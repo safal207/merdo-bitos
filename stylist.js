@@ -52,35 +52,77 @@ $("resetStyle").addEventListener("click",()=>{Object.assign(state,initial);secti
 $("toggleAdvanced").addEventListener("click",()=>{root.classList.toggle("expanded");section()});
 renderOutput()
 }
-function allocation(){
+function ownedCategories(){
+const own=window.BitOSWardrobe?.getOwned()||{};
+return {
+jacket:own.jacket===true,
+trousers:own.trousers===true,
+shirt:own.shirt===true,
+shoes:own.shoes===true||state.shoe==="have",
+details:own.details===true
+};
+}
+function allocation(own){
+const ownedFromWardrobe=window.BitOSWardrobe?.getCount?.()||0;
+if(ownedFromWardrobe===0){
 const p=state.shoe==="needed"?[.38,.19,.14,.23,.04,.02]:[.44,.23,.20,0,.08,.05];
 const rounded=p.slice(0,5).map(x=>Math.round(state.budget*x/50)*50);
-const reserve=state.budget-rounded.reduce((a,b)=>a+b,0);
-return [...rounded,reserve]
+return [...rounded,state.budget-rounded.reduce((a,b)=>a+b,0)];
+}
+const keys=["jacket","trousers","shirt","shoes","details"];
+const weights=[.38,.19,.14,.23,.04];
+const missing=keys.map((k,i)=>!own[k]?i:-1).filter(i=>i>=0);
+const money=Array(5).fill(0);
+if(!missing.length)return [...money,state.budget];
+const reserved=Math.round(state.budget*.05/50)*50;
+const available=state.budget-reserved;
+const activeWeight=missing.reduce((sum,i)=>sum+weights[i],0);
+let allocated=0;
+missing.forEach((i,n)=>{
+money[i]=n===missing.length-1?available-allocated:Math.round((available*weights[i]/activeWeight)/50)*50;
+allocated+=money[i];
+});
+return [...money,state.budget-money.reduce((a,b)=>a+b,0)];
 }
 function renderOutput(){
 const keys=["jacket","trousers","shirt","shoes","details","reservePiece"];
+const own=ownedCategories();
 const profile=styles[state.gender][state.occasion][lang()];
 const values=[profile[1],profile[3],profile[2],state.shoe==="have"?t("ownsShoes"):profile[4],profile[5],t("reserve")];
-const prices=allocation(),tailorTotal=["hem","sleeve","waist"].reduce((sum,k)=>sum+(state[k]?demoPrices[k]:0),0);
-const cells=keys.filter((k,i)=>i!==3||state.shoe==="needed").map(k=>{
-const i=keys.indexOf(k);return '<div class="stylePiece"><div><strong>'+t(k)+'</strong><p>'+esc(values[i])+'</p></div><strong>'+currency(prices[i])+'</strong></div>'
-}).join("");
-const shoeOwn=state.shoe==="have"?'<div class="fitTip">'+t("ownsShoes")+'</div>':"";
-$("styleDynamic").innerHTML='<p class="styleNote">'+t("intro")+'</p><h3>'+esc(profile[0])+'</h3><div class="stylePieces">'+cells+'</div>'+shoeOwn+
+const prices=allocation(own);
+const wardrobeCount=window.BitOSWardrobe?.getCount?.()||0;
+const tailorTotal=["hem","sleeve","waist"].reduce((sum,k)=>sum+(state[k]?demoPrices[k]:0),0);
+const plannedBuy=prices.slice(0,5).reduce((sum,n)=>sum+n,0);
+const purchaseTotal=wardrobeCount?plannedBuy:state.budget;
+const present=keys.slice(0,5).filter(k=>own[k]).map(k=>t(k));
+const missing=keys.slice(0,5).filter(k=>!own[k]).map(k=>t(k));
+const ownership=lang()==="tr"?{owned:"Bende var",advice:"Mevcut ürünleri yeniden önermiyoruz. Gerçek uyum ve ölçü prova ile doğrulanır.",none:"Tam kombin dolabınızda mevcut; yeni bir ürün satın almak gerekmeyebilir.",label:"Planlanan eksik parça bütçesi",link:"Dolabımı düzenle"}:
+{owned:"Уже есть",advice:"Вещи из вашего гардероба не предлагаем покупать повторно. Сочетаемость и посадку необходимо проверить.",none:"Все категории есть: возможно, ничего докупать не требуется.",label:"План на недостающие вещи",link:"Изменить гардероб"};
+const cells=keys.slice(0,5).map((k,i)=>'<div class="stylePiece '+(own[k]?"isOwned":"")+'"><div><strong>'+t(k)+'</strong><p>'+esc(values[i])+'</p></div>'+(own[k]?'<span class="ownedLabel">✓ '+ownership.owned+'</span>':'<strong>'+currency(prices[i])+'</strong>')+'</div>').join("")+
+'<div class="stylePiece"><div><strong>'+t("reservePiece")+'</strong><p>'+t("reserve")+'</p></div><strong>'+currency(prices[5])+'</strong></div>';
+const wardrobeInfo=wardrobeCount?'<div class="outfitWardrobeInfo">'+(missing.length?ownership.advice:ownership.none)+' <a href="#myWardrobe">'+ownership.link+' ↗</a></div>':"";
+const shoeOwn=own.shoes?'<div class="fitTip">'+t("ownsShoes")+'</div>':"";
+$("styleDynamic").innerHTML='<p class="styleNote">'+t("intro")+'</p><h3>'+esc(profile[0])+'</h3><div class="stylePieces">'+cells+'</div>'+wardrobeInfo+shoeOwn+
 '<div class="fitTip"><strong>'+t("fitTitle")+'</strong><p>'+t("fit"+state.fit[0].toUpperCase()+state.fit.slice(1))+'</p></div>'+
-'<div class="styleTotals"><div class="stylePiece"><span>'+t("budgetLabel")+'</span><b>'+currency(state.budget)+'</b></div><div class="stylePiece"><span>'+t("tailorLabel")+'</span><b>'+currency(tailorTotal)+'</b></div><div class="stylePiece total"><span>'+t("total")+'</span><b>'+currency(state.budget+tailorTotal)+'</b></div></div>'+
+'<div class="styleTotals"><div class="stylePiece"><span>'+t("budgetLabel")+'</span><b>'+currency(state.budget)+'</b></div>'+
+(wardrobeCount?'<div class="stylePiece"><span>'+ownership.label+'</span><b>'+currency(plannedBuy)+'</b></div>':"")+
+'<div class="stylePiece"><span>'+t("tailorLabel")+'</span><b>'+currency(tailorTotal)+'</b></div>'+
+'<div class="stylePiece total"><span>'+t("total")+'</span><b>'+currency(purchaseTotal+tailorTotal)+'</b></div></div>'+
 '<p class="styleNote">'+t("note")+'</p><h3>'+t("draftTitle")+'</h3><p class="styleNote">'+t("draftIntro")+'</p><div class="fitDraft" id="styleDraft"></div>'+
 '<div class="flowActions"><button type="button" class="primary" id="copyStyle">'+t("copy")+'</button></div>';
 const occasion=t(state.occasion);
 const service=["hem","sleeve","waist"].filter(k=>state[k]).map(k=>t(k));
+const ownedSentence=present.length?(lang()==="tr"?"Dolabımda mevcut kategoriler: ":"У меня уже есть: ")+present.join(", ")+". ":"";
+const missingSentence=missing.length?(lang()==="tr"?"Eksik kategoriler için mevcut ürün, fiyat ve beden bilgisini sorabilir miyim: ":"Подскажите реальные товары, размеры, цены и наличие для недостающих категорий: ")+missing.join(", ")+". ":"";
+const noneSentence=lang()==="tr"?"Yeni ürün ihtiyacı kesin değil. Mevcut parçaların uyumunu ve kalıbını kontrol etmek istiyorum. ":"Возможно, покупать ничего не нужно. Хочу проверить сочетаемость и посадку своих вещей. ";
 const text=lang()==="tr"?
-"Merhaba! BitOS konsept demosu üzerinden "+occasion.toLowerCase()+" için "+names.tr.genders[state.gender]+" kombin önerilerini gördüm. Bütçem "+currency(state.budget)+". "+(state.source?"İlham aldığım görünüm: "+state.source+". ":"")+"Güncel ürün, fiyat ve beden bilgisi alabilir miyim? "+(service.length?"Ayrı ücretli terzi işlemleri hakkında da bilgi rica ederim: "+service.join(", ")+". ":"")+"Bu yalnızca bilgi talebi taslağıdır; rezervasyon değildir.":
-"Здравствуйте! Я посмотрел(а) концепт BitOS для Merdo. Нужен "+names.ru.genders[state.gender]+" образ для события «"+occasion+"», бюджет на одежду "+currency(state.budget)+". "+(state.source?"Заинтересовал образ из фотоленты "+state.source+". ":"")+"Подскажите реальные товары, размеры, цены и наличие. "+(service.length?"Интересуют также отдельные услуги портного: "+service.join(", ")+". ":"")+"Это черновик запроса, а не оформленная бронь.";
+"Merhaba! BitOS konsept demosu üzerinden "+occasion.toLowerCase()+" için "+names.tr.genders[state.gender]+" kombin önerilerini gördüm. Giyim bütçem "+currency(state.budget)+". "+(state.source?"İlham aldığım görünüm: "+state.source+". ":"")+ownedSentence+(missing.length?missingSentence:noneSentence)+(service.length?"Ayrı ücretli terzi işlemleri hakkında da bilgi rica ederim: "+service.join(", ")+". ":"")+"Bu yalnızca bilgi talebi taslağıdır; rezervasyon değildir.":
+"Здравствуйте! Я посмотрел(а) концепт BitOS для Merdo. Нужен "+names.ru.genders[state.gender]+" образ для события «"+occasion+"», бюджет на одежду "+currency(state.budget)+". "+(state.source?"Заинтересовал образ из фотоленты "+state.source+". ":"")+ownedSentence+(missing.length?missingSentence:noneSentence)+(service.length?"Интересуют также отдельные услуги портного: "+service.join(", ")+". ":"")+"Это черновик запроса, а не оформленная бронь.";
 $("styleDraft").textContent=text;
 $("copyStyle").addEventListener("click",async()=>{
 const value=$("styleDraft").textContent;
-try{await navigator.clipboard.writeText(value);$("copyStyle").textContent=t("copied")}catch(e){$("copyStyle").textContent=t("copyFailed");$("styleDraft").setAttribute("tabindex","0");$("styleDraft").focus()}
+try{await navigator.clipboard.writeText(value);$("copyStyle").textContent=t("copied")}
+catch(e){$("copyStyle").textContent=t("copyFailed");$("styleDraft").setAttribute("tabindex","0");$("styleDraft").focus()}
 });
 }
 window.BitOSStylist={
@@ -101,5 +143,6 @@ if(id){state.source=id;state.gender=(id==="look1"||id==="look4")?"woman":"man";s
 window.BitOSStylist.showResult();
 });
 $("language").addEventListener("click",section);
+window.addEventListener("bitos:wardrobe-change",()=>{if($("styleDynamic"))renderOutput()});
 section()
 })();
