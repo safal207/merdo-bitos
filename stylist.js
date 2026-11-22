@@ -40,7 +40,7 @@ root.innerHTML='<div class="styleTop"><div><div class="kicker">03 / PERSONAL STY
 '<div class="tailor"><div class="kicker">PERFECT FIT / TERZİ</div><h4>'+t("tailor")+'</h4><p class="styleNote">'+t("tailorText")+'</p>'+
 ["hem","sleeve","waist"].map(k=>'<div class="tailorRow"><label><input type="checkbox" name="'+k+'" '+(state[k]?"checked":"")+'> <span>'+t(k)+'</span></label><span class="tailorPrice">'+currency(demoPrices[k])+'</span></div>').join("")+'</div>'+
 '<button type="button" class="pill" id="resetStyle">'+t("reset")+'</button></div>'+
-'<div class="styleResult" aria-live="polite"><span class="smallTag">BitOS / DEMO</span><h3>'+t("resultTitle")+'</h3><div id="styleDynamic"></div></div></div>';
+'<div class="styleResult" aria-live="polite"><span class="smallTag">BitOS / DEMO</span><h3>'+t("resultTitle")+'</h3><button type="button" id="toggleAdvanced" class="advancedToggle" aria-expanded="'+String(root.classList.contains("expanded"))+'">'+(lang()==="tr"?"İnce ayarları "+(root.classList.contains("expanded")?"kapat":"aç"):"Точная настройка "+(root.classList.contains("expanded")?"— скрыть":"— открыть"))+'</button><div id="styleDynamic"></div></div></div>';
 $("lookSource").hidden=!state.source;
 if(state.source){const p=document.querySelector('[data-post="'+state.source+'"] h3');$("lookSource").textContent=t("from")+": "+(p?.textContent||state.source)}
 const form=root.querySelector(".styleForm");
@@ -49,6 +49,7 @@ const el=e.target;
 if(el.name in state){state[el.name]=el.type==="checkbox"?el.checked:el.value;renderOutput()}else if(el.id==="styleBudget"){const n=Math.trunc(Number(el.value));state.budget=Math.min(1000000,Math.max(1000,Number.isFinite(n)?n:15000));el.value=state.budget;renderOutput()}
 });
 $("resetStyle").addEventListener("click",()=>{Object.assign(state,initial);section()});
+$("toggleAdvanced").addEventListener("click",()=>{root.classList.toggle("expanded");section()});
 renderOutput()
 }
 function allocation(){
@@ -82,7 +83,23 @@ const value=$("styleDraft").textContent;
 try{await navigator.clipboard.writeText(value);$("copyStyle").textContent=t("copied")}catch(e){$("copyStyle").textContent=t("copyFailed");$("styleDraft").setAttribute("tabindex","0");$("styleDraft").focus()}
 });
 }
-window.addEventListener("bitos:compose",e=>{const id=e.detail&&e.detail.lookId;if(id){state.source=id;state.gender=(id==="look1"||id==="look4")?"woman":"man";section()}root.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});root.focus({preventScroll:true})});
+window.BitOSStylist={
+applyPreferences(prefs){
+for(const k of ["gender","occasion","fit","budget","shoe","hem","sleeve","waist","source"]){if(Object.prototype.hasOwnProperty.call(prefs,k))state[k]=prefs[k]}
+section();root.classList.add("show-result");
+},
+showResult(){
+root.classList.add("show-result");
+root.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});
+root.focus({preventScroll:true});
+}
+};
+window.addEventListener("bitos:compose",e=>{
+const id=e.detail&&e.detail.lookId;
+if(window.BitOSJourney){window.BitOSJourney.startFromLook(id);return}
+if(id){state.source=id;state.gender=(id==="look1"||id==="look4")?"woman":"man";section()}
+window.BitOSStylist.showResult();
+});
 $("language").addEventListener("click",section);
 section()
 })();
