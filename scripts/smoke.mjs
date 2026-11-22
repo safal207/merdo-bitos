@@ -25,6 +25,21 @@ try {
     assert.equal(await page.locator("html").getAttribute("lang"), "ru", "RU switch works");
     assert.match(await page.locator("#startStyle").innerText(), /4 шага/);
 
+    // Lamoda-informed editorial exploration: same illustration, no SKU or false product prices.
+    await page.locator('[data-action="story"]').first().click();
+    assert.equal(await page.locator("#lookStoryOverlay").isVisible(), true, "three frame story opens");
+    assert.match(await page.locator("#lookStoryTitle").innerText(), /Посмотри на образ/);
+    const editorialImage = await page.locator(".lookStoryPicture img").getAttribute("src");
+    await page.locator('[data-story="next"]').click();
+    assert.match(await page.locator("#lookStoryTitle").innerText(), /детали/);
+    assert.equal(await page.locator(".lookStoryPicture img").getAttribute("src"), editorialImage, "same illustrative photo zoomed, no fake product photography");
+    await page.locator('[data-story="next"]').click();
+    assert.match(await page.locator("#lookStoryTitle").innerText(), /Из чего складывается/);
+    assert.equal(await page.locator(".lookStoryPart").count(), 4, "four generic outfit categories, no fake SKU");
+    await page.locator('[data-story="compose"]').click();
+    assert.equal(await page.locator("#lookStoryOverlay").isVisible(), false, "modal closes before entering funnel");
+    assert.match(await page.locator("#journeyTitle").innerText(), /Для чего подбираем/);
+
     // Feed-to-funnel handoff: the original look sets the gender.
     await page.locator('[data-action="compose"]').first().click();
     assert.match(await page.locator("#journeyTitle").innerText(), /Для чего подбираем/);
