@@ -50,7 +50,7 @@ try {
 
     // Micro-lesson style: one choice moves to the next screen, with an honest progress indicator.
     await page.locator('[data-option="formal"]').click();
-    assert.match(await page.locator("#journeyTitle").innerText(), /пиджак/i);
+    assert.match(await page.locator("#journeyTitle").innerText(), /в плечах/i);
     await page.locator(".journeyBack").click();
     assert.match(await page.locator("#journeyTitle").innerText(), /Для чего подбираем/);
     await page.locator('[data-option="formal"]').click();
@@ -127,6 +127,14 @@ try {
     assert.equal(await page.locator('[data-wardrobe-item="jacket"] .wardrobePhoto').count(),1,"saved image survives reload");
     await page.locator('[data-photo-remove="jacket"]').click();
     assert.equal(await page.locator('[data-wardrobe-item="jacket"] .wardrobePhoto').count(),0,"photo can be removed separately");
+    // Casual intent is available alongside premium business consultation.
+    await page.locator("#wardrobeProceed").click();
+    await page.locator('[data-option="casual"]').click();
+    await page.locator('[data-option="normal"]').click();
+    await page.locator('[data-budget="5000"]').click();
+    await page.locator('[data-action="skip"]').click();
+    await page.locator('[data-action="reveal"]').click();
+    assert.match(await page.locator("#styleDynamic").innerText(), /Городской выходной/);
     await page.locator("#wardrobeClear").click();
     assert.equal(await page.locator('input[name^="wardrobe-"]:checked').count(), 0);
     await page.reload();
