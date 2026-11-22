@@ -62,7 +62,7 @@ window.BitOSStylist.applyPreferences(answers);
 }
 move(4)
 }
-function reset(){answers=initial();move(-1)}
+function reset(){answers=initial();document.getElementById("stylist")?.classList.remove("show-result","expanded");move(-1)}
 function reveal(){
 if(window.BitOSStylist?.showResult){
 window.BitOSStylist.showResult();
@@ -96,6 +96,7 @@ root.querySelector(".journeyEstimate strong").textContent=money(priceExtra());
 });
 window.BitOSJourney={
 startFromLook(id){
+document.getElementById("stylist")?.classList.remove("show-result","expanded");
 answers=initial();
 answers.source=id;
 answers.gender=(id==="look1"||id==="look4")?"woman":"man";
@@ -103,7 +104,7 @@ move(0);
 root.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});
 },
 start(){
-answers=initial();move(0);root.scrollIntoView({behavior:"smooth",block:"start"})
+answers=initial();document.getElementById("stylist")?.classList.remove("show-result","expanded");move(0);root.scrollIntoView({behavior:"smooth",block:"start"})
 }
 };
 document.getElementById("language")?.addEventListener("click",render);
