@@ -39,7 +39,8 @@ jobs:
       - name: Browser acceptance
         run: node scripts/smoke.mjs
       - name: Cross-browser product and UX audit
-        run: node scripts/ux-audit.mjs
+        # Playwright Firefox fails as root when HOME is owned by the CI service user.
+        run: HOME=/root node scripts/ux-audit.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
