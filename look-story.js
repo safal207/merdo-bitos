@@ -89,15 +89,15 @@ const id=active;close();window.dispatchEvent(new CustomEvent("bitos:compose",{de
 });
 document.addEventListener("keydown",e=>{
 if(overlay.hidden)return;
-if(e.key==="Escape"){e.preventDefault();close()}
-if(e.key==="ArrowRight"){e.preventDefault();next()}
-if(e.key==="ArrowLeft"){e.preventDefault();prev()}
+if(e.key==="Escape"){e.preventDefault();close();return}
+if(e.key==="ArrowRight"){e.preventDefault();next();return}
+if(e.key==="ArrowLeft"){e.preventDefault();prev();return}
 if(e.key==="Tab"){
 const nodes=[...overlay.querySelectorAll('button:not([disabled])')];
 if(!nodes.length)return;
-const first=nodes[0],last=nodes[nodes.length-1];
-if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}
-else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}
+const first=nodes[0],last=nodes[nodes.length-1],focus=document.activeElement;
+if(e.shiftKey&&(focus===first||!nodes.includes(focus))){e.preventDefault();last.focus()}
+else if(!e.shiftKey&&(focus===last||!nodes.includes(focus))){e.preventDefault();first.focus()}
 }
 });
 overlay.addEventListener("touchstart",e=>{touchX=e.changedTouches[0]?.clientX??null},{passive:true});
