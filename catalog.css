@@ -1,0 +1,28 @@
+/* Source-backed catalogue gate: explicit zero verified products. */
+#catalogStatus{scroll-margin-top:115px;margin:44px 0 26px;padding:27px 29px 25px;background:#f4efe8;border:1px solid #d8c6b3;border-radius:16px}
+.catalogHeader{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center}
+.catalogEyebrow{display:inline-block;font-size:10px;font-weight:800;color:#885c3c;letter-spacing:.11em}
+.catalogHeader h2{font:500 clamp(27px,4vw,42px)/1.12 Georgia,serif;margin:11px 0 10px;letter-spacing:-.035em}
+.catalogHeader p{font-size:13px;color:#705e53;max-width:700px;line-height:1.6;margin:0}
+.catalogNumber{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;max-width:128px;padding:11px;color:#795e4b}
+.catalogNumber b{font-size:49px;font-weight:700;font-variant-numeric:tabular-nums}
+.catalogNumber span{text-align:center;font-size:11px;font-weight:700}
+.catalogFacts{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:22px 0 14px}
+.catalogFacts article{padding:19px;background:#fffcf8;border:1px solid #e5d9cb;border-radius:12px}
+.catalogFacts strong{font-size:15px;color:#382c25}
+.catalogFacts p{font-size:12px;color:#77665a;line-height:1.6;margin:8px 0 12px}
+.catalogFacts a{text-decoration:underline;text-underline-offset:4px;font-weight:800;font-size:12px;color:#9b532d}
+.catalogBrands{font-size:11px;color:#816b5f;line-height:1.6;margin:0 0 20px}
+.catalogLead{display:flex;gap:16px;align-items:center;justify-content:space-between;background:#40291f;color:#fffbf3;border-radius:11px;padding:17px 18px}
+.catalogLead strong{font-size:15px}
+.catalogLead p{margin:5px 0 0;font-size:12px;color:#e0cfc0}
+#catalogAsk{border:2px solid #9e2918;border-bottom-width:4px;flex-shrink:0;background:#c24225;color:#fff;padding:12px 17px;border-radius:9px;font-weight:900}
+#catalogRequest[hidden]{display:none}
+#catalogRequest{border:1px solid #e3d4c3;border-radius:10px;background:#fffdf9;margin-top:16px;padding:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+#catalogRequest label{flex:1 1 100%;font-size:12px;color:#6f594a;font-weight:700}
+#catalogDraft{flex:1 1 100%;width:100%;padding:13px;background:white;border:1px solid #d8c0ac;border-radius:8px;font:12px/1.65 sans-serif;color:#322820;resize:vertical}
+#catalogCopy{background:#513426;color:white;border:0;border-radius:7px;padding:11px 18px;font-weight:800}
+#catalogClose{background:transparent;border:1px solid #a78873;border-radius:7px;padding:10px 16px}
+#catalogFeedback{font-size:12px;color:#6f503c}
+#catalogStatus button:focus-visible,#catalogStatus a:focus-visible,#catalogStatus textarea:focus-visible{outline:3px solid #a45029;outline-offset:2px}
+@media(max-width:650px){#catalogStatus{padding:19px 14px;margin:30px 0 20px}.catalogHeader{gap:7px}.catalogNumber{max-width:78px;padding:4px}.catalogNumber b{font-size:36px}.catalogNumber span{font-size:9px}.catalogFacts{grid-template-columns:1fr;gap:9px}.catalogLead{flex-wrap:wrap}#catalogAsk{width:100%}}
