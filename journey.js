@@ -32,6 +32,8 @@ return '<button type="button" class="journeyChip '+(answers[group]===key?"select
 }
 function render(){
 const p=progress();
+const ownedCount=window.BitOSWardrobe?.getCount?.()||0;
+const wardrobeNote=ownedCount?(document.documentElement.lang==="ru"?"Учтём ваши вещи: "+ownedCount+" из 5 категорий.":"Dolabınızdaki "+ownedCount+" / 5 kategoriyi dikkate alacağız."):"";
 let body="";
 if(step===-1){
 body='<div class="journeyWelcome"><span class="journeyMini">'+tr("quick")+'</span><h2 id="journeyTitle">'+tr("headline")+'</h2><p>'+tr("sub")+'</p><button class="journeyMain" type="button" data-action="start">'+tr("begin")+' <span aria-hidden="true">→</span></button></div>';
@@ -44,7 +46,7 @@ body='<h2 id="journeyTitle">'+tr("budgetTitle")+'</h2><p class="journeyQuestion"
 }else if(step===3){
 body='<h2 id="journeyTitle">'+tr("tailorTitle")+'</h2><p class="journeyQuestion">'+tr("tailorSub")+'</p><div class="journeyTailors">'+Object.keys(costs).map(k=>'<label class="journeyTailor '+(answers[k]?"active":"")+'"><input type="checkbox" name="journey-'+k+'" '+(answers[k]?"checked":"")+'><span>'+tr(k)+'</span><b>+'+money(costs[k])+'</b></label>').join("")+'</div><div class="journeyEstimate"><span>'+tr("tailoring")+'</span><strong>'+money(priceExtra())+'</strong></div><p class="journeyFine">'+tr("notReal")+'</p><button class="journeyMain" type="button" data-action="finish">'+tr("next")+' →</button><button class="journeyLink" type="button" data-action="skip">'+tr("later")+'</button>';
 }else{
-body='<div class="journeySuccess"><div class="journeySeal" aria-hidden="true">✓</div><h2 id="journeyTitle">'+tr("finish")+'</h2><p>'+tr("finishSub")+'</p><div class="journeyReceipt"><div><span>'+tr("apparel")+'</span><b>'+money(answers.budget)+'</b></div><div><span>'+tr("tailoring")+'</span><b>+'+money(priceExtra())+'</b></div></div><button class="journeyMain" data-action="reveal" type="button">'+tr("see")+' →</button><button class="journeyLink" data-action="restart" type="button">'+tr("edit")+'</button></div>';
+body='<div class="journeySuccess"><div class="journeySeal" aria-hidden="true">✓</div><h2 id="journeyTitle">'+tr("finish")+'</h2><p>'+tr("finishSub")+'</p>'+(wardrobeNote?'<p class="journeyOwnedNote">✓ '+wardrobeNote+'</p>':"")+'<div class="journeyReceipt"><div><span>'+tr("apparel")+'</span><b>'+money(answers.budget)+'</b></div><div><span>'+tr("tailoring")+'</span><b>+'+money(priceExtra())+'</b></div></div><button class="journeyMain" data-action="reveal" type="button">'+tr("see")+' →</button><button class="journeyLink" data-action="restart" type="button">'+tr("edit")+'</button></div>';
 }
 const lookName=answers.source?(document.querySelector('[data-post="'+answers.source+'"] h3')?.textContent||answers.source):"";
 const source=answers.source?'<div class="journeySource">'+tr("source")+' · '+safe(lookName)+'</div>':"";
