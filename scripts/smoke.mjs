@@ -35,7 +35,7 @@ try {
     await page.locator('input[name="sleeve"]').check();
     assert.equal(await page.locator('input[name="sleeve"]').isChecked(), true);
     assert.match(await page.locator(".tailorRow").filter({ has: page.locator('input[name="sleeve"]') }).innerText(), /650/, "individual tailoring price shown");
-    assert.match(await page.locator("#styleDynamic").innerText(), /1\\s?050/, "separate total tailoring estimate shown");
+    assert.match(await page.locator("#styleDynamic").innerText(), /1\s?050/, "separate total tailoring estimate shown");
     assert.ok((await page.locator("#styleDraft").textContent()).length > 60, "outreach message drafted");
 
     await page.locator('input[name="occasion"][value="creative"]').check();
