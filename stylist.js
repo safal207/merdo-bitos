@@ -52,6 +52,40 @@ $("resetStyle").addEventListener("click",()=>{Object.assign(state,initial);secti
 $("toggleAdvanced").addEventListener("click",()=>{root.classList.toggle("expanded");section()});
 renderOutput()
 }
+
+/* Described garments only: simple color ideas, NOT computer-vision analysis. */
+const fashionColor={
+ru:{black:"чёрный",navy:"тёмно-синий",gray:"серый",white:"белый",beige:"бежевый",brown:"коричневый",blue:"голубой",other:"другой"},
+tr:{black:"siyah",navy:"lacivert",gray:"gri",white:"beyaz",beige:"bej",brown:"kahverengi",blue:"mavi",other:"diğer"}
+};
+const fashionCut={
+ru:{structured:"структурный",relaxed:"свободный",oversize:"оверсайз",classic:"классический",fitted:"приталенный",straight:"прямой",tapered:"зауженный",derby:"дерби",loafers:"лоферы",sneakers:"кроссовки",minimal:"минималистичный",statement:"акцентный"},
+tr:{structured:"yapılı",relaxed:"rahat",oversize:"oversize",classic:"klasik",fitted:"vücuda oturan",straight:"düz",tapered:"daralan",derby:"derby",loafers:"loafer",sneakers:"spor ayakkabı",minimal:"minimal",statement:"öne çıkan"}
+};
+const palette={
+navy:{ru:"серый, бежевый или белый",tr:"gri, bej veya beyaz"},
+gray:{ru:"тёмно-синий, белый или чёрный",tr:"lacivert, beyaz veya siyah"},
+black:{ru:"белый или серый",tr:"beyaz veya gri"},
+white:{ru:"тёмно-синий, серый или бежевый",tr:"lacivert, gri veya bej"},
+beige:{ru:"тёмно-синий, коричневый или белый",tr:"lacivert, kahverengi veya beyaz"},
+brown:{ru:"бежевый, белый или тёмно-синий",tr:"bej, beyaz veya lacivert"},
+blue:{ru:"тёмно-синий, серый или бежевый",tr:"lacivert, gri veya bej"}
+};
+function ownedNote(k,details){
+const d=details[k];if(!d?.owned)return "";
+const pieces=[fashionColor[lang()][d.color],fashionCut[lang()][d.cut]].filter(Boolean);
+if(d.hasPhoto)pieces.push(lang()==="ru"?"фото сохранено на устройстве":"fotoğraf bu cihazda");
+return pieces.join(" · ");
+}
+function colorAdvice(details){
+const k=["jacket","trousers","shirt","shoes"].find(k=>details[k]?.owned&&palette[details[k].color]);
+if(!k)return "";
+const anchor=fashionColor[lang()][details[k].color],choices=palette[details[k].color][lang()];
+return lang()==="ru"
+?"Цветовая идея: к вашей вещи «"+t(k)+"» ("+anchor+") можно примерить "+choices+". Это ориентир по выбранному цвету, а не проверка фотографии или посадки."
+:"Renk fikri: “"+t(k)+"” ("+anchor+") için "+choices+" tonlarını deneyebilirsiniz. Bu seçtiğiniz renge dayalı bir öneridir; fotoğraf analiz edilmez.";
+}
+
 function ownedCategories(){
 const own=window.BitOSWardrobe?.getOwned()||{};
 return {
@@ -87,11 +121,13 @@ const missing=keys.slice(0,5).filter(k=>!own[k]).map(k=>t(k));
 const ownership=lang()==="tr"?{owned:"Bende var",advice:"Mevcut ürünleri yeniden önermiyoruz. Gerçek uyum ve ölçü prova ile doğrulanır.",none:"Tam kombin dolabınızda mevcut; yeni bir ürün satın almak gerekmeyebilir.",label:"Planlanan eksik parça bütçesi",link:"Dolabımı düzenle"}:
 {owned:"Уже есть",advice:"Вещи из вашего гардероба не предлагаем покупать повторно. Сочетаемость и посадку необходимо проверить.",none:"Все категории есть: возможно, ничего докупать не требуется.",label:"План на недостающие вещи",link:"Изменить гардероб"};
 const ownedCheck=lang()==="tr"?"Renk, kesim ve kalıp uyumu provada kontrol edilmeli.":"Проверим цвет, крой и посадку при примерке.";
-const cells=keys.slice(0,5).map((k,i)=>'<div class="stylePiece '+(own[k]?"isOwned":"")+'"><div><strong>'+t(k)+'</strong><p>'+(own[k]?ownedCheck:esc(values[i]))+'</p></div>'+(own[k]?'<span class="ownedLabel">✓ '+ownership.owned+'</span>':'<strong>'+currency(prices[i])+'</strong>')+'</div>').join("")+
+const wardrobeDetails=window.BitOSWardrobe?.getDetails?.()||{};
+const colorHint=wardrobeCount?colorAdvice(wardrobeDetails):"";
+const cells=keys.slice(0,5).map((k,i)=>'<div class="stylePiece '+(own[k]?"isOwned":"")+'"><div><strong>'+t(k)+'</strong><p>'+(own[k]?(ownedNote(k,wardrobeDetails)?esc(ownedNote(k,wardrobeDetails))+" · "+ownedCheck:ownedCheck):esc(values[i]))+'</p></div>'+(own[k]?'<span class="ownedLabel">✓ '+ownership.owned+'</span>':'<strong>'+currency(prices[i])+'</strong>')+'</div>').join("")+
 '<div class="stylePiece"><div><strong>'+t("reservePiece")+'</strong><p>'+t("reserve")+'</p></div><strong>'+currency(prices[5])+'</strong></div>';
 const wardrobeInfo=wardrobeCount?'<div class="outfitWardrobeInfo">'+(missing.length?ownership.advice:ownership.none)+' <a href="#myWardrobe">'+ownership.link+' ↗</a></div>':"";
 const shoeOwn=own.shoes?'<div class="fitTip">'+t("ownsShoes")+'</div>':"";
-$("styleDynamic").innerHTML='<p class="styleNote">'+t("intro")+'</p><h3>'+esc(profile[0])+'</h3><div class="stylePieces">'+cells+'</div>'+wardrobeInfo+shoeOwn+
+$("styleDynamic").innerHTML='<p class="styleNote">'+t("intro")+'</p><h3>'+esc(profile[0])+'</h3><div class="stylePieces">'+cells+'</div>'+wardrobeInfo+(colorHint?'<div class="wardrobeColorNote">'+esc(colorHint)+'</div>':"")+shoeOwn+
 '<div class="fitTip"><strong>'+t("fitTitle")+'</strong><p>'+t("fit"+state.fit[0].toUpperCase()+state.fit.slice(1))+'</p></div>'+
 '<div class="styleTotals"><div class="stylePiece"><span>'+t("budgetLabel")+'</span><b>'+currency(state.budget)+'</b></div>'+
 (wardrobeCount?'<div class="stylePiece"><span>'+ownership.label+'</span><b>'+currency(plannedBuy)+'</b></div>':"")+
