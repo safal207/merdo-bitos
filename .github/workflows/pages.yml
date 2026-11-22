@@ -1,0 +1,56 @@
+name: Merdo BitOS — browser QA and Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: merdo-bitos-pages
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    name: Chromium mobile and desktop
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.55.0-noble
+      options: --init --ipc=host
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install pinned browser client
+        run: npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.55.0
+      - name: Check JavaScript syntax
+        run: |
+          node --check stylist.js
+          node --check scripts/smoke.mjs
+      - name: Browser acceptance
+        run: node scripts/smoke.mjs
+
+  deploy:
+    name: Deploy GitHub Pages
+    needs: smoke
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: .
+      - id: deployment
+        uses: actions/deploy-pages@v4
