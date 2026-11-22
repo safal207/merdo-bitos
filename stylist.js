@@ -63,26 +63,14 @@ details:own.details===true
 };
 }
 function allocation(own){
-const ownedFromWardrobe=window.BitOSWardrobe?.getCount?.()||0;
-if(ownedFromWardrobe===0){
 const p=state.shoe==="needed"?[.38,.19,.14,.23,.04,.02]:[.44,.23,.20,0,.08,.05];
 const rounded=p.slice(0,5).map(x=>Math.round(state.budget*x/50)*50);
-return [...rounded,state.budget-rounded.reduce((a,b)=>a+b,0)];
-}
+const ownedFromWardrobe=window.BitOSWardrobe?.getCount?.()||0;
 const keys=["jacket","trousers","shirt","shoes","details"];
-const weights=[.38,.19,.14,.23,.04];
-const missing=keys.map((k,i)=>!own[k]?i:-1).filter(i=>i>=0);
-const money=Array(5).fill(0);
-if(!missing.length)return [...money,state.budget];
-const reserved=Math.round(state.budget*.05/50)*50;
-const available=state.budget-reserved;
-const activeWeight=missing.reduce((sum,i)=>sum+weights[i],0);
-let allocated=0;
-missing.forEach((i,n)=>{
-money[i]=n===missing.length-1?available-allocated:Math.round((available*weights[i]/activeWeight)/50)*50;
-allocated+=money[i];
-});
-return [...money,state.budget-money.reduce((a,b)=>a+b,0)];
+// Retain the customer's planned spending cap: owning a jacket must never
+// push its unused allowance onto socks or any other missing category.
+const amounts=ownedFromWardrobe?rounded.map((n,i)=>own[keys[i]]?0:n):rounded;
+return [...amounts,state.budget-amounts.reduce((a,b)=>a+b,0)];
 }
 function renderOutput(){
 const keys=["jacket","trousers","shirt","shoes","details","reservePiece"];
@@ -98,7 +86,8 @@ const present=keys.slice(0,5).filter(k=>own[k]).map(k=>t(k));
 const missing=keys.slice(0,5).filter(k=>!own[k]).map(k=>t(k));
 const ownership=lang()==="tr"?{owned:"Bende var",advice:"Mevcut ürünleri yeniden önermiyoruz. Gerçek uyum ve ölçü prova ile doğrulanır.",none:"Tam kombin dolabınızda mevcut; yeni bir ürün satın almak gerekmeyebilir.",label:"Planlanan eksik parça bütçesi",link:"Dolabımı düzenle"}:
 {owned:"Уже есть",advice:"Вещи из вашего гардероба не предлагаем покупать повторно. Сочетаемость и посадку необходимо проверить.",none:"Все категории есть: возможно, ничего докупать не требуется.",label:"План на недостающие вещи",link:"Изменить гардероб"};
-const cells=keys.slice(0,5).map((k,i)=>'<div class="stylePiece '+(own[k]?"isOwned":"")+'"><div><strong>'+t(k)+'</strong><p>'+esc(values[i])+'</p></div>'+(own[k]?'<span class="ownedLabel">✓ '+ownership.owned+'</span>':'<strong>'+currency(prices[i])+'</strong>')+'</div>').join("")+
+const ownedCheck=lang()==="tr"?"Renk, kesim ve kalıp uyumu provada kontrol edilmeli.":"Проверим цвет, крой и посадку при примерке.";
+const cells=keys.slice(0,5).map((k,i)=>'<div class="stylePiece '+(own[k]?"isOwned":"")+'"><div><strong>'+t(k)+'</strong><p>'+(own[k]?ownedCheck:esc(values[i]))+'</p></div>'+(own[k]?'<span class="ownedLabel">✓ '+ownership.owned+'</span>':'<strong>'+currency(prices[i])+'</strong>')+'</div>').join("")+
 '<div class="stylePiece"><div><strong>'+t("reservePiece")+'</strong><p>'+t("reserve")+'</p></div><strong>'+currency(prices[5])+'</strong></div>';
 const wardrobeInfo=wardrobeCount?'<div class="outfitWardrobeInfo">'+(missing.length?ownership.advice:ownership.none)+' <a href="#myWardrobe">'+ownership.link+' ↗</a></div>':"";
 const shoeOwn=own.shoes?'<div class="fitTip">'+t("ownsShoes")+'</div>':"";
