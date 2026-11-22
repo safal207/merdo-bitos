@@ -31,6 +31,7 @@ jobs:
         run: |
           node --check stylist.js
           node --check journey.js
+          node --check look-story.js
           node --check scripts/smoke.mjs
       - name: Browser acceptance
         run: node scripts/smoke.mjs
