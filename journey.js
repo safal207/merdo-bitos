@@ -46,9 +46,11 @@ body='<h2 id="journeyTitle">'+tr("tailorTitle")+'</h2><p class="journeyQuestion"
 }else{
 body='<div class="journeySuccess"><div class="journeySeal" aria-hidden="true">✓</div><h2 id="journeyTitle">'+tr("finish")+'</h2><p>'+tr("finishSub")+'</p><div class="journeyReceipt"><div><span>'+tr("apparel")+'</span><b>'+money(answers.budget)+'</b></div><div><span>'+tr("tailoring")+'</span><b>+'+money(priceExtra())+'</b></div></div><button class="journeyMain" data-action="reveal" type="button">'+tr("see")+' →</button><button class="journeyLink" data-action="restart" type="button">'+tr("edit")+'</button></div>';
 }
-const source=answers.source?'<div class="journeySource">'+tr("source")+' · '+safe(answers.source)+'</div>':"";
+const lookName=answers.source?(document.querySelector('[data-post="'+answers.source+'"] h3')?.textContent||answers.source):"";
+const source=answers.source?'<div class="journeySource">'+tr("source")+' · '+safe(lookName)+'</div>':"";
+const gender=step>=0&&step<4?'<div class="journeyGender"><span>'+tr("gender")+'</span><div>'+chip("man","gender")+chip("woman","gender")+'</div></div>':"";
 root.innerHTML='<div class="journeyShell"><div class="journeyHead"><span class="journeyBrand">'+tr("badge")+'</span>'+p+'</div>'+source+
-'<div class="journeyContent" aria-live="polite">'+body+'</div>'+
+gender+'<div class="journeyContent" aria-live="polite">'+body+'</div>'+
 (step>=0&&step<4?'<div class="journeyFooter"><button type="button" class="journeyBack" data-action="back">← '+tr("back")+'</button><span>'+tr("quick")+'</span></div>':"")+
 '<div class="journeyDisclaimer">'+tr("disclaimer")+'</div></div>';
 }
