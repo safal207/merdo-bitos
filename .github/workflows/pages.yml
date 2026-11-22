@@ -30,9 +30,17 @@ jobs:
       - name: Check JavaScript syntax
         run: |
           node --check stylist.js
+          node --check journey.js
           node --check scripts/smoke.mjs
       - name: Browser acceptance
         run: node scripts/smoke.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: merdo-funnel-mobile-desktop
+          path: artifacts/
+          if-no-files-found: ignore
+          retention-days: 14
 
   deploy:
     name: Deploy GitHub Pages
