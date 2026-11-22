@@ -36,3 +36,5 @@
 .wardrobeActions{display:grid}.wardrobeActions button{width:100%}
 }
 @media(prefers-reduced-motion:reduce){.wardrobeMeter i,.wardrobeCategory{transition:none}}
+
+.journeyOwnedNote{max-width:450px;margin:8px auto 16px!important;padding:10px 12px;border-radius:9px;background:#eff4e7;color:#466039!important;font-weight:800;font-size:12px!important}
