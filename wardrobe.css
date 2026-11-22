@@ -1,0 +1,38 @@
+/* Merdo × BitOS · My Wardrobe: privacy-first, no pretend owned SKUs */
+#myWardrobe{scroll-margin-top:110px;margin:50px 0 20px;padding:27px 30px 23px;border:1px solid #e4d2bb;border-radius:16px;background:#fdf8f1;box-shadow:0 6px 25px rgba(70,47,28,.05)}
+.wardrobeHead{max-width:720px}.wardrobeMini{display:inline-block;background:#3e2e27;color:#fff;padding:6px 10px;letter-spacing:.16em;font-size:10px;font-weight:800;border-radius:4px}
+.wardrobeHead h2{font:500 clamp(32px,4.3vw,46px)/1.1 Georgia,serif;letter-spacing:-.035em;margin:13px 0 10px}
+.wardrobeHead p{max-width:650px;color:#78685b;margin:0;font-size:14px}
+.wardrobeStatus{display:flex;align-items:center;gap:12px;margin:24px 0 16px;font-size:12px;color:#795d4b}
+.wardrobeStatus strong{font-size:19px;color:#422c22;font-variant-numeric:tabular-nums;white-space:nowrap}
+.wardrobeMeter{height:9px;min-width:75px;flex:1;background:#e8d8c7;border-radius:100px;overflow:hidden;margin-left:10px}
+.wardrobeMeter i{display:block;height:100%;border-radius:100px;background:#b45a35;transition:width .2s}
+.wardrobeCategories{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.wardrobeCategory{position:relative;display:flex;align-items:center;flex-direction:column;justify-content:center;gap:5px;min-height:135px;border:2px solid #e2cfbd;border-bottom-width:4px;border-radius:12px;background:white;padding:12px 6px;cursor:pointer;text-align:center;transition:border-color .15s,background .15s}
+.wardrobeCategory.owned{border-color:#a75937;background:#fff0df}
+.wardrobeCategory input{position:absolute;top:11px;left:11px;height:19px;width:19px;accent-color:#a44726}
+.wardrobeSymbol{display:flex;align-items:center;justify-content:center;width:39px;height:39px;border-radius:11px;background:#f2e4d6;color:#986039;font-size:24px}
+.wardrobeCopy{display:grid;gap:4px}
+.wardrobeCopy strong{font-size:12px;line-height:1.35}
+.wardrobeCopy small{font-size:10px;color:#896d5e}
+.wardrobeCheck{position:absolute;right:9px;top:8px;font-weight:900;color:#ac6141}
+.wardrobeCategory:focus-within{outline:3px solid #a45b34;outline-offset:3px}
+.wardrobeActions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:21px 0 14px}
+#wardrobeProceed{padding:14px 19px;background:#b93d22;border:2px solid #9d301a;border-bottom-width:4px;border-radius:10px;color:#fff;font-weight:900;font-size:14px}
+#wardrobeProceed:hover{background:#a3311c}
+#wardrobeClear{padding:11px 14px;border:0;text-decoration:underline;text-underline-offset:4px;background:transparent;color:#7a5946}
+.wardrobePrivacy{color:#917e6f;font-size:11px;line-height:1.6;max-width:750px}
+.stylePiece.isOwned{background:#f4f0e8;border-radius:7px;padding:11px}
+.ownedLabel{display:inline-flex;align-items:center;gap:4px;font-weight:900;font-size:11px;color:#4f6c37;white-space:nowrap}
+.outfitWardrobeInfo{margin:14px 0;padding:13px 14px;background:#f3f7eb;border-left:3px solid #74965c;border-radius:5px;color:#425c35;font-size:12px;line-height:1.6}
+.outfitWardrobeInfo a{font-weight:800;text-decoration:underline;text-underline-offset:3px}
+@media(max-width:860px){.wardrobeCategories{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:600px){
+#myWardrobe{margin:26px 0 10px;padding:20px 14px}
+.wardrobeHead h2{font-size:34px}
+.wardrobeCategories{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.wardrobeCategory{min-height:115px}
+.wardrobeStatus{flex-wrap:wrap;margin:20px 0 13px}.wardrobeMeter{min-width:100%;margin-left:0}
+.wardrobeActions{display:grid}.wardrobeActions button{width:100%}
+}
+@media(prefers-reduced-motion:reduce){.wardrobeMeter i,.wardrobeCategory{transition:none}}
