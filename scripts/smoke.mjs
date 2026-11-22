@@ -81,9 +81,40 @@ try {
     await page.locator("#resetStyle").click();
     assert.equal(await page.locator('input[name="sleeve"]').isChecked(), false, "reset clears tailoring");
 
+    // My Wardrobe: only categories, locally saved; recommend missing items, never invent SKUs.
+    await page.locator('input[name="wardrobe-jacket"]').check();
+    await page.locator('input[name="wardrobe-shoes"]').check();
+    assert.match(await page.locator(".wardrobeStatus").innerText(), /2\s*\/\s*5/);
+    await page.locator("#wardrobeProceed").click();
+    assert.match(await page.locator("#journeyTitle").innerText(), /Для чего подбираем/);
+    await page.locator('[data-option="formal"]').click();
+    await page.locator('[data-option="normal"]').click();
+    await page.locator('[data-budget="15000"]').click();
+    await page.locator('[data-action="finish"]').click();
+    assert.match(await page.locator(".journeyOwnedNote").innerText(), /2 из 5/);
+    await page.locator('[data-action="reveal"]').click();
+    assert.equal(await page.locator("#stylist .stylePiece.isOwned").count(),2,
+      "do not offer already owned jacket and shoes as missing purchases");
+    assert.match(await page.locator("#styleDynamic").innerText(), /План на недостающие вещи/);
+    assert.match(await page.locator("#styleDraft").innerText(), /У меня уже есть/);
+    await page.locator('input[name="wardrobe-shirt"]').check();
+    await page.locator('input[name="wardrobe-trousers"]').check();
+    await page.locator('input[name="wardrobe-details"]').check();
+    assert.equal(await page.locator("#stylist .stylePiece.isOwned").count(), 5);
+    assert.match(await page.locator("#styleDynamic").innerText(), /возможно, ничего докупать не требуется/i);
+    assert.match(await page.locator("#styleDraft").innerText(), /покупать ничего не нужно/i);
+
+    // Persistence is device-local, language independent, and can be cleared.
+    await page.reload();
+    await page.locator("#myWardrobe").waitFor();
+    assert.equal(await page.locator('input[name^="wardrobe-"]:checked').count(), 5);
+    await page.locator("#wardrobeClear").click();
+    assert.equal(await page.locator('input[name^="wardrobe-"]:checked').count(), 0);
+    await page.reload();
+    assert.equal(await page.locator('input[name^="wardrobe-"]:checked').count(), 0);
     assert.deepEqual(errors, [], "no uncaught JS exceptions");
     await page.screenshot({path:path.join(base,"artifacts","merdo-journey-"+width+".png"),fullPage:true});
-    results.push({ viewport: width, checks: 19, status: "pass" });
+    results.push({ viewport: width, checks: 34, status: "pass" });
     await page.close();
   }
   console.log(JSON.stringify({ suite: "Merdo × BitOS simplified fashion funnel", results }, null, 2));
