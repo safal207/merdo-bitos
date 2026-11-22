@@ -84,6 +84,16 @@ try {
     // My Wardrobe: only categories, locally saved; recommend missing items, never invent SKUs.
     await page.locator('input[name="wardrobe-jacket"]').check();
     await page.locator('input[name="wardrobe-shoes"]').check();
+    // Item attributes are user-declared, not guessed from photos.
+    await page.locator('select[name="wardrobe-color-jacket"]').selectOption("navy");
+    await page.locator('select[name="wardrobe-cut-jacket"]').selectOption("structured");
+    assert.equal(await page.locator('select[name="wardrobe-color-jacket"]').inputValue(),"navy");
+    assert.equal(await page.locator('select[name="wardrobe-cut-jacket"]').inputValue(),"structured");
+    // Upload a small known-good PNG; browser converts and stores only a downscaled photo.
+    const photo=Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAF0lEQVR4nGNUdZ3IQAgwEVQxqmgAFAEAx40BEw18ATYAAAAASUVORK5CYII=","base64");
+    await page.locator('input[name="wardrobe-photo-jacket"]').setInputFiles({name:"mine.png",mimeType:"image/png",buffer:photo});
+    await page.locator('[data-wardrobe-item="jacket"] .wardrobePhoto').waitFor();
+    assert.match(await page.locator('[data-wardrobe-item="jacket"] .wardrobePhoto').getAttribute("src"),/^data:image\/(?:webp|jpeg);base64,/);
     assert.match(await page.locator(".wardrobeStatus").innerText(), /2\s*\/\s*5/);
     await page.locator("#wardrobeProceed").click();
     assert.match(await page.locator("#journeyTitle").innerText(), /Для чего подбираем/);
@@ -97,6 +107,10 @@ try {
       "do not offer already owned jacket and shoes as missing purchases");
     assert.match(await page.locator("#styleDynamic").innerText(), /План на недостающие вещи/);
     assert.match(await page.locator("#styleDraft").innerText(), /У меня уже есть/);
+    assert.match(await page.locator("#styleDynamic").innerText(), /тёмно-синий/i);
+    assert.match(await page.locator("#styleDynamic").innerText(), /структурный/i);
+    assert.match(await page.locator("#styleDynamic").innerText(), /Цветовая идея:/);
+    assert.ok(!(await page.locator("#styleDraft").innerText()).includes("data:image/"),"private photograph never added to outbound message");
     await page.locator('input[name="wardrobe-shirt"]').check();
     await page.locator('input[name="wardrobe-trousers"]').check();
     await page.locator('input[name="wardrobe-details"]').check();
@@ -108,13 +122,18 @@ try {
     await page.reload();
     await page.locator("#myWardrobe").waitFor();
     assert.equal(await page.locator('input[name^="wardrobe-"]:checked').count(), 5);
+    assert.equal(await page.locator('select[name="wardrobe-color-jacket"]').inputValue(), "navy");
+    assert.equal(await page.locator('select[name="wardrobe-cut-jacket"]').inputValue(), "structured");
+    assert.equal(await page.locator('[data-wardrobe-item="jacket"] .wardrobePhoto').count(),1,"saved image survives reload");
+    await page.locator('[data-photo-remove="jacket"]').click();
+    assert.equal(await page.locator('[data-wardrobe-item="jacket"] .wardrobePhoto').count(),0,"photo can be removed separately");
     await page.locator("#wardrobeClear").click();
     assert.equal(await page.locator('input[name^="wardrobe-"]:checked').count(), 0);
     await page.reload();
     assert.equal(await page.locator('input[name^="wardrobe-"]:checked').count(), 0);
     assert.deepEqual(errors, [], "no uncaught JS exceptions");
     await page.screenshot({path:path.join(base,"artifacts","merdo-journey-"+width+".png"),fullPage:true});
-    results.push({ viewport: width, checks: 34, status: "pass" });
+    results.push({ viewport: width, checks: 42, status: "pass" });
     await page.close();
   }
   console.log(JSON.stringify({ suite: "Merdo × BitOS simplified fashion funnel", results }, null, 2));
