@@ -105,9 +105,9 @@ try{if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(txt);
 const input=document.createElement("textarea");input.value=txt;input.style.cssText="position:fixed;left:-9999px;top:0";document.body.appendChild(input);input.select();let ok=false;
 try{ok=document.execCommand("copy")}catch(e){}input.remove();return ok
 }
-async function share(id){const x=data.find(a=>a.id===id),url=location.href.split("#")[0]+"#"+id,title=state.lang==="tr"?x.tr:x.ru;try{if(navigator.share){await navigator.share({title:"BitOS · "+title,text:title,url:url});state.shares[id]=(state.shares[id]||0)+1;render();return}}catch(e){if(e.name==="AbortError")return}
-const ok=await copy(url);if(ok){state.shares[id]=(state.shares[id]||0)+1;render();msg(tr("toastCopy"))}else msg(tr("toastFail"))}
-$("looks").addEventListener("click",e=>{const b=e.target.closest("button[data-action]");if(!b)return;const id=b.dataset.id;if(b.dataset.action==="like"){state.likes.has(id)?state.likes.delete(id):state.likes.add(id);save();render();msg(tr("toastLike"))}if(b.dataset.action==="share")share(id);if(b.dataset.action==="try")openModal(id);if(b.dataset.action==="story")window.BitOSStory?.open(id,b);if(b.dataset.action==="compose")window.dispatchEvent(new CustomEvent("bitos:compose",{detail:{lookId:id}}))});
+async function share(id){const x=data.find(a=>a.id===id),url=location.href.split("#")[0]+"#"+id,title=state.lang==="tr"?x.tr:x.ru;try{if(navigator.share){await navigator.share({title:"BitOS · "+title,text:title,url:url});state.shares[id]=(state.shares[id]||0)+1;render();document.querySelector('[data-action="share"][data-id="'+id+'"]')?.focus({preventScroll:true});return}}catch(e){if(e.name==="AbortError")return}
+const ok=await copy(url);if(ok){state.shares[id]=(state.shares[id]||0)+1;render();document.querySelector('[data-action="share"][data-id="'+id+'"]')?.focus({preventScroll:true});msg(tr("toastCopy"))}else msg(tr("toastFail"))}
+$("looks").addEventListener("click",e=>{const b=e.target.closest("button[data-action]");if(!b)return;const id=b.dataset.id;if(b.dataset.action==="like"){state.likes.has(id)?state.likes.delete(id):state.likes.add(id);save();render();document.querySelector('[data-action="like"][data-id="'+id+'"]')?.focus({preventScroll:true});msg(tr("toastLike"))}if(b.dataset.action==="share")share(id);if(b.dataset.action==="try")openModal(id);if(b.dataset.action==="story")window.BitOSStory?.open(id,b);if(b.dataset.action==="compose")window.dispatchEvent(new CustomEvent("bitos:compose",{detail:{lookId:id}}))});
 document.querySelectorAll("[data-filter]").forEach(b=>b.addEventListener("click",()=>{state.filter=b.dataset.filter;render()}));document.querySelectorAll("[data-mode]").forEach(b=>b.addEventListener("click",()=>{state.mode=b.dataset.mode;render()}));
 $("language").addEventListener("click",()=>{state.lang=state.lang==="tr"?"ru":"tr";refreshI18n();if(state.last)draft()});$("size").addEventListener("change",draft);$("closeModal").addEventListener("click",closeModal);$("closeModal2").addEventListener("click",closeModal);$("overlay").addEventListener("click",e=>{if(e.target===$("overlay"))closeModal()});document.addEventListener("keydown",e=>{
 if(!$("overlay").classList.contains("open"))return;
@@ -131,7 +131,7 @@ parent.classList.add("imageUnavailable");
 if(parent.classList.contains("heroPhoto"))parent.dataset.fallback=state.lang==="tr"?"Konsept fotoğrafı yok":"Иллюстрация временно недоступна";
 }
 $("looks").addEventListener("error",e=>{if(e.target.matches("img"))imageFailed(e.target)},true);
-document.querySelector(".heroPhoto img")?.addEventListener("error",e=>imageFailed(e.target));
+const heroImage=document.querySelector(".heroPhoto img");heroImage?.addEventListener("error",e=>imageFailed(e.target));if(heroImage?.complete&&heroImage.naturalWidth===0)imageFailed(heroImage);
 function followShareHash(){
 const id=location.hash.slice(1);if(!data.some(d=>d.id===id))return;
 state.filter="all";render();const el=document.querySelector('[data-post="'+id+'"]');if(el){el.classList.add("isShared");setTimeout(()=>el.scrollIntoView({block:"center",behavior:"auto"}),0)}
