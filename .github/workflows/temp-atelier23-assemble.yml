@@ -28,4 +28,6 @@ jobs:
           git rm -r atelier23/.video-staging .github/workflows/temp-atelier23-assemble.yml
           git add atelier23/assets/atelier23-film.mp4
           git commit -m "feat(atelier23): self-host user-supplied film"
+          git fetch origin feat/atelier23-selfhost-film
+          git rebase origin/feat/atelier23-selfhost-film
           git push origin HEAD:feat/atelier23-selfhost-film
