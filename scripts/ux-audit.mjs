@@ -41,6 +41,28 @@ try{
       await page.locator("#catalogClose").click();
       assert.equal(await page.locator("#catalogRequest").isVisible(),false);
 
+      // A customer's photo must work in Chromium, Firefox and WebKit, remain private,
+      // survive refresh, and be fully removable without deleting the garment.
+      await page.locator('input[name="wardrobe-jacket"]').check();
+      await page.locator('select[name="wardrobe-color-jacket"]').selectOption("navy");
+      await page.locator('select[name="wardrobe-cut-jacket"]').selectOption("structured");
+      const pixel=Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAF0lEQVR4nGNUdZ3IQAgwEVQxqmgAFAEAx40BEw18ATYAAAAASUVORK5CYII=","base64");
+      await page.locator('input[name="wardrobe-photo-jacket"]').setInputFiles({name:"wardrobe-test.png",mimeType:"image/png",buffer:pixel});
+      const saved=page.locator('[data-wardrobe-item="jacket"] .wardrobePhoto');
+      await saved.waitFor({timeout:10000});
+      assert.match(await saved.getAttribute("src"),/^data:image\/(?:jpeg|webp);base64,/);
+      await page.reload({waitUntil:"domcontentloaded"});
+      assert.equal(await page.locator('select[name="wardrobe-color-jacket"]').inputValue(),"navy");
+      assert.equal(await page.locator('select[name="wardrobe-cut-jacket"]').inputValue(),"structured");
+      assert.equal(await page.locator('[data-wardrobe-item="jacket"] .wardrobePhoto').count(),1);
+      await page.locator('[data-photo-remove="jacket"]').click();
+      assert.equal(await page.locator('[data-wardrobe-item="jacket"] .wardrobePhoto').count(),0);
+      await page.locator("#wardrobeClear").click();
+      assert.equal(await page.locator('input[name="wardrobe-jacket"]').isChecked(),false);
+      // The language control returns to Turkish after a page reload.
+      await page.locator("#language").click();
+      assert.equal(await page.locator("html").getAttribute("lang"),"ru");
+
       // Responsive navigation must exist on small screens, not hide all links.
       if(width<800){
         await page.locator("#navToggle").click();
