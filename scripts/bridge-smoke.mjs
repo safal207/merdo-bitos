@@ -60,6 +60,9 @@ try{
   const samplePage=await sampleContext.newPage();
   const sampleErrors=[];samplePage.on("pageerror",err=>sampleErrors.push(err.message));
   await samplePage.goto(url+"legacy.html#demoProducts",{waitUntil:"domcontentloaded"});
+  const expectedLang=width===390?"ru":"tr";
+  if(await samplePage.locator("html").getAttribute("lang")!==expectedLang)await samplePage.locator("#language").click();
+  assert.equal(await samplePage.locator("html").getAttribute("lang"),expectedLang);
   await samplePage.locator('select[name="sample-size-TEST-W-01"]').selectOption("M");
   await samplePage.locator('[data-sample-action="toggle"][data-id="TEST-W-01"]').click();
   await samplePage.locator('[data-sample-action="toggle"][data-id="TEST-W-02"]').click();
@@ -73,8 +76,9 @@ try{
   assert.deepEqual(imported.samples.map(x=>x.id),["TEST-W-01","TEST-W-02"]);
   assert.equal(imported.samples[0].size,"M");
   assert.equal(imported.handoffType,"samples");
+  assert.equal(await samplePage.locator("html").getAttribute("lang"),expectedLang,"language crosses the page boundary");
   assert.equal(imported.owned.jacket,false,"sample items are NOT owned clothing");
-  assert.match(await samplePage.locator(".grok-bridgeNotice").innerText(),/Тестовые карточки перенесены/);
+  assert.match(await samplePage.locator(".grok-bridgeNotice").innerText(),expectedLang==="ru"?/Тестовые карточки перенесены/:/Örnek ürünler aktarıldı/);
   await samplePage.locator('[data-action="next"]').click();
   await samplePage.locator('[data-action="next"]').click();
   await samplePage.locator('[data-action="next"]').click();
@@ -84,7 +88,7 @@ try{
   assert.equal(await summary.locator("li").count(),2);
   assert.match(await summary.innerText(),/6[\s\u00a0]?850/);
   assert.match(await summary.innerText(),/TEST-W-01/);
-  assert.match(await summary.innerText(),/вымышленные товары/);
+  assert.match(await summary.innerText(),expectedLang==="ru"?/вымышленные товары/:/kurgu ürünler/);
   assert.equal((await samplePage.evaluate(()=>window.BitOSGrok.getQuote())).toBuy<=6850,true);
   await samplePage.reload({waitUntil:"domcontentloaded"});
   assert.equal(await samplePage.locator(".grok-importedSamples li").count(),2,"selection persists across reload");
