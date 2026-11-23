@@ -55,6 +55,11 @@ jobs:
       - name: Cross-browser product and UX audit
         # Playwright Firefox fails as root when HOME is owned by the CI service user.
         run: HOME=/root node scripts/ux-audit.mjs
+      - name: Atelier 23 React demo acceptance
+        run: |
+          node --check atelier23/app.js
+          node --check scripts/atelier23-smoke.mjs
+          node scripts/atelier23-smoke.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
