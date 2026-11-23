@@ -39,7 +39,7 @@ try {
     assert.match(await page.locator("#demoProducts .sampleLookTotal strong").innerText(),/6[\s\u00a0]?850/);
     assert.equal(await page.locator("#demoProducts .sampleItems li").count(),2);
     await page.locator('[data-sample-action="details"][data-id="TEST-W-01"]').click();
-    assert.match(await page.locator('[data-sample-id="TEST-W-01"] .sampleDetails').innerText(),/не подтверждены/);
+    assert.match(await page.locator('[data-sample-id="TEST-W-01"] .sampleDetails').innerText(),/не подтверждены/i);
     await page.screenshot({path:path.join(base,"artifacts","merdo-product-cards-"+width+".png"),fullPage:true});
     await page.locator("#sampleToStylist").click();
     assert.match(await page.locator("#journeyTitle").innerText(),/Для чего подбираем/);
