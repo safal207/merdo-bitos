@@ -93,8 +93,8 @@ const switches=(field,keys,dict)=>'<div class="grok-switches">'+keys.map(k=>'<bu
 function renderIntro(){
  const c=t();return '<section class="grok-screen"><p class="grok-kicker">'+c.introKicker+'</p><h1 id="grokTitle" tabindex="-1" class="grok-title">'+c.introTitle+'</h1><p class="grok-lead">'+c.introLead+'</p><p class="grok-sub">'+c.introNote+'</p>'+
  '<button class="grok-primary" data-action="start" type="button"><span>'+c.introCta+'</span><span aria-hidden="true">→</span></button>'+
- '<div class="grok-introPhotos"><figure><div class="grok-photo" data-gender="man" data-occasion="formal" role="img" aria-label="'+c.man+' · '+c.occasions.formal+'"></div><figcaption>'+c.occasions.formal+' · '+c.man+'</figcaption></figure>'+
- '<figure><div class="grok-photo" data-gender="woman" data-occasion="casual" role="img" aria-label="'+c.woman+' · '+c.occasions.casual+'"></div><figcaption>'+c.occasions.casual+' · '+c.woman+'</figcaption></figure></div><p class="grok-introFine">'+c.introFine+'</p></section>'
+ '<div class="grok-introPhotos"><figure><div class="grok-photo" data-gender="man" data-occasion="formal"><img src="./looks/man-formal.jpg" loading="eager" decoding="async" fetchpriority="high" alt="'+c.man+' · '+c.occasions.formal+'"></div><figcaption>'+c.occasions.formal+' · '+c.man+'</figcaption></figure>'+
+ '<figure><div class="grok-photo" data-gender="woman" data-occasion="casual"><img src="./looks/woman-casual.jpg" loading="lazy" decoding="async" alt="'+c.woman+' · '+c.occasions.casual+'"></div><figcaption>'+c.occasions.casual+' · '+c.woman+'</figcaption></figure></div><p class="grok-introFine">'+c.introFine+'</p></section>'
 }
 function renderGoal(){
  const c=t();return '<h1 id="grokStepTitle" tabindex="-1" class="grok-question">'+c.s1Title+'</h1><p class="grok-questionLead">'+c.s1Lead+'</p>'+
@@ -128,7 +128,7 @@ function renderFlow(){
  '<div class="grok-stepButtons"><button type="button" class="grok-secondary" data-action="back">← '+c.back+'</button><button type="button" class="grok-primary" data-action="next"><span>'+(step===4?c.showLook:c.next)+'</span><span aria-hidden="true">→</span></button></div></section>';
 }
 function srcPhoto(gender,occasion,caption){
- return '<div class="grok-photo" data-gender="'+gender+'" data-occasion="'+occasion+'" role="img" aria-label="'+safe(caption)+'"><span class="grok-photoBadge">'+t().notProduct+'</span></div>'
+ return '<div class="grok-photo" data-gender="'+gender+'" data-occasion="'+occasion+'"><img src="./looks/'+gender+'-'+occasion+'.jpg" width="900" height="1350" fetchpriority="high" decoding="async" alt="'+safe(caption)+'"><span class="grok-photoBadge">'+t().notProduct+'</span></div>'
 }
 function swatch(k){
  const given=isOwned(k)?state.colors[k]:null;
