@@ -240,8 +240,10 @@ function render(){
  (screen==="intro"?renderIntro():screen==="flow"?renderFlow():handoffBanner()+renderResult())+
  (!persistOK?'<p class="grok-disclaimer">'+c.noSaved+'</p>':"")+
  '<footer class="grok-footer"><span>MERDO × BitOS · DEMO</span><a href="https://github.com/safal207/merdo-bitos/issues" target="_blank" rel="noopener noreferrer">Backlog</a></footer>'+
- '<details class="grok-moreTools"><summary>'+c.demoTools+'</summary><nav class="grok-legacyLinks" aria-label="'+c.demoTools+'"><a href="./legacy.html#discover">'+c.oldSocial+'</a><a href="./legacy.html#demoProducts">'+c.oldCatalog+'</a><a href="./legacy.html#myWardrobe">'+c.oldWardrobe+'</a><a href="./legacy.html#catalogStatus">'+c.oldSources+'</a></nav></details></div>';
+ '<details class="grok-moreTools"><summary>'+c.demoTools+'</summary><nav class="grok-legacyLinks" aria-label="'+c.demoTools+'"><a href="./legacy.html#discover">'+c.oldSocial+'</a><a href="./legacy.html#demoProducts">'+c.oldCatalog+'</a><a href="./legacy.html#myWardrobe">'+c.oldWardrobe+'</a><a href="./legacy.html#catalogStatus">'+c.oldSources+'</a></nav></details>'+
+ '<details class="analyticsDetails"><summary>'+(lang==="ru"?"Диагностика воронки · только эта вкладка":"Satış akışı tanılama · yalnızca bu sekme")+'</summary><div id="bitosAnalytics"></div></details></div>';
  window.BitOSSalesFunnel?.render();
+ window.BitOSAnalytics?.render();
 }
 function restoreFocus(selector){const e=root.querySelector(selector);if(e)e.focus({preventScroll:true})}
 root.addEventListener("click",async event=>{
@@ -249,14 +251,15 @@ root.addEventListener("click",async event=>{
  if(b.dataset.lang){lang=b.dataset.lang;persist();render();restoreFocus('[data-lang="'+lang+'"]');return}
  const action=b.dataset.action;
  if(action==="home"){go("intro");return}
- if(action==="start"){go("flow",1);return}
+ if(action==="start"){go("flow",1);window.BitOSAnalytics?.record("stylist_started");return}
  if(action==="back"){step===1?go("intro"):go("flow",step-1);return}
- if(action==="next"){if(step===3)state.budget=clampBudget(state.budget);step===4?go("result"):go("flow",step+1);return}
+ if(action==="next"){const completed=step;if(step===3)state.budget=clampBudget(state.budget);step===4?go("result"):go("flow",step+1);window.BitOSAnalytics?.record("step_"+completed+"_completed");if(completed===4)window.BitOSAnalytics?.record("look_viewed");return}
  if(action==="edit"){go("flow",4);return}
- if(action==="details"){detailsOpen=!detailsOpen;render();restoreFocus('[data-action="details"]');if(detailsOpen)document.getElementById("grokDetails")?.scrollIntoView({block:"start",behavior:"smooth"});return}
+ if(action==="details"){detailsOpen=!detailsOpen;render();restoreFocus('[data-action="details"]');if(detailsOpen){window.BitOSAnalytics?.record("look_details_opened");document.getElementById("grokDetails")?.scrollIntoView({block:"start",behavior:"smooth"})}return}
  if(action==="copy"){
   const draft=root.querySelector("#grokDraft");if(!draft)return;
-  try{if(!navigator.clipboard?.writeText)throw Error("Clipboard unavailable");await navigator.clipboard.writeText(draft.value);feedback=t().copied}
+  window.BitOSAnalytics?.record("stylist_copy_attempted");
+  try{if(!navigator.clipboard?.writeText)throw Error("Clipboard unavailable");await navigator.clipboard.writeText(draft.value);window.BitOSAnalytics?.record("stylist_copy_succeeded");feedback=t().copied}
   catch(e){feedback=t().copyError;draft.focus();draft.select()}
   const el=root.querySelector("#grokFeedback");if(el)el.textContent=feedback;return;
  }
