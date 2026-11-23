@@ -92,8 +92,26 @@ try {
     assert.match(await page.locator("#journeyTitle").innerText(), /Образ собран/);
     assert.match(await page.locator(".journeyReceipt").innerText(), /15\s?000/);
     assert.match(await page.locator(".journeyReceipt").innerText(), /650/);
+    // Show the requested outfit, not just a bill: an accessible full-body fashion illustration
+    // with jacket, shirt, trousers and shoes is visible immediately after four questions.
+    const journeyLook=page.locator("#styleJourney .lookPreview");
+    assert.equal(await journeyLook.isVisible(),true,"complete illustrated outfit appears at completion");
+    assert.equal(await journeyLook.locator("svg.lookModel").count(),1,"complete mannequin look SVG rendered");
+    assert.equal(await journeyLook.locator('[data-look-piece]').count(),4,"all four clothing categories visible");
+    assert.equal(await journeyLook.getAttribute("data-look-gender"),"man");
+    assert.equal(await journeyLook.getAttribute("data-look-occasion"),"formal");
+    assert.match(await journeyLook.innerText(),/Вот как выглядит комплект/);
+    assert.match(await journeyLook.innerText(),/не фотография/i);
+
 
     await page.locator('[data-action="reveal"]').click();
+    const stylistLook=page.locator("#stylist .lookPreview");
+    assert.equal(await stylistLook.isVisible(),true,"stylist itself displays visual outfit");
+    assert.equal(await stylistLook.locator('[data-look-piece]').count(),4);
+    assert.equal(await stylistLook.getAttribute("data-look-gender"),"man");
+    assert.equal(await page.evaluate(()=>document.activeElement.classList.contains("lookPreview")),true,
+      "reveal focuses the actual look instead of scrolling to unrelated text");
+
     assert.equal(await page.locator("#stylist").isVisible(), true, "full look preview opens");
     assert.equal(await page.locator(".styleForm").isVisible(), false, "advanced form hidden by default");
     assert.match(await page.locator("#styleDynamic").innerText(), /15\s?650/, "apparel plus separate tailoring estimate");
@@ -128,6 +146,7 @@ try {
     await page.locator('[data-action="finish"]').click();
     assert.match(await page.locator(".journeyOwnedNote").innerText(), /2 из 5/);
     await page.locator('[data-action="reveal"]').click();
+    assert.match(await page.locator("#stylist .lookPreview").innerText(),/Уже есть/);
     assert.equal(await page.locator("#stylist .stylePiece.isOwned").count(),2,
       "do not offer already owned jacket and shoes as missing purchases");
     assert.match(await page.locator("#styleDynamic").innerText(), /План на недостающие вещи/);
@@ -160,13 +179,16 @@ try {
     await page.locator('[data-action="skip"]').click();
     await page.locator('[data-action="reveal"]').click();
     assert.match(await page.locator("#styleDynamic").innerText(), /Городской выходной/);
+    assert.equal(await page.locator("#styleJourney .lookPreview").getAttribute("data-look-occasion"),"casual");
+    assert.equal(await page.locator("#stylist .lookPreview").getAttribute("data-look-occasion"),"casual");
+
     await page.locator("#wardrobeClear").click();
     assert.equal(await page.locator('input[name^="wardrobe-"]:checked').count(), 0);
     await page.reload();
     assert.equal(await page.locator('input[name^="wardrobe-"]:checked').count(), 0);
     assert.deepEqual(errors, [], "no uncaught JS exceptions");
     await page.screenshot({path:path.join(base,"artifacts","merdo-journey-"+width+".png"),fullPage:true});
-    results.push({ viewport: width, checks: 56, status: "pass" });
+    results.push({ viewport: width, checks: 69, status: "pass" });
     await page.close();
   }
   console.log(JSON.stringify({ suite: "Merdo × BitOS simplified fashion funnel", results }, null, 2));
