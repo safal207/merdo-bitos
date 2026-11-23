@@ -2,8 +2,13 @@ import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { extname, join, resolve } from "node:path";
 import { chromium } from "playwright";
+import { createHash } from "node:crypto";
 
 const root = resolve(process.cwd());
+const localFilm = await readFile(join(root,"atelier23/assets/atelier23-film.mp4"));
+const digest = createHash("sha256").update(localFilm).digest("hex");
+if(localFilm.length !== 3503909 || digest !== "e4a47584c6309e6baac87949fe6726108eccf337f356c0bee7c3328651d261c5") throw new Error("Atelier 23 local MP4 checksum mismatch");
+console.log("PASS MP4 asset integrity: "+localFilm.length+" bytes; SHA256 "+digest.slice(0,12));
 const mime = {".html":"text/html; charset=utf-8",".js":"application/javascript; charset=utf-8",".css":"text/css; charset=utf-8",".jpg":"image/jpeg",".webp":"image/webp"};
 const server = createServer(async (req,res) => {
   try {
