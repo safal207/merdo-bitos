@@ -25,6 +25,31 @@ try {
     assert.equal(await page.locator("html").getAttribute("lang"), "ru", "RU switch works");
     assert.match(await page.locator("#startStyle").innerText(), /4 шага/);
 
+    // Sample product cards: explicit mock prices, illustrative vectors, gender, sizes and look builder.
+    assert.equal(await page.locator("#demoProducts .sampleCard").count(),8,"all eight fictional products render");
+    assert.equal(await page.locator('#demoProducts .sampleArt svg').count(),8,"editable schematic garment art renders");
+    assert.match(await page.locator("#demoProducts .sampleWarning").innerText(),/ЦЕНЫ И РАЗМЕРЫ УСЛОВНЫЕ/);
+    await page.locator('[data-gender="woman"].sampleFilter').click();
+    assert.equal(await page.locator("#demoProducts .sampleCard").count(),4,"women filter");
+    await page.locator('select[name="sample-size-TEST-W-01"]').selectOption("M");
+    assert.equal(await page.locator('select[name="sample-size-TEST-W-01"]').inputValue(),"M");
+    await page.locator('[data-sample-action="toggle"][data-id="TEST-W-01"]').click();
+    await page.locator('[data-sample-action="toggle"][data-id="TEST-W-02"]').click();
+    assert.equal(await page.locator("#demoProducts .sampleCount").innerText(),"2");
+    assert.match(await page.locator("#demoProducts .sampleLookTotal strong").innerText(),/6[\s\u00a0]?850/);
+    assert.equal(await page.locator("#demoProducts .sampleItems li").count(),2);
+    await page.locator('[data-sample-action="details"][data-id="TEST-W-01"]').click();
+    assert.match(await page.locator('[data-sample-id="TEST-W-01"] .sampleDetails').innerText(),/не подтверждены/);
+    await page.screenshot({path:path.join(base,"artifacts","merdo-product-cards-"+width+".png"),fullPage:true});
+    await page.locator("#sampleToStylist").click();
+    assert.match(await page.locator("#journeyTitle").innerText(),/Для чего подбираем/);
+    assert.equal(await page.locator('.journeyChip[data-gender="woman"]').getAttribute("aria-pressed"),"true");
+    assert.match(await page.locator(".journeySource").innerText(),/6[\s\u00a0]?850/);
+    await page.locator("#sampleReset").click();
+    assert.equal(await page.locator("#demoProducts .sampleCount").innerText(),"0");
+    await page.locator('[data-gender="all"].sampleFilter').click();
+
+
     // Lamoda-informed editorial exploration: same illustration, no SKU or false product prices.
     await page.locator('[data-action="story"]').first().click();
     assert.equal(await page.locator("#lookStoryOverlay").isVisible(), true, "three frame story opens");
@@ -141,7 +166,7 @@ try {
     assert.equal(await page.locator('input[name^="wardrobe-"]:checked').count(), 0);
     assert.deepEqual(errors, [], "no uncaught JS exceptions");
     await page.screenshot({path:path.join(base,"artifacts","merdo-journey-"+width+".png"),fullPage:true});
-    results.push({ viewport: width, checks: 42, status: "pass" });
+    results.push({ viewport: width, checks: 56, status: "pass" });
     await page.close();
   }
   console.log(JSON.stringify({ suite: "Merdo × BitOS simplified fashion funnel", results }, null, 2));
