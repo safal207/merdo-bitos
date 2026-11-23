@@ -27,6 +27,7 @@ try{
   await page.locator('[data-action="start"]').waitFor();
   assert.match(await page.locator("#grokTitle").innerText(),/Образ на модели/);
   assert.equal(await page.locator(".grok-introPhotos img").count(),2);
+  await page.waitForFunction(()=>{const i=document.querySelector(".grok-introPhotos img");return !!i&&i.complete&&i.naturalWidth>0},null,{timeout:12000});
   assert.equal(await page.locator(".grok-introPhotos img").first().evaluate(i=>i.naturalWidth>0),true,"original Grok photo loads");
   await page.screenshot({path:path.join(root,"artifacts","grok-start-"+width+".png"),fullPage:true});
   // Woman, creative, loose fit, relaxed trousers, existing shoes,
@@ -51,6 +52,7 @@ try{
   assert.equal(quote.amounts.jacket,0);assert.equal(quote.amounts.shoes,0);assert.equal(quote.amounts.details,1200);
   assert.equal(await page.locator(".grok-resultPhoto img").count(),1);
   assert.equal(await page.locator(".grok-resultPhoto img").getAttribute("src"),"./looks/woman-creative.jpg");
+  await page.waitForFunction(()=>{const i=document.querySelector(".grok-resultPhoto img");return !!i&&i.complete&&i.naturalWidth>0},null,{timeout:12000});
   assert.equal(await page.locator(".grok-resultPhoto img").evaluate(i=>i.naturalWidth>0),true,"woman creative original photo loads");
   assert.match(await page.locator(".grok-pricebox").first().innerText(),/7[\s\u00a0]?650/);
   assert.match(await page.locator(".grok-pricebox").first().innerText(),/7[\s\u00a0]?350/);

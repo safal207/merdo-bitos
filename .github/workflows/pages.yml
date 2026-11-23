@@ -32,6 +32,8 @@ jobs:
       - name: Check JavaScript syntax
         run: |
           node --check grok-core.js
+          node --check bitos-bridge.js
+          node --check scripts/bridge-smoke.mjs
           node --check scripts/grok-smoke.mjs
           node --check stylist.js
           node --check look-preview.js
@@ -44,6 +46,8 @@ jobs:
           node --check scripts/smoke.mjs
       - name: Grok designer QA — 390px and 1280px
         run: node scripts/grok-smoke.mjs
+      - name: Cross-page wardrobe and mock catalog handoff
+        run: node scripts/bridge-smoke.mjs
       - name: Legacy BitOS acceptance
         run: node scripts/smoke.mjs
       - name: Cross-browser product and UX audit
