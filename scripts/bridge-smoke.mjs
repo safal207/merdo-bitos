@@ -27,6 +27,9 @@ try{
   const page=await context.newPage();
   const errors=[];page.on("pageerror",err=>errors.push(err.message));
   await page.goto(url+"legacy.html#myWardrobe",{waitUntil:"domcontentloaded"});
+  // Source locale is explicitly chosen, not guessed from a fresh browser context.
+  if(await page.locator("html").getAttribute("lang")!=="ru")await page.locator("#language").click();
+  assert.equal(await page.locator("html").getAttribute("lang"),"ru");
   await page.locator('input[name="wardrobe-jacket"]').check();
   await page.locator('select[name="wardrobe-color-jacket"]').selectOption("navy");
   await page.locator('input[name="wardrobe-trousers"]').check();
