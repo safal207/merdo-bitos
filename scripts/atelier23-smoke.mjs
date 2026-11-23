@@ -1,0 +1,63 @@
+import { createServer } from "node:http";
+import { readFile } from "node:fs/promises";
+import { extname, join, resolve } from "node:path";
+import { chromium } from "playwright";
+
+const root = resolve(process.cwd());
+const mime = {".html":"text/html; charset=utf-8",".js":"application/javascript; charset=utf-8",".css":"text/css; charset=utf-8",".jpg":"image/jpeg",".webp":"image/webp"};
+const server = createServer(async (req,res) => {
+  try {
+    const u = new URL(req.url,"http://localhost");
+    const rel = decodeURIComponent(u.pathname).replace(/^\/+/,"");
+    const requested = resolve(root, rel.endsWith("/") ? rel+"index.html" : rel);
+    if (!requested.startsWith(root+"/")) {res.writeHead(403).end();return;}
+    const buf = await readFile(requested);
+    res.writeHead(200,{"content-type":mime[extname(requested)]||"application/octet-stream","cache-control":"no-store"});
+    res.end(buf);
+  } catch {res.writeHead(404).end("Not found");}
+});
+await new Promise(ok=>server.listen(0,"127.0.0.1",ok));
+const port=server.address().port;
+const base="http://127.0.0.1:"+port+"/atelier23/";
+let failures=[];
+const browser=await chromium.launch({headless:true,args:["--no-sandbox"]});
+try {
+  for(const width of [390,1440]){
+    const page=await browser.newPage({viewport:{width,height:850},reducedMotion:"reduce"});
+    page.on("pageerror",e=>failures.push(width+" JS: "+e.message));
+    page.on("console",msg=>{if(msg.type()==="error" && !/net::ERR|favicon|atelier-reel|film-looks/i.test(msg.text()))failures.push(width+" console: "+msg.text());});
+    await page.goto(base,{waitUntil:"domcontentloaded"});
+    await page.locator("#journey .quiz-body").waitFor({timeout:40000});
+    const horizontallyScrollable=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1);
+    if(horizontallyScrollable) failures.push(width+" horizontal scroll");
+    await page.getByRole("button",{name:/Деловые встречи/}).click();
+    await page.getByRole("button",{name:/Продолжить/}).click();
+    await page.getByRole("button",{name:/Продолжить/}).click();
+    await page.getByRole("button",{name:/Современная классика/}).click();
+    await page.getByRole("button",{name:/Продолжить/}).click();
+    await page.getByRole("button",{name:/150–250 тыс/}).click();
+    await page.getByRole("button",{name:/Получить рекомендацию/}).click();
+    await page.getByText("Костюм, подходящий вашему ритму").waitFor({timeout:2000});
+    const book=await page.locator(".result-actions a").first().getAttribute("href");
+    if(book!=="https://atelier-23.ru/sign-up-for-a-fitting-room/")failures.push(width+" booking href mismatch");
+    await page.getByRole("button",{name:/Начать заново/}).click();
+    await page.getByRole("button",{name:/Свадьба/}).click();
+    await page.getByRole("button",{name:/Продолжить/}).click();
+    const eventDate=new Date(Date.now()+7*86400000).toISOString().slice(0,10);
+    await page.locator("#eventDate").fill(eventDate);
+    await page.getByRole("button",{name:/Продолжить/}).click();
+    await page.getByRole("button",{name:/Современная классика/}).click();
+    await page.getByRole("button",{name:/Продолжить/}).click();
+    await page.getByRole("button",{name:/До 150 000 ₽/}).click();
+    await page.getByRole("button",{name:/Получить рекомендацию/}).click();
+    await page.getByText("К важной дате — без неоправданных обещаний").waitFor({timeout:2000});
+    const collection=await page.locator(".result-actions a").nth(1).getAttribute("href");
+    if(collection!=="https://atelier-23.ru/collection/costumes/")failures.push(width+" urgent route mismatch");
+    const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1);
+    if(overflow)failures.push(width+" horizontal scroll after result");
+    await page.close();
+    process.stdout.write("PASS "+width+"px: wizard, guardrails, overflow, links\n");
+  }
+} catch(e) {failures.push(e.stack||String(e));}
+finally {await browser.close();server.close();}
+if(failures.length){console.error(failures.join("\n"));process.exitCode=1;}
