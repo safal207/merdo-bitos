@@ -46,7 +46,7 @@ id:v.id,gender:v.gender,kind:v.kind,price:v.price,size:v.size,
 nameRu:v.nameRu,nameTr:v.nameTr
 }));
 const sum=items.reduce((acc,x)=>acc+Number(x.price||0),0);
-data={version:1,kind,at:Date.now(),gender:items[0].gender,budget:sum,items};
+data={version:1,kind,at:Date.now(),lang:lang(),gender:items[0].gender,budget:sum,items};
 }else{
 const details=window.BitOSWardrobe?.getDetails?.();
 if(!details){panel.querySelector(".bitosBridgeStatus").textContent=t("outdated");return}
@@ -54,7 +54,7 @@ const owned={};
 for(const k of ["jacket","shirt","trousers","shoes","details"]){
 const x=details[k]||{};owned[k]={owned:x.owned===true,color:x.color||"unknown",cut:x.cut||"unknown"};
 }
-data={version:1,kind,at:Date.now(),owned};
+data={version:1,kind,at:Date.now(),lang:lang(),owned};
 }
 try{sessionStorage.setItem(key,JSON.stringify(data))}
 catch(e){panel.querySelector(".bitosBridgeStatus").textContent=t("failed");return}
