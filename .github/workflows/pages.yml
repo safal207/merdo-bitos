@@ -34,6 +34,7 @@ jobs:
           node --check look-story.js
           node --check wardrobe.js
           node --check catalog.js
+          node --check demo-products.js
           node --check scripts/ux-audit.mjs
           node --check scripts/smoke.mjs
       - name: Browser acceptance
