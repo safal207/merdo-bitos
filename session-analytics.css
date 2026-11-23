@@ -1,0 +1,27 @@
+/* Session-only analytics QA, intentionally secondary to customer experience. */
+.analyticsDetails{margin:18px 0 0;border-top:1px solid var(--line);font-family:var(--sans);color:var(--ink)}
+.analyticsDetails>summary{padding:15px 2px;cursor:pointer;font-weight:800;font-size:12px;color:var(--navy);text-underline-offset:3px}
+.analyticsDetails>summary:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.analyticsInner{background:#f9f6ef;border:1px solid #dbcab7;border-radius:14px;padding:16px;margin:3px 0 16px}
+.analyticsInner h3{font-size:12px;letter-spacing:.02em;margin:20px 0 10px}
+.analyticsIntro,.analyticsPrivacy{font-size:11px;line-height:1.65;margin:9px 0;color:#5b5145}
+.analyticsPrivacy{border-left:3px solid #9f8569;padding:9px 13px;background:#f0e8db}
+.analyticsStats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.analyticsStats>div{padding:12px;border:1px solid #e2d5c6;border-radius:10px;background:#fffdfa;min-width:0}
+.analyticsStats span{display:block;color:#78685a;font-size:10px;line-height:1.45;margin-bottom:7px}
+.analyticsStats strong{font:600 30px/1 var(--serif);color:var(--navy)}
+.analyticsSteps{list-style:none;display:grid;gap:6px;padding:0;margin:0}
+.analyticsSteps li{display:flex;align-items:center;gap:9px;min-height:30px;padding:7px 10px;border:1px dashed #d6c7b5;border-radius:8px;font-size:11px;color:#837366}
+.analyticsSteps li.passed{border-style:solid;border-color:#c9dac7;background:#eef5eb;color:#355d40;font-weight:800}
+.analyticsSteps li>span{font-size:15px;flex:none}
+.analyticsTimeline{list-style:none;padding:0;margin:0;display:grid;gap:3px;max-height:300px;overflow-y:auto}
+.analyticsTimeline li{display:flex;gap:10px;justify-content:space-between;align-items:baseline;padding:8px 3px;border-bottom:1px solid #e9e0d4;font-size:11px}
+.analyticsTimeline time{color:#866f5a;font-size:10px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.analyticsTip{font-size:10px;color:#77675a;line-height:1.6}
+.analyticsActions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.analyticsActions button{border:1px solid #bfae9c;border-radius:8px;background:#fffefa;min-height:43px;padding:9px;color:var(--navy);font-size:10px;font-weight:800}
+.analyticsActions button:first-child{background:#293d52;color:white;border-color:#293d52}
+.analyticsActions button:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.analyticsFeedback{font-size:11px;line-height:1.5;min-height:15px;color:#46684a}
+#analyticsFallback{width:100%;min-height:170px;background:#fffdfa;padding:10px;border:1px solid #dac8b6;border-radius:8px;font:11px/1.5 monospace;resize:vertical}
+@media(max-width:390px){.analyticsInner{padding:12px}.analyticsActions{gap:6px}.analyticsActions button{font-size:9px}}
