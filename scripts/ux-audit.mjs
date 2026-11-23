@@ -17,7 +17,7 @@ const server=createServer(async(req,res)=>{
   catch(e){res.writeHead(404).end("Not Found")}
 });
 await new Promise(resolve=>server.listen(0,"127.0.0.1",resolve));
-const url="http://127.0.0.1:"+server.address().port+"/";
+const url="http://127.0.0.1:"+server.address().port+"/legacy.html";
 const results=[],errors=[];
 await mkdir(path.join(base,"artifacts"),{recursive:true});
 try{
