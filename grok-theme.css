@@ -115,3 +115,8 @@ img{max-width:100%}
 .sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 @media(max-width:390px){.grok-shell{padding-left:18px;padding-right:18px}.grok-header{gap:7px}.grok-logo span{font-size:32px}.grok-lang button{min-width:38px}.grok-shortParts{gap:5px}.grok-shortPart span{font-size:9px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
+
+/* Full-resolution photographs from the Grok source archive replace the interim sprite. */
+.grok-photo{background-image:none;background-color:#d9cabb}
+.grok-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block}
+.grok-photoBadge{z-index:2}
