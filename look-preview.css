@@ -1,0 +1,28 @@
+/* Merdo × BitOS outfit view: full silhouette first, detailed composition second. */
+.lookPreview{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:0;border:1px solid #c9ad91;border-radius:15px;overflow:hidden;background:#fdf8f1;color:#35291f;margin:22px 0 18px;text-align:left;scroll-margin-top:96px;box-shadow:0 10px 28px rgba(61,36,21,.08)}
+.lookPreviewArt{padding:14px;min-width:0;background:#ddd0be;display:grid;place-items:center}
+.lookModel{display:block;width:100%;height:auto;max-height:565px}
+.lookPreviewInfo{min-width:0;padding:23px 20px 17px;display:flex;flex-direction:column;justify-content:center;gap:0}
+.lookPreviewEyebrow{font-size:10px;letter-spacing:.17em;font-weight:900;color:#a15d39;text-transform:uppercase}
+.lookPreviewInfo h3{font:500 clamp(29px,3.7vw,42px)/1.1 Georgia,serif;letter-spacing:-.035em;color:#34241c;margin:12px 0 6px}
+.lookPreviewOccasion{font-size:12px;font-weight:900;color:#69493a;margin:5px 0 10px}
+.lookPreviewHint{font-size:12px;line-height:1.55;color:#7b6759;margin:0 0 12px}
+.lookParts{display:grid;gap:3px}
+.lookPart{display:flex;gap:9px;align-items:center;padding:10px 0;border-bottom:1px solid #ebdbca;min-width:0}
+.lookSwatch{width:26px;height:26px;flex:none;border-radius:7px;border:2px solid #fff;outline:1px solid #b5a493}
+.lookPartCopy{display:grid;gap:2px;min-width:0;flex:1}
+.lookPartCopy strong{font-size:12px;line-height:1.3;color:#392a24;font-weight:800}
+.lookPartCopy small{font-size:10px;color:#867061}
+.lookPartStatus{font-size:10px;font-weight:800;color:#825739;white-space:nowrap}
+.lookPartStatus.isOwned{color:#547046}
+.lookPreviewDisclaimer{font-size:10px!important;line-height:1.5!important;color:#8a7363!important;margin:14px 0 0!important;border-left:3px solid #c59070;padding-left:10px}
+.journeySuccess>.lookPreview{margin:23px -9px 20px;text-align:left}
+.journeySuccess>.lookPreview h3{font-size:clamp(27px,3.5vw,36px)}
+.journeySuccess>.lookPreview p{margin:5px 0 10px}
+#styleDynamic>.lookPreview{margin-top:0}
+#stylist.show-result .styleTop{display:none}
+#stylist.show-result .styleResult{padding-top:15px}
+#stylist.show-result .styleResult>h3:first-of-type{margin:7px 0 13px}
+.lookPreview:focus-visible{outline:3px solid #a54d2e;outline-offset:3px}
+@media(max-width:760px){.lookPreview{grid-template-columns:minmax(0,1fr);margin:14px 0}.lookPreviewArt{padding:9px}.lookModel{max-height:360px;max-width:305px}.lookPreviewInfo{padding:17px 16px}.lookPreviewInfo h3{font-size:30px}.lookParts{grid-template-columns:1fr 1fr;column-gap:12px}.lookPart{align-items:flex-start}.lookPartStatus{font-size:9px}.journeySuccess>.lookPreview{margin:17px -4px}}
+@media(max-width:410px){.lookParts{grid-template-columns:1fr}.lookModel{max-height:340px}.lookPart{padding:8px 0}.lookPreviewInfo{padding:15px 13px}}
