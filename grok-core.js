@@ -171,7 +171,7 @@ function render(){
  '<div class="grok-headerRight"><span class="grok-demo">'+c.demo+'</span><div class="grok-lang" role="group" aria-label="Language"><button data-lang="ru" aria-pressed="'+(lang==="ru")+'">RU</button><button data-lang="tr" aria-pressed="'+(lang==="tr")+'">TR</button></div></div></header>'+
  (screen==="intro"?renderIntro():screen==="flow"?renderFlow():renderResult())+
  (!persistOK?'<p class="grok-disclaimer">'+c.noSaved+'</p>':"")+
- '<footer class="grok-footer"><span>MERDO × BitOS · DEMO</span><a href="./BACKLOG.md">Backlog</a><span>'+c.demoTools+':</span></footer>'+
+ '<footer class="grok-footer"><span>MERDO × BitOS · DEMO</span><a href="https://github.com/safal207/merdo-bitos/issues" target="_blank" rel="noopener noreferrer">Backlog</a><span>'+c.demoTools+':</span></footer>'+
  '<nav class="grok-legacyLinks" aria-label="'+c.demoTools+'"><a href="./legacy.html#discover">'+c.oldSocial+'</a><a href="./legacy.html#demoProducts">'+c.oldCatalog+'</a><a href="./legacy.html#myWardrobe">'+c.oldWardrobe+'</a><a href="./legacy.html#catalogStatus">'+c.oldSources+'</a></nav></div>';
 }
 function restoreFocus(selector){const e=root.querySelector(selector);if(e)e.focus({preventScroll:true})}
