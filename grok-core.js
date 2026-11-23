@@ -189,7 +189,7 @@ function renderTailor(){
  '<fieldset class="grok-fieldset"><legend class="grok-legend">'+c.wardrobe+'</legend><p class="grok-miniNote">'+c.wardrobeHint+'</p><div class="grok-ownedCards">'+PIECES.map(ownedCard).join("")+'</div></fieldset>';
 }
 function renderFlow(){
- const c=t();return '<section class="grok-screen"><ol class="grok-progress" aria-label="'+c.steps.join(", ")+'">'+c.steps.map((label,i)=>'<li class="'+(i+1===step?"current":i+1<step?"done":"")+'"><i></i><small>'+(i+1)+'. '+label+'</small></li>').join("")+'</ol>'+
+ const c=t();return '<section class="grok-screen">'+handoffBanner()+'<ol class="grok-progress" aria-label="'+c.steps.join(", ")+'">'+c.steps.map((label,i)=>'<li class="'+(i+1===step?"current":i+1<step?"done":"")+'"><i></i><small>'+(i+1)+'. '+label+'</small></li>').join("")+'</ol>'+
  (step===1?renderGoal():step===2?renderFit():step===3?renderBudget():renderTailor())+
  '<div class="grok-stepButtons"><button type="button" class="grok-secondary" data-action="back">← '+c.back+'</button><button type="button" class="grok-primary" data-action="next"><span>'+(step===4?c.showLook:c.next)+'</span><span aria-hidden="true">→</span></button></div></section>';
 }
@@ -225,7 +225,7 @@ function renderResult(){
  return '<section class="grok-screen"><p class="grok-kicker">'+c.resultKicker+'</p><h1 id="grokResultTitle" tabindex="-1" class="grok-resultName">'+safe(profile[0])+'</h1><p class="grok-sub">'+c.occasions[state.occasion]+' · '+c[state.gender]+'</p>'+
  '<figure class="grok-resultPhoto">'+srcPhoto(state.gender,state.occasion,photoAlt)+'<figcaption class="grok-photoCaption">'+c.photoNote+'</figcaption></figure>'+
  '<div class="grok-shortParts">'+visualKeys.map(k=>'<div class="grok-shortPart"><i class="swatch" style="background:'+swatch(k)+'"></i><span>'+c.piecesShort[k]+'</span><small>'+(isOwned(k)?c.owned:money(q.amounts[k]))+'</small></div>').join("")+'</div>'+
- '<div class="grok-pricebox"><div class="main"><span>'+c.toBuy+'</span><strong>'+money(q.toBuy)+'</strong></div><div><span>'+c.budget+'</span><strong>'+money(state.budget)+'</strong></div><div><span>'+c.reserve+'</span><strong>'+money(q.reserve)+'</strong></div><div><span>'+c.pieces.details+'</span><strong>'+(isOwned("details")?c.owned:money(q.amounts.details))+'</strong></div><div class="tailor"><span>'+c.tailorApart+'</span><strong>+'+money(q.tailor)+'</strong></div></div>'+
+ sampleSummary()+'<div class="grok-pricebox"><div class="main"><span>'+c.toBuy+'</span><strong>'+money(q.toBuy)+'</strong></div><div><span>'+c.budget+'</span><strong>'+money(state.budget)+'</strong></div><div><span>'+c.reserve+'</span><strong>'+money(q.reserve)+'</strong></div><div><span>'+c.pieces.details+'</span><strong>'+(isOwned("details")?c.owned:money(q.amounts.details))+'</strong></div><div class="tailor"><span>'+c.tailorApart+'</span><strong>+'+money(q.tailor)+'</strong></div></div>'+
  '<button type="button" class="grok-primary" data-action="details" aria-expanded="'+String(detailsOpen)+'"><span>'+c.detailsBtn+'</span><span aria-hidden="true">'+(detailsOpen?"↑":"→")+'</span></button>'+
  (detailsOpen?detailHtml():"")+
  '<button type="button" class="grok-link" data-action="edit">'+c.edit+'</button>'+
@@ -235,7 +235,7 @@ function render(){
  const c=t();document.documentElement.lang=lang;
  root.innerHTML='<div class="grok-shell"><header class="grok-header"><button type="button" class="grok-logo" data-action="home" aria-label="Merdo · '+c.demo+'"><span>Merdo</span><small>× BITOS</small></button>'+
  '<div class="grok-headerRight"><span class="grok-demo">'+c.demo+'</span><div class="grok-lang" role="group" aria-label="Language"><button data-lang="ru" aria-pressed="'+(lang==="ru")+'">RU</button><button data-lang="tr" aria-pressed="'+(lang==="tr")+'">TR</button></div></div></header>'+
- (screen==="intro"?renderIntro():screen==="flow"?renderFlow():renderResult())+
+ (screen==="intro"?renderIntro():screen==="flow"?renderFlow():handoffBanner()+renderResult())+
  (!persistOK?'<p class="grok-disclaimer">'+c.noSaved+'</p>':"")+
  '<footer class="grok-footer"><span>MERDO × BitOS · DEMO</span><a href="https://github.com/safal207/merdo-bitos/issues" target="_blank" rel="noopener noreferrer">Backlog</a></footer>'+
  '<details class="grok-moreTools"><summary>'+c.demoTools+'</summary><nav class="grok-legacyLinks" aria-label="'+c.demoTools+'"><a href="./legacy.html#discover">'+c.oldSocial+'</a><a href="./legacy.html#demoProducts">'+c.oldCatalog+'</a><a href="./legacy.html#myWardrobe">'+c.oldWardrobe+'</a><a href="./legacy.html#catalogStatus">'+c.oldSources+'</a></nav></details></div>';
@@ -257,7 +257,7 @@ root.addEventListener("click",async event=>{
   catch(e){feedback=t().copyError;draft.focus();draft.select()}
   const el=root.querySelector("#grokFeedback");if(el)el.textContent=feedback;return;
  }
- if(b.dataset.set){const key=b.dataset.set,value=b.dataset.val;if((key==="gender"&&["man","woman"].includes(value))||(key==="occasion"&&OCCASIONS.includes(value))||(key==="fit"&&FITS.includes(value))||(key==="pants"&&PANTS.includes(value))||(key==="shoe"&&["have","needed"].includes(value))){state[key]=value;persist();render();restoreFocus('[data-set="'+key+'"][data-val="'+value+'"]')}return}
+ if(b.dataset.set){const key=b.dataset.set,value=b.dataset.val;if((key==="gender"&&["man","woman"].includes(value))||(key==="occasion"&&OCCASIONS.includes(value))||(key==="fit"&&FITS.includes(value))||(key==="pants"&&PANTS.includes(value))||(key==="shoe"&&["have","needed"].includes(value))){if(key==="gender"&&state.samples?.length&&value!==state.samples[0].gender){state.samples=[];state.handoffType=""}state[key]=value;persist();render();restoreFocus('[data-set="'+key+'"][data-val="'+value+'"]')}return}
  if(b.dataset.budget){state.budget=Number(b.dataset.budget);persist();render();restoreFocus('[data-budget="'+state.budget+'"]');return}
  if(b.dataset.tailor){const key=b.dataset.tailor;if(!["hem","sleeve","waist"].includes(key))return;state[key]=!state[key];persist();render();restoreFocus('[data-tailor="'+key+'"]');return}
  if(b.dataset.owned){const key=b.dataset.owned;if(!PIECES.includes(key))return;state.owned[key]=!state.owned[key];if(!state.owned[key])delete state.colors[key];persist();render();restoreFocus('[data-owned="'+key+'"]');return}
@@ -273,5 +273,5 @@ root.addEventListener("input",e=>{
  if(e.target.id==="grokRange"){state.budget=Number(e.target.value);const input=root.querySelector("#grokBudget");if(input)input.value=state.budget}
 });
 window.BitOSGrok={getState:()=>JSON.parse(JSON.stringify(state)),getQuote:quote,reset:()=>{state=initial();go("intro")}};
-hydrate();hydrated=true;persist();render();
+hydrate();applyHandoff();hydrated=true;persist();render();
 })();
