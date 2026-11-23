@@ -129,3 +129,17 @@ img{max-width:100%}
 .grok-introPhotos{margin-top:32px}
 .grok-primary[data-action=start]{justify-content:center;position:relative}
 .grok-primary[data-action=start] span:last-child{position:absolute;right:19px}
+
+/* Explicit data provenance between the preserved BitOS tools and the Grok stylist. */
+.grok-bridgeNotice{background:#edf2ee;border:1px solid #c4d1c6;border-left:4px solid #6f927c;padding:13px 15px;border-radius:12px;margin:0 0 21px;color:#253a31}
+.grok-bridgeNotice strong{display:block;font-size:12px;font-weight:850}
+.grok-bridgeNotice p{font-size:11px;color:#52665a;margin:4px 0 0;line-height:1.6}
+.grok-importedSamples{padding:17px 16px;border:1px solid #d8caba;border-radius:15px;margin:18px 0 15px;background:#f9f4eb}
+.grok-importedSamples h2{margin:0 0 10px;font:500 27px/1.1 var(--serif)}
+.grok-importedSamples ul{margin:0;padding:0;list-style:none;display:grid;gap:9px}
+.grok-importedSamples li{display:flex;justify-content:space-between;align-items:baseline;gap:12px;border-bottom:1px solid var(--line);padding:7px 0;font-size:12px}
+.grok-importedSamples li span{min-width:0}
+.grok-importedSamples li small{display:block;color:var(--muted);font-size:10px}
+.grok-importedSamples li b{white-space:nowrap;font-variant-numeric:tabular-nums}
+.grok-importedSamples>p{font-size:12px;margin:11px 0 3px;color:#4b4137}
+.grok-importedSamples .grok-miniNote{font-size:11px;color:var(--muted);line-height:1.5}
