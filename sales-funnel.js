@@ -111,8 +111,14 @@ function render(){
  '</nav><p class="funnelNote">'+L("notTracked")+'</p></section>';
 }
 function advance(to){
+ const previous=stage;
  stage=Math.max(0,Math.min(5,to));copied="";
  render();
+ if(stage>previous){
+  const event=({1:"funnel_started",2:"core_stage_viewed",3:"bump_stage_viewed",4:"oto_stage_viewed",5:"retention_stage_viewed"})[stage];
+  if(event)window.BitOSAnalytics?.record(event);
+  if(stage===5)window.BitOSAnalytics?.record("funnel_demo_completed");
+ }
  if(stage>0)document.querySelector("#bitosSalesFunnel .funnelDemo")?.scrollIntoView({block:"start",behavior:"auto"});
  document.querySelector('#bitosSalesFunnel [data-funnel-action="'+(stage===0?"start":"back")+'"]')?.focus({preventScroll:true});
 }
@@ -125,17 +131,18 @@ document.addEventListener("click",async e=>{
  if(op==="back")return advance(stage-1);
  if(op==="next")return advance(stage+1);
  if(op==="reset"){tripwire=false;bump="";oto=false;return advance(1)}
- if(op==="tripwire"){tripwire=b.dataset.value==="yes";render();document.querySelector('[data-funnel-action="tripwire"][data-value="'+b.dataset.value+'"]')?.focus({preventScroll:true});return}
+ if(op==="tripwire"){const interested=b.dataset.value==="yes";if(interested&&!tripwire)window.BitOSAnalytics?.record("tripwire_interest");tripwire=interested;render();document.querySelector('[data-funnel-action="tripwire"][data-value="'+b.dataset.value+'"]')?.focus({preventScroll:true});return}
  if(op==="bump"){
   const v=b.dataset.value;
   if(v!==""&&!Object.hasOwn(tailorPrices,v))return;
   if(v&&model()?.[v]===true)return;
-  bump=v;render();document.querySelector('[data-funnel-action="bump"][data-value="'+v+'"]')?.focus({preventScroll:true});return
+  if(v&&v!==bump)window.BitOSAnalytics?.record("bump_interest");bump=v;render();document.querySelector('[data-funnel-action="bump"][data-value="'+v+'"]')?.focus({preventScroll:true});return
  }
- if(op==="oto"){oto=b.dataset.value==="yes";render();document.querySelector('[data-funnel-action="oto"][data-value="'+b.dataset.value+'"]')?.focus({preventScroll:true});return}
+ if(op==="oto"){const interested=b.dataset.value==="yes";if(interested&&!oto)window.BitOSAnalytics?.record("oto_interest");oto=interested;render();document.querySelector('[data-funnel-action="oto"][data-value="'+b.dataset.value+'"]')?.focus({preventScroll:true});return}
  if(op==="copy"){
   const area=document.getElementById("funnelDraft");if(!area)return;
-  try{if(!navigator.clipboard?.writeText)throw Error("Clipboard unavailable");await navigator.clipboard.writeText(area.value);copied=L("copied")}
+  window.BitOSAnalytics?.record("funnel_copy_attempted");
+  try{if(!navigator.clipboard?.writeText)throw Error("Clipboard unavailable");await navigator.clipboard.writeText(area.value);window.BitOSAnalytics?.record("funnel_copy_succeeded");copied=L("copied")}
   catch(error){copied=L("copyFallback");area.focus();area.select()}
   const p=document.querySelector("#bitosSalesFunnel .funnelCopyStatus");
   if(p)p.textContent=copied;
