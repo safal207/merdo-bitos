@@ -1,0 +1,31 @@
+name: Temporary Atelier 23 media assembly
+on:
+  push:
+    branches: [feat/atelier23-selfhost-film]
+    paths: ['.github/workflows/temp-atelier23-assemble.yml']
+permissions:
+  contents: write
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Assemble and verify uploaded MP4
+        run: |
+          set -euo pipefail
+          mkdir -p atelier23/assets
+          cat atelier23/.video-staging/part-* > atelier23/assets/atelier23-film.mp4
+          echo "e4a47584c6309e6baac87949fe6726108eccf337f356c0bee7c3328651d261c5  atelier23/assets/atelier23-film.mp4" | sha256sum -c -
+          test "$(wc -c < atelier23/assets/atelier23-film.mp4)" -eq 3503909
+      - name: Commit the verified asset without staging files
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm -r atelier23/.video-staging .github/workflows/temp-atelier23-assemble.yml
+          git add atelier23/assets/atelier23-film.mp4
+          git commit -m "feat(atelier23): self-host user-supplied film"
+          git push origin HEAD:feat/atelier23-selfhost-film
