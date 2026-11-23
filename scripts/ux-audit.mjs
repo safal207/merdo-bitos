@@ -37,7 +37,7 @@ try{
       await page.locator('select[name="sample-size-TEST-M-08"]').selectOption("42");
       assert.equal(await page.locator('select[name="sample-size-TEST-M-08"]').inputValue(),"42");
       await page.locator('[data-sample-action="toggle"][data-id="TEST-M-08"]').click();
-      assert.match(await page.locator("#demoProducts .sampleLookTotal strong").innerText(),/2[\s\u00a0]?950/);
+      assert.match(await page.locator("#demoProducts .sampleLookTotal strong").innerText(),/2[.\s\u00a0]?950/);
       await page.locator('[data-gender="woman"].sampleFilter').click();
       assert.equal(await page.locator("#demoProducts .sampleCard").count(),4);
       await page.locator('[data-sample-action="toggle"][data-id="TEST-W-03"]').click();
