@@ -78,6 +78,12 @@ function card(k){
  '<p class="wardrobePhotoHint">'+(item.photo?t("photoSaved"):t("photoHelp"))+'</p></div>':"")+
  '</article>';
 }
+function renderAndFocus(name){
+ render();
+ if(!name)return;
+ const target=Array.from(root.querySelectorAll("input,select,button")).find(el=>el.name===name||el.id===name);
+ target?.focus({preventScroll:true});
+}
 function render(){
  const count=keys.filter(k=>items[k].owned).length;
  root.innerHTML='<div class="wardrobeHead"><span class="wardrobeMini">'+t("eyebrow")+'</span><h2>'+t("headline")+'</h2><p>'+t("intro")+'</p></div>'+
@@ -143,19 +149,19 @@ root.addEventListener("change",async e=>{
   if(!keys.includes(k))return;
   const valid=field==="color"?colorKeys:cuts[k];
   if(!valid.includes(input.value))return;
-  items[k][field]=input.value;error="";persist();render();return;
+  items[k][field]=input.value;error="";persist();renderAndFocus(name);return;
  }
  if(/^wardrobe-(jacket|shirt|trousers|shoes|details)$/.test(name)){
   const k=name.slice("wardrobe-".length);items[k].owned=input.checked;
   if(!input.checked){items[k].photo="";items[k].color="unknown";items[k].cut="unknown"}
-  error="";persist();render();
+  error="";persist();renderAndFocus(name);
  }
 });
 root.addEventListener("click",e=>{
  const b=e.target.closest("button");if(!b)return;
  if(b.dataset.photoRemove){const k=b.dataset.photoRemove;
   if(keys.includes(k)){items[k].photo="";error="";persist();render()}return}
- if(b.id==="wardrobeClear"){items=normalize(null);error="";persist();render();return}
+ if(b.id==="wardrobeClear"){items=normalize(null);error="";persist();renderAndFocus("wardrobeClear");return}
  if(b.id==="wardrobeProceed"){
   if(window.BitOSJourney?.start)window.BitOSJourney.start();
   else document.getElementById("styleJourney")?.scrollIntoView({behavior:"smooth"});
