@@ -88,19 +88,39 @@ function render(){
  '<p class="wardrobePrivacy">'+t("privacy")+(canStore?"":" "+t("noStore"))+'</p>';
 }
 async function compress(file){
- // Canvas strips EXIF metadata and ensures only JPEG/WebP image data is stored.
- const bitmap=await createImageBitmap(file);
+ // Draw decoded pixels to Canvas. Do not preserve original file or EXIF metadata.
+ // HTMLImageElement decoding is a fallback for browsers lacking createImageBitmap.
+ let source=null, release=()=>{};
+ if(typeof createImageBitmap==="function"){
+  try{source=await createImageBitmap(file);release=()=>source.close()}catch(e){source=null}
+ }
+ if(!source){
+  const objectUrl=URL.createObjectURL(file);
+  try{
+   source=await new Promise((resolve,reject)=>{
+    const image=new Image();
+    image.onload=()=>resolve(image);
+    image.onerror=()=>reject(Error("Image decode failed"));
+    image.src=objectUrl;
+   });
+  }catch(e){URL.revokeObjectURL(objectUrl);throw e}
+  release=()=>URL.revokeObjectURL(objectUrl);
+ }
  try{
-  const scale=Math.min(1,640/Math.max(bitmap.width,bitmap.height));
+  const width=source.naturalWidth||source.width,height=source.naturalHeight||source.height;
+  if(!width||!height||width>20000||height>20000)throw Error("Unsupported dimensions");
+  const scale=Math.min(1,640/Math.max(width,height));
   const c=document.createElement("canvas");
-  c.width=Math.max(1,Math.round(bitmap.width*scale));
-  c.height=Math.max(1,Math.round(bitmap.height*scale));
-  c.getContext("2d",{alpha:false}).drawImage(bitmap,0,0,c.width,c.height);
+  c.width=Math.max(1,Math.round(width*scale));
+  c.height=Math.max(1,Math.round(height*scale));
+  const ctx=c.getContext("2d",{alpha:false});
+  if(!ctx)throw Error("Canvas unavailable");
+  ctx.drawImage(source,0,0,c.width,c.height);
   let result=c.toDataURL("image/webp",.7);
   if(!photoOK(result))result=c.toDataURL("image/jpeg",.65);
   if(!photoOK(result))throw Error("Image too large after downscale");
   return result;
- }finally{bitmap.close()}
+ }finally{release()}
 }
 root.addEventListener("change",async e=>{
  const input=e.target;const name=input.name||"";
