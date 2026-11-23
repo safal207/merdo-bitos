@@ -32,6 +32,7 @@ jobs:
       - name: Check JavaScript syntax
         run: |
           node --check grok-core.js
+          node --check sales-funnel.js
           node --check bitos-bridge.js
           node --check scripts/bridge-smoke.mjs
           node --check scripts/grok-smoke.mjs
