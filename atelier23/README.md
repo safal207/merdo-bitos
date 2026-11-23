@@ -13,7 +13,7 @@ The demo uses **React 19 + ReactDOM** via a browser import map. There is no buil
 
 ## Features
 
-- Editorial mobile-first landing screen and promotional concept film (external Grok MP4), with still-image fallback, lazy video load, pause control and reduced-motion handling.
+- Editorial mobile-first landing screen and user-provided promotional concept film (self-hosted MP4), with still-image fallback, lazy video load, pause control and reduced-motion handling.
 - Occasion Engine: occasion → event date → style → budget and already-owned clothes → recommendation.
 - If event is within **56 days**, do not promise bespoke tailoring; recommend checking ready-to-wear availability and possible alterations.
 - If budget is below **150,000 ₽**, do not promise a bespoke suit.
@@ -27,9 +27,9 @@ The demo uses **React 19 + ReactDOM** via a browser import map. There is no buil
 
 `node scripts/atelier23-smoke.mjs` when Playwright 1.55 is installed and Chromium is available.
 
-CI runs the demo smoke check before publishing the parent repo. External media/ESM resources need connectivity; vendor dependencies in a later production stage.
+CI runs the demo smoke check before publishing the parent repo. The uploaded 17.64 s H.264 film is self-hosted in `atelier23/assets/atelier23-film.mp4` (3,503,909 bytes, SHA-256 `e4a47584c6309e6baac87949fe6726108eccf337f356c0bee7c3328651d261c5`). React uses a public ESM CDN; video is loaded only when visible.
 
 ## Source & use
 
 Real product details: <https://atelier-23.ru/personal-tailoring/>.
-Images from Atelier 23 public pages are linked, not bundled. Promotional video is a **generated advertising concept, not documentary footage** and is hosted by a third-party demo. Reconfirm permission before commercial rollout or use of the brand.
+Images from Atelier 23 public pages are linked, not bundled. Promotional video is a **generated advertising concept, not documentary footage**. The exact user-supplied MP4 is served from this GitHub Pages project, without relying on Grok or expiring media URLs. Reconfirm permission before commercial rollout or use of the brand.
