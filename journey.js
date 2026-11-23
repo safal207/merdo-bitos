@@ -5,7 +5,7 @@ const root=document.getElementById("styleJourney");
 if(!root)return;
 root.setAttribute("tabindex","-1");
 const initial=()=>({gender:"man",occasion:"formal",fit:"normal",budget:15000,shoe:"needed",hem:false,sleeve:false,waist:false,source:null});
-let answers=initial(), step=-1;
+let answers=initial(), step=-1, samplePref=null;
 const locales={
 ru:{
 badge:"BitOS LOOK LAB",headline:"Не вещь. Твой образ.",sub:"Четыре коротких шага — и ты увидишь цельный комплект для своей задачи. Без сложных анкет.",begin:"Собрать мой образ",quick:"Просто • Персонально • Без обязательств",count:"шаг из 4",back:"Назад",later:"Без подгонки",next:"Посмотреть образ",custom:"Другая сумма",customGo:"Продолжить",budgetErr:"Введите бюджет от 1 000 до 1 000 000 ₺.",finish:"Образ собран!",finishSub:"Мы подобрали направление стиля и примерный бюджет по категориям. Осталось посмотреть комплект и запросить наличие.",see:"Посмотреть мой образ",edit:"Начать заново",apparel:"План на одежду",tailoring:"Дополнительно: портной",disclaimer:"Это демонстрация. Никаких реальных товаров Merdo, цен, скидок, броней или ограничений по времени мы не обещаем.",source:"Вы выбрали образ из фотоленты",gender:"Направление",man:"Мужской",woman:"Женский",genderHint:"Образ с фотографии уже учтён. При необходимости поменяйте направление.",occasionTitle:"Для чего подбираем?",occasionSub:"Начинаем, как у настоящего стилиста: сначала цель, потом вещи.",formal:"Важная встреча",formalSub:"Уверенно и строго",partners:"Общение с клиентом",partnersSub:"Деловой, но открытый",creative:"IT / свободный офис",creativeSub:"Стильно и непринуждённо",casual:"Каждый день / прогулка",casualSub:"Комфорт, обувь и сумка",fitTitle:"Как вещи сидят в плечах?",fitSub:"Уточним посадку, чтобы не навязать неподходящий крой.",normal:"Хорошо",normalSub:"Удобно в плечах",tight:"Тесно",tightSub:"Тянет в спине или плечах",loose:"Свободно",looseSub:"Плечи свисают",budgetTitle:"Сколько планируем на образ?",budgetSub:"Это ваш лимит на одежду, не цена товаров Merdo.",budgetPick:"Выберите бюджет или введите свой.",tailorTitle:"Нужна подгонка?",tailorSub:"Как у премиального консультанта: портной — отдельная, необязательная услуга.",hem:"Укоротить брюки",sleeve:"Рукава пиджака",waist:"Посадка брюк в талии",notReal:"Условные цены для демонстрации. Наличие услуги в Merdo не подтверждено.",save:"Подобрать с портным",hintDone:"Вы уже на последнем шаге."
@@ -50,8 +50,9 @@ body='<div class="journeySuccess"><div class="journeySeal" aria-hidden="true">�
 }
 const lookName=answers.source?(document.querySelector('[data-post="'+answers.source+'"] h3')?.textContent||answers.source):"";
 const source=answers.source?'<div class="journeySource">'+tr("source")+' · '+safe(lookName)+'</div>':"";
+const sampleNote=samplePref?'<div class="journeySource">'+(document.documentElement.lang==="ru"?"Выбрано тестовых карточек: ":"Seçilen örnek kart: ")+samplePref.count+" · "+(document.documentElement.lang==="ru"?"Условная сумма: ":"Örnek toplam: ")+money(samplePref.budget)+" · DEMO</div>":"";
 const gender=step>=0&&step<4?'<div class="journeyGender"><span>'+tr("gender")+'</span><div>'+chip("man","gender")+chip("woman","gender")+'</div></div>':"";
-root.innerHTML='<div class="journeyShell"><div class="journeyHead"><span class="journeyBrand">'+tr("badge")+'</span>'+p+'</div>'+source+
+root.innerHTML='<div class="journeyShell"><div class="journeyHead"><span class="journeyBrand">'+tr("badge")+'</span>'+p+'</div>'+source+sampleNote+
 gender+'<div class="journeyContent" aria-live="polite">'+body+'</div>'+
 (step>=0&&step<4?'<div class="journeyFooter"><button type="button" class="journeyBack" data-action="back">← '+tr("back")+'</button><span>'+tr("quick")+'</span></div>':"")+
 '<div class="journeyDisclaimer">'+tr("disclaimer")+'</div></div>';
@@ -64,7 +65,7 @@ window.BitOSStylist.applyPreferences(answers);
 }
 move(4)
 }
-function reset(){answers=initial();document.getElementById("stylist")?.classList.remove("show-result","expanded");move(-1)}
+function reset(){samplePref=null;answers=initial();document.getElementById("stylist")?.classList.remove("show-result","expanded");move(-1)}
 function reveal(){
 if(window.BitOSStylist?.showResult){
 window.BitOSStylist.showResult();
@@ -97,7 +98,19 @@ root.querySelector(".journeyEstimate strong").textContent=money(priceExtra());
 }
 });
 window.BitOSJourney={
+startFromSamples(p){
+ const budget=Number(p?.budget), count=Number(p?.count);
+ if(!Number.isFinite(budget)||budget<1000||!Number.isInteger(count)||count<1)return;
+ samplePref={budget:Math.round(budget),count};
+ answers=initial();
+ answers.gender=p.gender==="woman"?"woman":"man";
+ answers.budget=Math.max(1000,Math.min(1000000,Math.round(budget)));
+ document.getElementById("stylist")?.classList.remove("show-result","expanded");
+ move(0);
+ root.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});
+},
 startFromLook(id){
+samplePref=null;
 document.getElementById("stylist")?.classList.remove("show-result","expanded");
 answers=initial();
 answers.source=id;
@@ -106,6 +119,7 @@ move(0);
 root.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});
 },
 start(){
+samplePref=null;
 answers=initial();document.getElementById("stylist")?.classList.remove("show-result","expanded");move(0);root.scrollIntoView({behavior:"smooth",block:"start"})
 }
 };
