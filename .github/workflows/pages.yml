@@ -30,6 +30,7 @@ jobs:
       - name: Check JavaScript syntax
         run: |
           node --check stylist.js
+          node --check look-preview.js
           node --check journey.js
           node --check look-story.js
           node --check wardrobe.js
