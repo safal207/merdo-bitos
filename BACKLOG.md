@@ -29,6 +29,7 @@
 | ID | Задача | Измерение | Issue |
 | --- | --- | --- | --- |
 | MBD-008 | ClickFunnels/SamCart: lead magnet → tripwire → core offer → order bump → post-purchase OTO → follow-up | Воронка от привлечения до оплаты, средний чек, прибыль, возвраты | [#8](https://github.com/safal207/merdo-bitos/issues/8) |
+| MBD-010 | **Демо-воронка** после просмотра образа (без реального заказа) | 5 этапов, RU/TR, портной отдельно, мобильные тесты; реальные продажи не эмулировать как состоявшиеся | [#12](https://github.com/safal207/merdo-bitos/issues/12) |
 
 ## Принципы и границы
 

@@ -229,6 +229,7 @@ function renderResult(){
  sampleSummary()+'<div class="grok-pricebox"><div class="main"><span>'+c.toBuy+'</span><strong>'+money(q.toBuy)+'</strong></div><div><span>'+c.budget+'</span><strong>'+money(state.budget)+'</strong></div><div><span>'+c.reserve+'</span><strong>'+money(q.reserve)+'</strong></div><div><span>'+c.pieces.details+'</span><strong>'+(isOwned("details")?c.owned:money(q.amounts.details))+'</strong></div><div class="tailor"><span>'+c.tailorApart+'</span><strong>+'+money(q.tailor)+'</strong></div></div>'+
  '<button type="button" class="grok-primary" data-action="details" aria-expanded="'+String(detailsOpen)+'"><span>'+c.detailsBtn+'</span><span aria-hidden="true">'+(detailsOpen?"↑":"→")+'</span></button>'+
  (detailsOpen?detailHtml():"")+
+ '<div id="bitosSalesFunnel" class="grok-salesMount" aria-label="BitOS sales journey demo"></div>'+
  '<button type="button" class="grok-link" data-action="edit">'+c.edit+'</button>'+
  '<p class="grok-disclaimer">'+c.disclaimer+'</p></section>';
 }
@@ -240,6 +241,7 @@ function render(){
  (!persistOK?'<p class="grok-disclaimer">'+c.noSaved+'</p>':"")+
  '<footer class="grok-footer"><span>MERDO × BitOS · DEMO</span><a href="https://github.com/safal207/merdo-bitos/issues" target="_blank" rel="noopener noreferrer">Backlog</a></footer>'+
  '<details class="grok-moreTools"><summary>'+c.demoTools+'</summary><nav class="grok-legacyLinks" aria-label="'+c.demoTools+'"><a href="./legacy.html#discover">'+c.oldSocial+'</a><a href="./legacy.html#demoProducts">'+c.oldCatalog+'</a><a href="./legacy.html#myWardrobe">'+c.oldWardrobe+'</a><a href="./legacy.html#catalogStatus">'+c.oldSources+'</a></nav></details></div>';
+ window.BitOSSalesFunnel?.render();
 }
 function restoreFocus(selector){const e=root.querySelector(selector);if(e)e.focus({preventScroll:true})}
 root.addEventListener("click",async event=>{
@@ -273,6 +275,6 @@ root.addEventListener("input",e=>{
  if(e.target.id==="grokBudget"){const n=Number(e.target.value);if(Number.isFinite(n)&&n>=0&&n<=1000000)state.budget=n}
  if(e.target.id==="grokRange"){state.budget=Number(e.target.value);const input=root.querySelector("#grokBudget");if(input)input.value=state.budget}
 });
-window.BitOSGrok={getState:()=>JSON.parse(JSON.stringify(state)),getQuote:quote,reset:()=>{state=initial();go("intro")}};
+window.BitOSGrok={getState:()=>JSON.parse(JSON.stringify(state)),getQuote:quote,getDraft:buildDraft,reset:()=>{state=initial();go("intro")}};
 hydrate();applyHandoff();hydrated=true;persist();render();
 })();
