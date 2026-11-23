@@ -46,7 +46,8 @@ body='<h2 id="journeyTitle">'+tr("budgetTitle")+'</h2><p class="journeyQuestion"
 }else if(step===3){
 body='<h2 id="journeyTitle">'+tr("tailorTitle")+'</h2><p class="journeyQuestion">'+tr("tailorSub")+'</p><div class="journeyTailors">'+Object.keys(costs).map(k=>'<label class="journeyTailor '+(answers[k]?"active":"")+'"><input type="checkbox" name="journey-'+k+'" '+(answers[k]?"checked":"")+'><span>'+tr(k)+'</span><b>+'+money(costs[k])+'</b></label>').join("")+'</div><div class="journeyEstimate"><span>'+tr("tailoring")+'</span><strong>'+money(priceExtra())+'</strong></div><p class="journeyFine">'+tr("notReal")+'</p><button class="journeyMain" type="button" data-action="finish">'+tr("next")+' →</button><button class="journeyLink" type="button" data-action="skip">'+tr("later")+'</button>';
 }else{
-body='<div class="journeySuccess"><div class="journeySeal" aria-hidden="true">✓</div><h2 id="journeyTitle">'+tr("finish")+'</h2><p>'+tr("finishSub")+'</p>'+(wardrobeNote?'<p class="journeyOwnedNote">✓ '+wardrobeNote+'</p>':"")+'<div class="journeyReceipt"><div><span>'+tr("apparel")+'</span><b>'+money(answers.budget)+'</b></div><div><span>'+tr("tailoring")+'</span><b>+'+money(priceExtra())+'</b></div></div><button class="journeyMain" data-action="reveal" type="button">'+tr("see")+' →</button><button class="journeyLink" data-action="restart" type="button">'+tr("edit")+'</button></div>';
+const preview=window.BitOSLookPreview?.render(answers)||"";
+body='<div class="journeySuccess"><div class="journeySeal" aria-hidden="true">✓</div><h2 id="journeyTitle">'+tr("finish")+'</h2><p>'+tr("finishSub")+'</p>'+(wardrobeNote?'<p class="journeyOwnedNote">✓ '+wardrobeNote+'</p>':"")+preview+'<div class="journeyReceipt"><div><span>'+tr("apparel")+'</span><b>'+money(answers.budget)+'</b></div><div><span>'+tr("tailoring")+'</span><b>+'+money(priceExtra())+'</b></div></div><button class="journeyMain" data-action="reveal" type="button">'+tr("see")+' →</button><button class="journeyLink" data-action="restart" type="button">'+tr("edit")+'</button></div>';
 }
 const lookName=answers.source?(document.querySelector('[data-post="'+answers.source+'"] h3')?.textContent||answers.source):"";
 const source=answers.source?'<div class="journeySource">'+tr("source")+' · '+safe(lookName)+'</div>':"";
@@ -58,7 +59,7 @@ gender+'<div class="journeyContent" aria-live="polite">'+body+'</div>'+
 '<div class="journeyDisclaimer">'+tr("disclaimer")+'</div></div>';
 }
 function focusTitle(){root.querySelector("#journeyTitle")?.setAttribute("tabindex","-1");root.querySelector("#journeyTitle")?.focus({preventScroll:true})}
-function move(n){step=n;render();focusTitle()}
+function move(n){step=n;render();root.scrollIntoView({behavior:"auto",block:"start"});focusTitle()}
 function finish(){
 if(window.BitOSStylist?.applyPreferences){
 window.BitOSStylist.applyPreferences(answers);
