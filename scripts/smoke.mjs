@@ -5,7 +5,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { chromium } from "playwright";
 
 const base = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const url = pathToFileURL(path.join(base, "index.html")).href;
+const url = pathToFileURL(path.join(base, "legacy.html")).href;
 const browser = await chromium.launch({ headless: true });
 const results = [];
 await mkdir(path.join(base, "artifacts"), {recursive: true});
