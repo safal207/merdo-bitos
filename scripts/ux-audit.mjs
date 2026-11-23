@@ -63,7 +63,10 @@ try{
       assert.equal(await page.locator('[data-wardrobe-item="jacket"] .wardrobePhoto').count(),0);
       await page.locator("#wardrobeClear").click();
       assert.equal(await page.locator('input[name="wardrobe-jacket"]').isChecked(),false);
-      // The language control returns to Turkish after a page reload.
+      // Language is persisted across reloads; verify both toggles without assuming reset.
+      assert.equal(await page.locator("html").getAttribute("lang"),"ru");
+      await page.locator("#language").click();
+      assert.equal(await page.locator("html").getAttribute("lang"),"tr");
       await page.locator("#language").click();
       assert.equal(await page.locator("html").getAttribute("lang"),"ru");
 
