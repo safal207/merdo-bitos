@@ -12,8 +12,7 @@
 | MBD-002 | Прозрачная смета одежды, свой гардероб, портной отдельно | Для кейса 15 000 ₺: покупка 7 650, резерв 7 350, портной 400; никаких дублирующихся покупок | [#2](https://github.com/safal207/merdo-bitos/issues/2) |
 | MBD-003 | Сохранение фотоленты, демо-каталога и настроек прежней версии | `/legacy.html` и deep links работают; старые smoke адаптированы | [#3](https://github.com/safal207/merdo-bitos/issues/3) |
 | MBD-004 | Доступность, 390px, сохранение, ошибки копирования | Chromium/Firefox/WebKit, keyboard, valid 1 000–1 000 000 ₺ | [#4](https://github.com/safal207/merdo-bitos/issues/4) |
-
-| MBD-009 | Интеграция гардероба и демо-карточек с Grok | Передача без фото, RU/TR, проверка 390/1280 | [#10](https://github.com/safal207/merdo-bitos/issues/10) |
+| MBD-009 | **Реализовано в [PR #11](https://github.com/safal207/merdo-bitos/pull/11):** интеграция гардероба и демо-карточек с Grok | Приватная передача без фото, RU/TR, Playwright 390/1280 зелёный | [#10](https://github.com/safal207/merdo-bitos/issues/10) |
 
 **Релизный шлюз:** скомпоновать на отдельной ветке; `main` не менять до зелёного CI и сверки мобильных скриншотов; затем публиковать статический GitHub Pages без внешнего сервера.
 
