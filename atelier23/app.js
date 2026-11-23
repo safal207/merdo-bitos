@@ -7,7 +7,7 @@ const BOOK = BASE + "sign-up-for-a-fitting-room/";
 const SHOP = BASE + "collection/costumes/";
 const TAILOR = BASE + "personal-tailoring/";
 const TG = "https://t.me/A23_Private";
-const FILM = "https://scarlet-eagle-sapphire-breeze.grok.me/film-looks-portrait.mp4";
+const FILM = new URL("./assets/atelier23-film.mp4", import.meta.url).href;
 const PHOTO = {
   hero: BASE + "wp-content/uploads/2026/09/a23-hero-autumn-poster-2720.jpg",
   fitting: BASE + "wp-content/uploads/2026/09/a23o-a23-primerka-u-zerkala-960.webp",
