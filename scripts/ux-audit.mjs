@@ -30,6 +30,22 @@ try{
       await page.locator("#looks article").first().waitFor();
       assert.equal(await page.locator("#looks article").count(),4);
 
+      // Demo catalog is a UI laboratory, not confirmed Merdo merchandise.
+      assert.equal(await page.locator("#demoProducts .sampleCard").count(),8);
+      await page.locator('[data-gender="man"].sampleFilter').click();
+      assert.equal(await page.locator("#demoProducts .sampleCard").count(),4);
+      await page.locator('select[name="sample-size-TEST-M-08"]').selectOption("42");
+      assert.equal(await page.locator('select[name="sample-size-TEST-M-08"]').inputValue(),"42");
+      await page.locator('[data-sample-action="toggle"][data-id="TEST-M-08"]').click();
+      assert.match(await page.locator("#demoProducts .sampleLookTotal strong").innerText(),/2[\s\u00a0]?950/);
+      await page.locator('[data-gender="woman"].sampleFilter').click();
+      assert.equal(await page.locator("#demoProducts .sampleCard").count(),4);
+      await page.locator('[data-sample-action="toggle"][data-id="TEST-W-03"]').click();
+      assert.equal(await page.locator("#demoProducts .sampleItems li").count(),1,"mixed-gender selection is reset for one coherent outfit");
+      await page.locator("#sampleReset").click();
+      await page.locator('[data-gender="all"].sampleFilter').click();
+
+
       // Real inventory may not be inferred from a website's brand list.
       assert.equal(await page.locator("#catalogStatus .catalogNumber b").innerText(),"0");
       await page.locator("#language").click();
