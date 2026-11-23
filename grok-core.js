@@ -36,7 +36,7 @@ occasionHints:{formal:"Чёткое плечо, спокойный тон",partn
 s2Title:"Как одежда должна сидеть?",s2Lead:"Посадка — это заметка для примерки. Фотография от выбора посадки не меняется.",fit:"Посадка",fits:{normal:"Обычная",tight:"Ближе к фигуре",loose:"Свободнее"},pants:"Крой брюк",pantsOpts:{straight:"Прямые",tapered:"Зауженные",relaxed:"Свободные"},shoesQ:"Обувь",needed:"Нужна новая",have:"Подходящая уже есть",
 s3Title:"Бюджет на одежду",s3Lead:"Сумма в лирах условная. Это не цена витрины Merdo. Портной рассчитывается отдельно.",s4Title:"Портной и гардероб",s4Lead:"Подгонка необязательна. То, что уже есть дома, не предлагаем покупать снова.",tailor:"Подгонка",tailorHint:"Отдельная условная смета.",hem:"Укоротить брюки",sleeve:"Укоротить рукава",waist:"Подогнать талию брюк",wardrobe:"Уже есть дома",wardrobeHint:"Освободившаяся сумма остаётся резервом.",yourColor:"Ваш цвет",colors:{navy:"Тёмно-синий",gray:"Серый",black:"Чёрный",white:"Белый",beige:"Бежевый",brown:"Коричневый",blue:"Синий"},
 pieces:{jacket:"Пиджак / жакет",shirt:"Верх",trousers:"Брюки",shoes:"Обувь",details:"Детали"},piecesShort:{jacket:"Пиджак",shirt:"Верх",trousers:"Брюки",shoes:"Обувь",details:"Детали"},
-resultKicker:"Ваш образ · пример",photoNote:"Фотореалистичный пример на модели. Цвет и посадка ваших вещей не изменяют фотографию.",notProduct:"Не товар Merdo",budget:"Бюджет на одежду",toBuy:"К докупке",reserve:"Свободный резерв",tailorApart:"Портной отдельно",owned:"Уже есть",detailsBtn:"Детали образа и запрос",edit:"Править ответы",fitTitle:"На примерке",colorTitle:"К цвету из гардероба",draftTitle:"Черновик запроса",draftHint:"Текст только копируется. Это не отправка, не бронь и не заказ.",copy:"Скопировать запрос",copied:"Скопировано",copyError:"Автоматически скопировать не удалось. Выделите текст ниже и скопируйте вручную.",disclaimer:"Фотореалистичный пример, не фотографии реальных товаров Merdo. Цвета, размеры, фасоны, цены и наличие не подтверждены.",colorsDontChange:"Ваш цвет показан меткой, фото модели не перекрашивается.",noSaved:"Сохранение на устройстве недоступно — ответы могут не пережить обновление страницы.",demoTools:"Другие инструменты BitOS",oldWardrobe:"Мой гардероб",oldCatalog:"Тестовые товары",oldSocial:"Фотолента",oldSources:"Статус каталога",reStart:"Заново",
+resultKicker:"Ваш образ · пример",photoNote:"Фотореалистичный пример на модели. Цвет и посадка ваших вещей не изменяют фотографию.",notProduct:"Не товар Merdo",budget:"Бюджет на одежду",toBuy:"К докупке",reserve:"Свободный резерв",tailorApart:"Портной отдельно",owned:"Уже есть",detailsBtn:"Детали образа и запрос",edit:"Править ответы",fitTitle:"На примерке",colorTitle:"К цвету из гардероба",draftTitle:"Черновик запроса",draftHint:"Текст только копируется. Это не отправка, не бронь и не заказ.",copy:"Скопировать запрос",copied:"Скопировано",copyError:"Автоматически скопировать не удалось. Выделите текст ниже и скопируйте вручную.",disclaimer:"Фотореалистичный пример, не фотографии реальных товаров Merdo. Цвета, размеры, фасоны, цены и наличие не подтверждены.",colorsDontChange:"Ваш цвет показан меткой, фото модели не перекрашивается.",noSaved:"Сохранение на устройстве недоступно — ответы могут не пережить обновление страницы.",importWardrobe:"Гардероб перенесён: отмеченные вещи уже учтены. Фото остались на этом устройстве.",importSamples:"Тестовые карточки перенесены. Их сумма стала стартовым бюджетом, но стилист рассчитывает категории отдельно.",importSamplesLabel:"Выбранные тестовые карточки",importSamplesPrice:"Условная сумма карточек",importNotStock:"Это вымышленные товары; размер и цену магазин не подтвердил.",importSource:"Источник подбора",noSize:"Размер не выбран",demoTools:"Другие инструменты BitOS",oldWardrobe:"Мой гардероб",oldCatalog:"Тестовые товары",oldSocial:"Фотолента",oldSources:"Статус каталога",reStart:"Заново",
 fitsAdvice:{normal:"Проверьте плечо, застёжку и свободу движений.",tight:"Убедитесь, что не тянет в спине и плечах: нужна проверка кроя.",loose:"Если плечо сползает, нужен другой крой — не просто ушить талию."},
 pantsAdvice:{straight:"Прямой крой сохраняет линию и проще подгоняется по длине.",tapered:"Заужение требует проверки по щиколотке.",relaxed:"Свободный крой особенно чувствителен к длине брючины."}
 },
@@ -48,12 +48,12 @@ occasionHints:{formal:"Net omuz, sakin ton",partners:"Klasikten daha yumuşak",c
 s2Title:"Kıyafet nasıl oturmalı?",s2Lead:"Kalıp prova notudur, fotoğrafı değiştirmez.",fit:"Oturuş",fits:{normal:"Normal",tight:"Daha dar",loose:"Daha bol"},pants:"Pantolon kesimi",pantsOpts:{straight:"Düz",tapered:"Daralan",relaxed:"Rahat"},shoesQ:"Ayakkabı",needed:"Yeni gerekli",have:"Uygun olanım var",
 s3Title:"Giyim bütçesi",s3Lead:"Lira cinsinden koşullu tutar. Merdo ürün fiyatı değildir, terzi ücretleri ayrı.",s4Title:"Terzi ve gardırop",s4Lead:"Tadilat isteğe bağlı. Evde olan parçalar yeniden satın alınmaz.",tailor:"Tadilat",tailorHint:"Ayrı örnek ücret.",hem:"Paça kısaltma",sleeve:"Kol kısaltma",waist:"Bel ayarı",wardrobe:"Zaten bende var",wardrobeHint:"Kalan tutar yeniden dağıtılmayıp rezervde kalır.",yourColor:"Renginiz",colors:{navy:"Lacivert",gray:"Gri",black:"Siyah",white:"Beyaz",beige:"Bej",brown:"Kahverengi",blue:"Mavi"},
 pieces:{jacket:"Ceket / blazer",shirt:"Üst",trousers:"Pantolon",shoes:"Ayakkabı",details:"Detay"},piecesShort:{jacket:"Ceket",shirt:"Üst",trousers:"Pantolon",shoes:"Ayakkabı",details:"Detay"},
-resultKicker:"Kombininiz · örnek",photoNote:"Model üzerinde örnek görünüm; kişisel renk ve kalıp fotoğrafı değiştirmez.",notProduct:"Merdo ürünü değil",budget:"Giyim bütçesi",toBuy:"Alınacak",reserve:"Serbest rezerv",tailorApart:"Terzi ayrı",owned:"Bende var",detailsBtn:"Kombin detayı ve talep",edit:"Yanıtları düzenle",fitTitle:"Provada",colorTitle:"Gardırop renginiz",draftTitle:"Talep taslağı",draftHint:"Metin yalnızca kopyalanır, gönderim veya rezervasyon değildir.",copy:"Talebi kopyala",copied:"Kopyalandı",copyError:"Otomatik kopyalama başarısız. Metni seçip manuel kopyalayabilirsiniz.",disclaimer:"Model fotoğrafları gerçek Merdo ürünlerini göstermez. Renk, beden, kalıp, fiyat ve stok doğrulanmamıştır.",colorsDontChange:"Kendi renginiz listede gösterilir; model fotoğrafı değiştirilmez.",noSaved:"Cihazda kayıt mümkün değil; yanıtlar kaybolabilir.",demoTools:"Diğer BitOS araçları",oldWardrobe:"Gardırobum",oldCatalog:"Örnek ürünler",oldSocial:"Sosyal akış",oldSources:"Katalog durumu",reStart:"Baştan başla",
+resultKicker:"Kombininiz · örnek",photoNote:"Model üzerinde örnek görünüm; kişisel renk ve kalıp fotoğrafı değiştirmez.",notProduct:"Merdo ürünü değil",budget:"Giyim bütçesi",toBuy:"Alınacak",reserve:"Serbest rezerv",tailorApart:"Terzi ayrı",owned:"Bende var",detailsBtn:"Kombin detayı ve talep",edit:"Yanıtları düzenle",fitTitle:"Provada",colorTitle:"Gardırop renginiz",draftTitle:"Talep taslağı",draftHint:"Metin yalnızca kopyalanır, gönderim veya rezervasyon değildir.",copy:"Talebi kopyala",copied:"Kopyalandı",copyError:"Otomatik kopyalama başarısız. Metni seçip manuel kopyalayabilirsiniz.",disclaimer:"Model fotoğrafları gerçek Merdo ürünlerini göstermez. Renk, beden, kalıp, fiyat ve stok doğrulanmamıştır.",colorsDontChange:"Kendi renginiz listede gösterilir; model fotoğrafı değiştirilmez.",noSaved:"Cihazda kayıt mümkün değil; yanıtlar kaybolabilir.",importWardrobe:"Gardırobunuz aktarıldı; sahip olduklarınız dikkate alındı. Fotoğraflar cihazınızda kaldı.",importSamples:"Örnek ürünler aktarıldı. Toplamları başlangıç bütçesi oldu, stilist kategorileri ayrıca hesaplar.",importSamplesLabel:"Seçilen örnek kartlar",importSamplesPrice:"Örnek kart toplamı",importNotStock:"Bunlar kurgu ürünler; beden ve fiyat mağaza tarafından doğrulanmadı.",importSource:"Kombin kaynağı",noSize:"Beden seçilmedi",demoTools:"Diğer BitOS araçları",oldWardrobe:"Gardırobum",oldCatalog:"Örnek ürünler",oldSocial:"Sosyal akış",oldSources:"Katalog durumu",reStart:"Baştan başla",
 fitsAdvice:{normal:"Omuzların, düğmenin ve hareket rahatlığının uyumunu kontrol edin.",tight:"Sırt ve omuzlarda sıkışma varsa farklı kalıp deneyin.",loose:"Omuz düşüyorsa sadece bel daraltmak yetmez."},
 pantsAdvice:{straight:"Düz kesim daha kolay boy ayarı sağlar.",tapered:"Bilek çevresinde çok dar olmamalı.",relaxed:"Rahat pantolonda paça uzunluğu önemlidir."}
 }};
 const safe=s=>String(s).replace(/[&<>"']/g,k=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[k]));
-const initial=()=>({gender:"man",occasion:"formal",fit:"normal",pants:"straight",shoe:"needed",budget:15000,hem:false,sleeve:false,waist:false,owned:{jacket:false,shirt:false,trousers:false,shoes:false,details:false},colors:{}});
+const initial=()=>({gender:"man",occasion:"formal",fit:"normal",pants:"straight",shoe:"needed",budget:15000,hem:false,sleeve:false,waist:false,owned:{jacket:false,shirt:false,trousers:false,shoes:false,details:false},colors:{},samples:[],handoffType:""});
 let state=initial(),lang="ru",screen="intro",step=1,detailsOpen=false,feedback="",persistOK=true,hydrated=false;
 function isOwned(k){return state.owned[k]===true||(k==="shoes"&&state.shoe==="have")}
 const t=()=>strings[lang],money=n=>new Intl.NumberFormat(lang==="ru"?"ru-RU":"tr-TR").format(Math.round(n))+" ₺";
@@ -65,12 +65,78 @@ function quote(){
  while(toBuy>state.budget){const k=keys.reduce((best,k)=>amounts[k]>amounts[best]?k:best,"jacket");amounts[k]-=Math.min(amounts[k],Math.ceil((toBuy-state.budget)/50)*50);toBuy=PIECES.reduce((sum,k)=>sum+amounts[k],0)}
  return {amounts,toBuy,reserve:state.budget-toBuy,tailor:(state.hem?400:0)+(state.sleeve?650:0)+(state.waist?500:0)}
 }
+
+const HANDOFF_KEY="bitos:grok-handoff:v1";
+function sanitizeSamples(raw){
+ if(!Array.isArray(raw))return [];
+ const seen=new Set(),result=[];
+ for(const v of raw.slice(0,8)){
+  if(!v||typeof v!=="object"||!/^TEST-[MW]-0[1-8]$/.test(v.id||"")||seen.has(v.id))continue;
+  const expectedGender=v.id.startsWith("TEST-W-")?"woman":"man";
+  if(v.gender!==expectedGender||!PIECES.includes(v.kind)||v.kind==="details")continue;
+  const price=Number(v.price);
+  if(!Number.isInteger(price)||price<0||price>100000)continue;
+  seen.add(v.id);
+  const size=typeof v.size==="string"&&/^[A-Za-z0-9]{1,5}$/.test(v.size)?v.size:"";
+  const label=x=>typeof x==="string"?x.slice(0,90).replace(/[<>]/g,""):"";
+  result.push({id:v.id,gender:expectedGender,kind:v.kind,price,size,nameRu:label(v.nameRu),nameTr:label(v.nameTr)});
+ }
+ if(result.some(v=>v.gender!==result[0].gender))return [];
+ return result;
+}
+function applyHandoff(){
+ const url=new URL(location.href),kind=url.searchParams.get("handoff");
+ if(kind!=="wardrobe"&&kind!=="samples")return;
+ url.searchParams.delete("handoff");
+ history.replaceState(history.state,"",url.pathname+url.search+url.hash);
+ let data=null;
+ try{
+  data=JSON.parse(sessionStorage.getItem(HANDOFF_KEY)||"null");
+  sessionStorage.removeItem(HANDOFF_KEY);
+ }catch(e){return}
+ if(!data||data.version!==1||data.kind!==kind||!Number.isFinite(data.at)||Math.abs(Date.now()-data.at)>600000)return;
+ if(kind==="wardrobe"){
+  if(!data.owned||typeof data.owned!=="object")return;
+  const pantsFromCut={straight:"straight",tapered:"tapered",relaxed:"relaxed"};
+  for(const k of PIECES){
+   const entry=data.owned[k]||{};
+   state.owned[k]=entry.owned===true;
+   if(state.owned[k]&&COLORS.includes(entry.color))state.colors[k]=entry.color;
+   else delete state.colors[k];
+  }
+  if(state.owned.shoes)state.shoe="have";
+  if(state.owned.trousers&&pantsFromCut[data.owned.trousers?.cut])state.pants=pantsFromCut[data.owned.trousers.cut];
+  state.samples=[];state.handoffType="wardrobe";
+ }else{
+  const samples=sanitizeSamples(data.items);
+  if(!samples.length)return;
+  const sum=samples.reduce((n,v)=>n+v.price,0);
+  if(sum<1000||sum>1000000||data.gender!==samples[0].gender||Number(data.budget)!==sum)return;
+  state.gender=samples[0].gender;
+  state.budget=clampBudget(sum);
+  state.samples=samples;state.handoffType="samples";
+ }
+ screen="flow";step=1;detailsOpen=false;
+}
+function handoffBanner(){
+ const c=t();
+ if(!state.handoffType)return "";
+ return '<aside class="grok-bridgeNotice" role="status"><strong>'+c.importSource+'</strong><p>'+(state.handoffType==="samples"?c.importSamples:c.importWardrobe)+'</p></aside>';
+}
+function sampleSummary(){
+ if(!state.samples?.length)return "";
+ const c=t(),items=state.samples,total=items.reduce((n,v)=>n+v.price,0);
+ return '<aside class="grok-importedSamples"><h2>'+c.importSamplesLabel+'</h2><ul>'+items.map(v=>'<li><span>'+safe((lang==="ru"?v.nameRu:v.nameTr)||v.id)+' <small>'+v.id+' · '+safe(v.size||c.noSize)+'</small></span><b>'+money(v.price)+'</b></li>').join("")+'</ul><p>'+c.importSamplesPrice+': <strong>'+money(total)+'</strong></p><p class="grok-miniNote">'+c.importNotStock+'</p></aside>';
+}
+
 function hydrate(){
  try{
   const raw=JSON.parse(localStorage.getItem(STORAGE)||"null");
   if(raw&&typeof raw==="object"&&raw.state&&["man","woman"].includes(raw.state.gender)&&OCCASIONS.includes(raw.state.occasion)){
    const d=raw.state;state={...initial(),gender:d.gender,occasion:d.occasion,fit:FITS.includes(d.fit)?d.fit:"normal",pants:PANTS.includes(d.pants)?d.pants:"straight",shoe:d.shoe==="have"?"have":"needed",budget:clampBudget(Number(d.budget)),hem:d.hem===true,sleeve:d.sleeve===true,waist:d.waist===true};
    for(const k of PIECES){state.owned[k]=d.owned?.[k]===true;if(COLORS.includes(d.colors?.[k]))state.colors[k]=d.colors[k]}
+   state.samples=sanitizeSamples(d.samples);
+   state.handoffType=(d.handoffType==="samples"||d.handoffType==="wardrobe")?d.handoffType:"";
    screen=["intro","flow","result"].includes(raw.screen)?raw.screen:"intro";
    step=[1,2,3,4].includes(raw.step)?raw.step:1;lang=raw.lang==="tr"?"tr":"ru";
    return;
