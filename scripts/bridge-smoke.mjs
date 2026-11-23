@@ -89,7 +89,7 @@ try{
   const summary=samplePage.locator(".grok-importedSamples");
   assert.equal(await summary.isVisible(),true);
   assert.equal(await summary.locator("li").count(),2);
-  assert.match(await summary.innerText(),/6[\s\u00a0]?850/);
+  assert.match(await summary.innerText(),/6[.\s\u00a0]?850/);
   assert.match(await summary.innerText(),/TEST-W-01/);
   assert.match(await summary.innerText(),expectedLang==="ru"?/вымышленные товары/:/kurgu ürünler/);
   assert.equal((await samplePage.evaluate(()=>window.BitOSGrok.getQuote())).toBuy<=6850,true);
