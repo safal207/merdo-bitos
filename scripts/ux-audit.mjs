@@ -44,8 +44,12 @@ try{
       // A customer's photo must work in Chromium, Firefox and WebKit, remain private,
       // survive refresh, and be fully removable without deleting the garment.
       await page.locator('input[name="wardrobe-jacket"]').check();
+      await page.locator('select[name="wardrobe-color-jacket"]').focus();
       await page.locator('select[name="wardrobe-color-jacket"]').selectOption("navy");
+      assert.equal(await page.evaluate(()=>document.activeElement.name),"wardrobe-color-jacket","color select retains focus");
+      await page.locator('select[name="wardrobe-cut-jacket"]').focus();
       await page.locator('select[name="wardrobe-cut-jacket"]').selectOption("structured");
+      assert.equal(await page.evaluate(()=>document.activeElement.name),"wardrobe-cut-jacket","cut select retains focus");
       const pixel=Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAF0lEQVR4nGNUdZ3IQAgwEVQxqmgAFAEAx40BEw18ATYAAAAASUVORK5CYII=","base64");
       await page.locator('input[name="wardrobe-photo-jacket"]').setInputFiles({name:"wardrobe-test.png",mimeType:"image/png",buffer:pixel});
       const saved=page.locator('[data-wardrobe-item="jacket"] .wardrobePhoto');
