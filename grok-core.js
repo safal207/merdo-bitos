@@ -95,6 +95,7 @@ function applyHandoff(){
   sessionStorage.removeItem(HANDOFF_KEY);
  }catch(e){return}
  if(!data||data.version!==1||data.kind!==kind||!Number.isFinite(data.at)||Math.abs(Date.now()-data.at)>600000)return;
+ if(data.lang==="tr"||data.lang==="ru")lang=data.lang;
  if(kind==="wardrobe"){
   if(!data.owned||typeof data.owned!=="object")return;
   const pantsFromCut={straight:"straight",tapered:"tapered",relaxed:"relaxed"};
