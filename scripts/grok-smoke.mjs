@@ -107,6 +107,39 @@ try{
   assert.match(await page.locator(".funnelDone").innerText(),/satış değildir/i);
   await page.locator('[data-lang="ru"]').click();
   assert.equal(page.url(),beforeFunnelUrl,"no order, booking or navigation occurred");
+
+  // The prototype is observable but does not pretend to collect multi-user traffic.
+  const analytics=await page.evaluate(()=>window.BitOSAnalytics.getEvents());
+  const names=analytics.map(x=>x.event);
+  for(const event of [
+    "session_opened","stylist_started","step_1_completed","step_2_completed",
+    "step_3_completed","step_4_completed","look_viewed","look_details_opened",
+    "funnel_started","tripwire_interest","core_stage_viewed",
+    "bump_stage_viewed","bump_interest","oto_stage_viewed","oto_interest",
+    "retention_stage_viewed","funnel_demo_completed"
+  ])assert.ok(names.includes(event),"missing session event: "+event);
+  assert.equal(names.includes("purchase_completed"),false,"hypothetical OTO is not a real sale");
+  assert.equal(names.includes("appointment_booked"),false,"no fabricated booking");
+  assert.equal(await page.evaluate(()=>window.BitOSAnalytics.record("purchase_completed")),false,"deny unknown revenue events");
+  assert.ok(analytics.length<150,"analytics is intentionally capped");
+  for(const entry of analytics){
+    assert.deepEqual(Object.keys(entry).sort(),["event","time"],"do not store gender, budgets, sizes, names, contacts, URL or UTM");
+    assert.equal(Number.isSafeInteger(entry.time),true);
+  }
+  const stored=await page.evaluate(()=>JSON.parse(sessionStorage.getItem("bitos:session-analytics:v1")));
+  assert.equal(stored.length,analytics.length,"event log persists only within tab storage");
+  await page.locator(".analyticsDetails summary").click();
+  assert.equal(await page.locator(".analyticsSteps li.passed").count(),9,"all nine funnel milestones visibly completed");
+  assert.match(await page.locator(".analyticsPrivacy").innerText(),/не отправляется на сервер/);
+  assert.equal(await page.locator(".analyticsStats strong").first().innerText(),String(analytics.length));
+  await page.screenshot({path:path.join(root,"artifacts","grok-analytics-"+width+".png"),fullPage:true});
+  await page.reload({waitUntil:"domcontentloaded"});
+  assert.equal((await page.evaluate(()=>window.BitOSAnalytics.getEvents())).length,analytics.length,"reload does not count duplicate session opening");
+  await page.locator(".analyticsDetails summary").click();
+  await page.locator('[data-analytics-action="clear"]').click();
+  assert.equal((await page.evaluate(()=>window.BitOSAnalytics.getEvents())).length,0,"user can wipe local diagnostics");
+  assert.equal(await page.evaluate(()=>sessionStorage.getItem("bitos:session-analytics:v1")),null,"clear removes persistent data");
+
   const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
   assert.ok(overflow<=2,"horizontal overflow "+overflow+"px at "+width);
   assert.equal(await page.locator('.grok-legacyLinks a[href="./legacy.html#myWardrobe"]').count(),1);
