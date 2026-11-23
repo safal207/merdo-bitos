@@ -104,6 +104,6 @@ const p=products.find(x=>x.id===m[1]);if(!p||el.value&&!p.sizes.includes(el.valu
 sizes.set(p.id,el.value);render();root.querySelector('select[name="sample-size-'+p.id+'"]')?.focus({preventScroll:true});
 });
 document.getElementById("language")?.addEventListener("click",render);
-window.BitOSDemoCards={getSelection(){return [...selected.values()].map(p=>({id:p.id,gender:p.sex,price:p.price,size:sizes.get(p.id)||null}))},clear(){selected.clear();render()}};
+window.BitOSDemoCards={getSelection(){return [...selected.values()].map(p=>({id:p.id,gender:p.sex,kind:p.kind,price:p.price,size:sizes.get(p.id)||null,nameRu:p.nameRu,nameTr:p.nameTr}))},clear(){selected.clear();render()}};
 render();
 })();
