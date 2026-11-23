@@ -124,12 +124,13 @@ const ownership=lang()==="tr"?{owned:"Bende var",advice:"Mevcut ürünleri yenid
 {owned:"Уже есть",advice:"Вещи из вашего гардероба не предлагаем покупать повторно. Сочетаемость и посадку необходимо проверить.",none:"Все категории есть: возможно, ничего докупать не требуется.",label:"План на недостающие вещи",link:"Изменить гардероб"};
 const ownedCheck=lang()==="tr"?"Renk, kesim ve kalıp uyumu provada kontrol edilmeli.":"Проверим цвет, крой и посадку при примерке.";
 const wardrobeDetails=window.BitOSWardrobe?.getDetails?.()||{};
+const lookVisual=window.BitOSLookPreview?.render(state)||"";
 const colorHint=wardrobeCount?colorAdvice(wardrobeDetails):"";
 const cells=keys.slice(0,5).map((k,i)=>'<div class="stylePiece '+(own[k]?"isOwned":"")+'"><div><strong>'+t(k)+'</strong><p>'+(own[k]?(ownedNote(k,wardrobeDetails)?esc(ownedNote(k,wardrobeDetails))+" · "+ownedCheck:ownedCheck):esc(values[i]))+'</p></div>'+(own[k]?'<span class="ownedLabel">✓ '+ownership.owned+'</span>':'<strong>'+currency(prices[i])+'</strong>')+'</div>').join("")+
 '<div class="stylePiece"><div><strong>'+t("reservePiece")+'</strong><p>'+t("reserve")+'</p></div><strong>'+currency(prices[5])+'</strong></div>';
 const wardrobeInfo=wardrobeCount?'<div class="outfitWardrobeInfo">'+(missing.length?ownership.advice:ownership.none)+' <a href="#myWardrobe">'+ownership.link+' ↗</a></div>':"";
 const shoeOwn=own.shoes?'<div class="fitTip">'+t("ownsShoes")+'</div>':"";
-$("styleDynamic").innerHTML='<p class="styleNote">'+t("intro")+'</p><h3>'+esc(profile[0])+'</h3><div class="stylePieces">'+cells+'</div>'+wardrobeInfo+(colorHint?'<div class="wardrobeColorNote">'+esc(colorHint)+'</div>':"")+shoeOwn+
+$("styleDynamic").innerHTML=lookVisual+'<p class="styleNote">'+t("intro")+'</p><h3>'+esc(profile[0])+'</h3><div class="stylePieces">'+cells+'</div>'+wardrobeInfo+(colorHint?'<div class="wardrobeColorNote">'+esc(colorHint)+'</div>':"")+shoeOwn+
 '<div class="fitTip"><strong>'+t("fitTitle")+'</strong><p>'+t("fit"+state.fit[0].toUpperCase()+state.fit.slice(1))+'</p></div>'+
 '<div class="styleTotals"><div class="stylePiece"><span>'+t("budgetLabel")+'</span><b>'+currency(state.budget)+'</b></div>'+
 (wardrobeCount?'<div class="stylePiece"><span>'+ownership.label+'</span><b>'+currency(plannedBuy)+'</b></div>':"")+
@@ -159,8 +160,9 @@ section();root.classList.add("show-result");
 },
 showResult(){
 root.classList.add("show-result");
-root.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});
-root.focus({preventScroll:true});
+const visual=root.querySelector(".lookPreview")||root;
+visual.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});
+visual.focus({preventScroll:true});
 }
 };
 window.addEventListener("bitos:compose",e=>{
