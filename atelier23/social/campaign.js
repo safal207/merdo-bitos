@@ -52,3 +52,33 @@ export function destination(topic,kind){
   const message=["Gostaria de conversar sobre o fato de noivo.","Estilo: "+weddingStyles[style]+".",date?"Data do casamento: "+date+".":"Data a confirmar.",selected.length?"Também gostaria de falar sobre: "+selected.join(", ")+".":""].filter(Boolean).join(" ");
   return WHATSAPP+"?text="+encodeURIComponent(message);
  }
+
+ // A local planning aid only: no access to actual orders, patterns or customer records.
+ export const wardrobeStages=Object.freeze({first:"Primeira visita",returning:"Já sou cliente",unsure:"Prefiro conversar"});
+ export const wardrobeGoals=Object.freeze({business:"Trabalho e reuniões",casual:"Dia a dia",occasion:"Ocasiões especiais",season:"Nova estação"});
+ export const wardrobePieces=Object.freeze({suit:"Fato",shirt:"Camisa",jacket:"Casaco",trousers:"Calças",coat:"Sobretudo"});
+ export const wardrobeHorizons=Object.freeze({now:"Nas próximas semanas",season:"Nos próximos três meses",later:"Sem prazo definido"});
+ export const WARDROBE_KEY="bitos.atelier23.lisboa.wardrobe.v1";
+ export const emptyWardrobe=()=>({stage:"",goal:"",owned:[],wanted:[],horizon:""});
+ export function normalizeWardrobe(raw){
+  const s=raw&&typeof raw==="object"?raw:{};
+  const valid=(obj,id)=>typeof id==="string"&&Object.hasOwn(obj,id)?id:"";
+  const list=v=>Array.isArray(v)?Object.keys(wardrobePieces).filter(id=>v.includes(id)):[];
+  return {stage:valid(wardrobeStages,s.stage),goal:valid(wardrobeGoals,s.goal),owned:list(s.owned),wanted:list(s.wanted),horizon:valid(wardrobeHorizons,s.horizon)};
+ }
+ export function wardrobeContact(raw){
+  const s=normalizeWardrobe(raw);
+  if(!s.stage||!s.goal||!s.wanted.length)return null;
+  const labels=ids=>ids.map(id=>wardrobePieces[id]).join(", ");
+  const message=["Gostaria de conversar sobre o meu guarda-roupa.", "Visita: "+wardrobeStages[s.stage]+".", "Objetivo: "+wardrobeGoals[s.goal]+".",s.owned.length?"Já tenho: "+labels(s.owned)+".":"", "Gostaria de explorar: "+labels(s.wanted)+".",s.horizon?"Prazo: "+wardrobeHorizons[s.horizon]+".":"",s.stage==="returning"?"Podemos confirmar se as minhas medidas anteriores ainda são adequadas?":""].filter(Boolean).join(" ");
+  return WHATSAPP+"?text="+encodeURIComponent(message);
+ }
+ export function loadWardrobe(storage){
+  try{return normalizeWardrobe(JSON.parse(storage.getItem(WARDROBE_KEY)||"null"))}catch{return emptyWardrobe()}
+ }
+ export function saveWardrobe(storage,raw){
+  try{storage.setItem(WARDROBE_KEY,JSON.stringify(normalizeWardrobe(raw)));return true}catch{return false}
+ }
+ export function clearWardrobe(storage){
+  try{storage.removeItem(WARDROBE_KEY);return true}catch{return false}
+ }
