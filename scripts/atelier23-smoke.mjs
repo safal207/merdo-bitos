@@ -61,6 +61,25 @@ try {
     const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1);
     if(overflow)failures.push(width+" horizontal scroll after result");
     await page.close();
+    const episode=await browser.newPage({viewport:{width,height:850},reducedMotion:"reduce"});
+    episode.on("pageerror",e=>failures.push(width+" episode JS: "+e.message));
+    await episode.goto(base+"series/01/",{waitUntil:"domcontentloaded"});
+    const primary=episode.locator("#choose-occasion");
+    const href=await primary.getAttribute("href");
+    if(href!=="../../#journey") failures.push(width+" episode CTA route mismatch");
+    const video=episode.locator("#film");
+    if(await video.locator("source").getAttribute("src")!=="https://scarlet-eagle-sapphire-breeze.grok.me/atelier-reel.mp4") failures.push(width+" episode source mismatch");
+    if(!await video.evaluate(v=>v.paused && v.muted && v.playsInline)) failures.push(width+" reduced motion/muted media check");
+    if(await episode.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1)) failures.push(width+" episode overflow");
+    const bounds=await primary.boundingBox();
+    if(!bounds || bounds.y+bounds.height>850) failures.push(width+" episode CTA outside first viewport");
+    await video.locator("source").dispatchEvent("error");
+    if(!await episode.locator("#fallback").isVisible()) failures.push(width+" episode fallback not visible after simulated source failure");
+    await primary.click();
+    await episode.locator("#journey .quiz-body").waitFor({timeout:40000});
+    if(new URL(episode.url()).hash!=="#journey") failures.push(width+" episode destination not reached");
+    await episode.close();
+    process.stdout.write("PASS "+width+"px: episode, video source, reduced motion, fallback, primary CTA route\n");
     process.stdout.write("PASS "+width+"px: wizard, guardrails, overflow, links\n");
   }
 } catch(e) {failures.push(e.stack||String(e));}
