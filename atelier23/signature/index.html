@@ -95,6 +95,29 @@
 @keyframes sig-caption{from{opacity:.5;transform:translateY(3px)}to{opacity:1;transform:none}}
 @media(max-width:720px){.sig .cinema-controls{grid-template-columns:minmax(0,1fr);gap:8px}.sig .cinema-actions button{flex:1 1 auto}.sig .cinema-actions{width:100%}}
 @media(prefers-reduced-motion:reduce){.sig .film-frame,.sig .film-frame::after,.sig .scene-line,.sig .stitch,.sig .thread-line{animation:none!important;transition:none!important}}
+
+/* Optional consultation composition, not a checkout. */
+.sig .commerce-edit{margin:26px 0;border-top:1px solid var(--line);padding-top:22px}
+.sig .commerce-edit h3{font:normal clamp(27px,4vw,40px)/1.1 Georgia,serif;color:var(--ivory);margin:10px 0 20px}
+.sig .core-offer{display:grid;gap:5px;padding:17px;border:1px solid #9e8967;background:#28392e}
+.sig .core-offer strong{font:normal 25px Georgia,serif;color:#efe6d3}
+.sig .core-offer span{color:var(--gold);font-size:12px}
+.sig .core-offer p{font-size:13px;margin:0}
+.sig .commerce-edit fieldset{border:0;padding:0;margin:20px 0 12px}
+.sig .commerce-edit legend{padding:0;font-size:15px;color:#efe6d3}
+.sig .commerce-hint{font-size:12px;line-height:1.6;margin:10px 0;color:#c8c5b9}
+.sig .extra-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.sig .extra-card{padding:15px 12px;align-items:flex-start;min-width:0;border:1px solid #667367;background:#192920;cursor:pointer}
+.sig .extra-card:has(input:checked){border-color:var(--gold);background:#354238}
+.sig .extra-card:focus-within{outline:2px solid var(--gold);outline-offset:2px}
+.sig .extra-card input{margin:3px 0}
+.sig .extra-info{display:grid;gap:8px;min-width:0;overflow-wrap:anywhere}
+.sig .extra-info strong{font:normal 19px/1.2 Georgia,serif;color:#eee5d2}
+.sig .extra-info span{font-size:12px;color:#c4cbbf;line-height:1.5}
+.sig .extra-info small{font-size:11px;color:#e1cda8;line-height:1.5}
+.sig #extra-count{font-size:13px;margin:12px 0}
+.sig #clear-extras{white-space:normal;min-height:48px;text-align:center}
+@media(max-width:720px){.sig .extra-grid{grid-template-columns:minmax(0,1fr)}.sig .extra-card{min-height:76px}.sig #clear-extras{width:100%;justify-content:center}}
 </style>
 <script type="importmap">
 {"imports":{"react":"https://esm.sh/react@19.0.0","react-dom/client":"https://esm.sh/react-dom@19.0.0/client?external=react"}}
