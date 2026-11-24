@@ -1,5 +1,6 @@
 import React, {useState,useLayoutEffect,useRef,useSyncExternalStore} from "react";
 import {createRoot} from "react-dom/client";
+import {makeTracker} from "../fashion-overlay/analytics.js";
 const h=React.createElement;
 // Editorial craft layer; no product recommendation, booking, payment or analytics.
 const chapters=[
@@ -173,7 +174,7 @@ function CommerceEdit({state,onExtra,onClear}){
  h("button",{type:"button",id:"clear-extras",className:"btn btn-ghost",onClick:onClear,disabled:state.extras.length===0},"Оставить только костюм"),
  h("p",{className:"commerce-hint"},"Наличие, цены и условия подтверждает ателье. Нет корзины, оплаты, депозита или автоматической записи."));
 }
-function Brief({state,headingRef,onReset,copy,onCopy,fallbackRef,onExtra,onClearExtras}){
+function Brief({state,headingRef,onReset,copy,onCopy,fallbackRef,onExtra,onClearExtras,onHandoff}){
  const summary=chapters.filter(c=>c.options).map(c=>[c.question,state.choices[c.id]||"Обсудить на встрече"]);
  const selected=extras.filter(x=>state.extras.includes(x.id)).map(x=>x.name);
  const notes=[...summary,["Основная идея:","Индивидуальный костюм"],["Дополнения для обсуждения:",selected.length?selected.join(", "):"Без дополнений"]];
@@ -185,7 +186,7 @@ function Brief({state,headingRef,onReset,copy,onCopy,fallbackRef,onExtra,onClear
  h("button",{className:"btn btn-ghost",type:"button",id:"copy-brief",onClick:()=>onCopy(notes)},"Скопировать заметки"),
  h("textarea",{id:"copy-fallback","aria-label":"Заметки для ручного копирования",readOnly:true,hidden:!copy.fallback,value:copy.fallback,ref:fallbackRef}),
  h("p",{id:"copy-status",role:"status"},copy.status),
- h("div",{className:"actions"},h("a",{className:"btn btn-primary",id:"advisor",href:"../#journey"},"Перейти к подбору образа"),h("a",{className:"btn btn-ghost",id:"journey",href:"../fashion-journey/"},"Исследовать образы")),
+ h("div",{className:"actions"},h("a",{className:"btn btn-primary",id:"advisor",href:"../#journey",onClick:()=>onHandoff("advisor")},"Перейти к подбору образа"),h("a",{className:"btn btn-ghost",id:"journey",href:"../fashion-journey/",onClick:()=>onHandoff("journey")},"Исследовать образы")),
  h("p",{className:"notice"},"Подбор события, бюджета, сроков и запись на примерку уже находятся в существующем сервисе. Заметки можно скопировать вручную; они не передаются автоматически. Дополнительные изделия и стоимость обсуждаются с мастером, без платежей в этой демонстрации."),
  h("button",{className:"btn btn-ghost",type:"button",id:"reset",onClick:onReset},"Начать заново"));
 }
@@ -215,6 +216,15 @@ function CinemaControls({step,motion,reduced,onMotion,onReplay}){
 }
 function SignatureExperience(){
  const [state,setState]=useState(restore);
+ const [track]=useState(()=>{try{return makeTracker(localStorage,"sig-"+crypto.randomUUID())}catch{return ()=>false}});
+ const observed=useRef({started:false,step:null,complete:false});
+ useLayoutEffect(()=>{
+  const o=observed.current;
+  if(!o.started){track("signature_open");o.started=true}
+  if(o.step!==state.step){track("signature_chapter",{chapter:chapters[state.step].id});o.step=state.step}
+  if(state.complete&&!o.complete)track("signature_brief");
+  o.complete=state.complete;
+ },[state.step,state.complete,track]);
  const [copy,setCopy]=useState(emptyCopy);
  const [motion,setMotion]=useState(true),[direction,setDirection]=useState("forward"),[replay,setReplay]=useState(0);
  const reduced=useSyncExternalStore(subscribeReduced,getReduced);
@@ -230,11 +240,11 @@ function SignatureExperience(){
   if(!Number.isInteger(i)||i<0||i>=chapters.length)return;
   clearCopy();setDirection(i<state.step?"backward":"forward");focus.current="chapter";setState(s=>({...s,step:i,complete:false}));
  }
- function choose(id,value){if(!chapters.find(c=>c.id===id)?.options?.includes(value))return;clearCopy();setState(s=>({...s,choices:{...s.choices,[id]:value}}))}
- function toggleExtra(id){if(!extraIds.has(id))return;clearCopy();setState(s=>({...s,extras:s.extras.includes(id)?s.extras.filter(x=>x!==id):[...s.extras,id]}))}
- function clearExtras(){clearCopy();setState(s=>({...s,extras:[]}))}
+ function choose(id,value){if(!chapters.find(c=>c.id===id)?.options?.includes(value))return;track("signature_choice",{chapter:id,choice:value});clearCopy();setState(s=>({...s,choices:{...s.choices,[id]:value}}))}
+ function toggleExtra(id){if(!extraIds.has(id)||!state.complete)return;track("signature_extra",{extra:id,action:state.extras.includes(id)?"remove":"add"});clearCopy();setState(s=>({...s,extras:s.extras.includes(id)?s.extras.filter(x=>x!==id):[...s.extras,id]}))}
+ function clearExtras(){for(const id of state.extras)track("signature_extra",{extra:id,action:"remove"});clearCopy();setState(s=>({...s,extras:[]}))}
  function next(){if(state.step<chapters.length-1)navigate(state.step+1);else{clearCopy();focus.current="brief";setState(s=>({...s,complete:true}))}}
- function reset(){clearCopy();setDirection("backward");focus.current="chapter";setState(blank())}
+ function reset(){track("signature_reset");clearCopy();setDirection("backward");focus.current="chapter";setState(blank())}
  async function copyNotes(summary){
   const ticket=++generation.current;
   const value=["ATELIER 23 — заметки для консультации",...summary.map(([q,a])=>q+" "+a),"Не заказ и не мерки."].join("\n");
@@ -245,9 +255,9 @@ function SignatureExperience(){
  h("header",null,h("a",{className:"wordmark",href:"../"},"ATELIER ",h("b",null,"23"),h("small",null,"× BITOS")),h("span",{className:"edition"},"SIGNATURE",h("br"),"EXPERIENCE / 01")),
  h("div",{className:"introcopy"},h("span",{className:"eyebrow"},"Искусство индивидуального пошива"),h("h1",null,"Костюм начинается",h("br"),"с ",h("em",null,"вас.")),h("p",null,"Шесть глав — от замысла и ткани до финальной примерки. Соберите заметки для разговора с мастером, прежде чем выбирать образ.")),
  h(ChapterNav,{step:state.step,onNavigate:navigate}),h("div",{className:"progress-line"},h("p",{id:"progress",role:"status","aria-live":"polite"},"Глава "+(state.step+1)+" из "+chapters.length),h("progress",{max:chapters.length,value:state.step+1,"aria-label":"Прогресс знакомства с пошивом"})),
- h(CinemaControls,{step:state.step,motion:effectiveMotion,reduced,onMotion:()=>setMotion(m=>!m),onReplay:()=>setReplay(n=>n+1)}),
+ h(CinemaControls,{step:state.step,motion:effectiveMotion,reduced,onMotion:()=>setMotion(m=>!m),onReplay:()=>{track("signature_replay",{chapter:chapters[state.step].id});setReplay(n=>n+1)}}),
  h(Chapter,{state,onChoose:choose,onNavigate:navigate,onNext:next,headingRef:chapterRef,direction,replay}),
- h(Brief,{state,headingRef:briefRef,onReset:reset,copy,onCopy:copyNotes,fallbackRef,onExtra:toggleExtra,onClearExtras:clearExtras}),
- h("footer",null,h("p",null,"Независимый демонстрационный концепт BitOS. Никаких реальных заказов, платежей, записей, сбора контактов или передачи мерок. Процесс схематичен; детали производства и сроки уточняет ателье.")));
+ h(Brief,{state,headingRef:briefRef,onReset:reset,copy,onCopy:copyNotes,fallbackRef,onExtra:toggleExtra,onClearExtras:clearExtras,onHandoff:destination=>track("signature_handoff",{destination})}),
+ h("footer",null,h("p",null,"Независимый демонстрационный концепт BitOS. Никаких реальных заказов, платежей, записей, сбора контактов или передачи мерок. Процесс схематичен; детали производства и сроки уточняет ателье. Обезличенные действия сохраняются только в журнале этого браузера, без отправки на сервер.")));
 }
 createRoot(document.getElementById("root")).render(h(SignatureExperience));
