@@ -127,3 +127,21 @@ for(const value of giftValues)for(const format of giftFormats){
  assert.ok(u.searchParams.get("text").includes(String(value)+" €"));
 }
 console.log("PASS Christmas gift denomination, format, Lisbon date boundaries and safe handoff");
+
+import {WEDDING_PAGE,validWeddingDate,weddingContact,weddingStyles} from "../atelier23/social/campaign.js";
+assert.equal(WEDDING_PAGE,"https://atelier23.store/pages/wedding-suits");
+assert.equal(validWeddingDate("2026-11-24","2026-11-25"),false);
+assert.equal(validWeddingDate("2026-11-25","2026-11-25"),true);
+assert.equal(validWeddingDate("2027-02-29","2026-11-25"),false);
+assert.equal(validWeddingDate("2028-02-29","2026-11-25"),true);
+assert.equal(validWeddingDate("2027-12-31","bad"),false);
+assert.equal(weddingContact({style:"constructor"}),null);
+assert.equal(weddingContact({style:"day",date:"2026-11-24"},"2026-11-25"),null);
+assert.equal(weddingContact({style:"day",guests:["unknown"]}),null);
+for(const style of Object.keys(weddingStyles)){
+ const u=new URL(weddingContact({style,date:"2027-05-20",guests:["father","father","groomsmen"]},"2026-11-25"));
+ assert.equal(u.origin,"https://wa.me");assert.equal(u.pathname,"/351912204778");
+ const msg=u.searchParams.get("text");assert.ok(msg.includes(weddingStyles[style]));assert.ok(msg.includes("2027-05-20"));assert.equal(msg.split("Pai do noivo").length,2);
+}
+assert.ok(new URL(weddingContact({style:"unsure"})).searchParams.get("text").includes("Data a confirmar."));
+console.log("PASS wedding optional date, leap year, style allowlist, family preferences and Lisbon handoff");
