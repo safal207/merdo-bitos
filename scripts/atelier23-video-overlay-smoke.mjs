@@ -151,6 +151,19 @@ try{
 
  assert.match(await page.locator("#retention").textContent(),/35\s*%/);
  assert.equal(await page.locator("#products .product").count(),6);
+ assert.equal(await page.locator("#advisor .adv-card").count(),5);
+ assert.match(await page.locator(".marketing").textContent(),/138/);
+ assert.match(await page.locator(".product-advisor").textContent(),/40%/);
+ assert.match(await page.locator(".style-advisor").textContent(),/Уверенная классика/);
+ assert.match(await page.locator(".finance-advisor").textContent(),/210[\s\u00a0\u202f]000/);
+ await page.locator('[data-model="attach"]').fill("100");
+ assert.match(await page.locator(".finance-advisor").textContent(),/420[\s\u00a0\u202f]000/);
+ assert.equal(await page.locator('[data-metric="sales"] b').textContent(),"12");
+ await page.locator('[data-model="attach"]').fill("50");
+ assert.equal(await page.locator(".loyalty-advisor .adv-journey-step").count(),4);
+ assert.ok(await page.locator("#advisor").evaluate(el=>el.scrollWidth<=el.clientWidth+1),"Advisor overflow");
+ await page.locator("#advisor").screenshot({path:"artifacts/atelier23-advisor-"+width+".png"});
+
  assert.equal(await page.evaluate(key=>localStorage.getItem(key),analyticsKey),beforeDemo);
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),"Demo dashboard overflow");
  await page.reload();await page.locator('[data-metric="sales"] b').waitFor();assert.equal(await page.locator('[data-metric="sales"] b').textContent(),"12");
@@ -158,6 +171,10 @@ try{
  assert.equal(await page.locator('[data-metric="sales"] b').textContent(),"—");
  assert.equal(await page.locator('[data-metric="booking"] b').textContent(),"2");
  assert.match(await page.locator("#retention").textContent(),/Пока нет измерения/);
+ assert.match(await page.locator(".finance-advisor").textContent(),/не реальные данные/);
+ assert.match(await page.locator(".marketing").textContent(),/Локально/);
+ assert.equal(await page.locator('[data-metric="sales"] b').textContent(),"—");
+
  assert.equal(await page.locator("#funnel .frow").count(),4);
  assert.ok(!(await page.locator("#funnel-summary").textContent()).includes("покупку"));
 

@@ -31,3 +31,12 @@ const events=[{visit:"a",ts:0,type:"film_view"},{visit:"a",ts:1,type:"occasion_s
 assert.deepEqual(localFunnel(events).map(r=>r[1]),[2,2,1,1]);
 assert.equal(localProducts(events).find(p=>p.id==="navy").booking,2);
 console.log("PASS synthetic funnel/retention/product reconciliation and ordered local cohorts");
+
+import {scenario,diagnose} from "../atelier23/fashion-overlay/analytics/advisor.js";
+assert.deepEqual(scenario({buyers:12,check:180000,extra:35000,attach:50}),{base:2160000,additional:210000,total:2370000,average:197500});
+assert.equal(scenario({buyers:0,check:180000,extra:35000,attach:100}).average,0);
+assert.equal(scenario({buyers:12,check:180000,extra:35000,attach:0}).additional,0);
+const advisor=diagnose(DEMO.scenes,DEMO.products,DEMO.funnel);
+assert.equal(advisor.ranked[0].id,"emotion");assert.equal(advisor.best.id,"navy");assert.equal(advisor.booking.id,"navy");assert.equal(advisor.gap.rate,40);
+assert.equal(diagnose([],[],[]).gap,null);assert.equal(diagnose([],[],[]).best,null);
+console.log("PASS advisor diagnostics and financial scenario arithmetic");

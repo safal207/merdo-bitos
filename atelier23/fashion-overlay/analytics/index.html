@@ -25,15 +25,60 @@
 .funnel-foot strong{font-size:13px;color:#f1d39f;font-weight:500}
 @media(max-width:760px){.two{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:400px){.frow{grid-template-columns:76px minmax(0,1fr);gap:8px}.flabel b{font-size:21px}.fshape{height:60px}.fshape span{font-size:11px}.funnel-summary>div{padding:10px}}
+
+.advisor-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
+.adv-card{border:1px solid #415547;border-radius:12px;background:#1b2a22;padding:20px;display:grid;gap:14px;min-width:0;--accent:#b3dcc6;--accent-bg:#2b493b}
+.adv-card.product-advisor{--accent:#b8cbf0;--accent-bg:#303e59}
+.adv-card.style-advisor{--accent:#e0c6a5;--accent-bg:#473b2e}
+.adv-card.finance-advisor{--accent:#efcf8e;--accent-bg:#473d29}
+.adv-card.loyalty-advisor{--accent:#cfb9e5;--accent-bg:#3b3249;grid-column:1/-1}
+.adv-title{display:grid;gap:6px;border-top:3px solid var(--accent);padding-top:14px}
+.adv-kicker{font-size:10px;letter-spacing:.14em;color:var(--accent)}
+.adv-title h3{font:normal 25px/1.15 Georgia,serif;letter-spacing:-.02em}
+.adv-note{background:var(--accent-bg);border-left:2px solid var(--accent);padding:12px;border-radius:0 6px 6px 0;display:grid;gap:5px}
+.adv-note strong{font-size:12px;color:var(--accent)}
+.adv-note p,.adv-look p,.adv-journey p{font-size:12px;color:#e0e5dc;line-height:1.55}
+.adv-rank{display:grid;gap:11px}
+.adv-rank-row{display:grid;gap:6px}
+.adv-rank-label,.adv-field-label{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.adv-rank-label b{white-space:nowrap;color:var(--accent);font-size:13px;font-weight:500}
+.adv-rail{background:#3b4c40;height:9px;border-radius:4px;overflow:hidden}
+.adv-rail i{display:block;height:100%;background:var(--accent);border-radius:4px}
+.adv-minis,.adv-results,.adv-ab{display:grid;gap:8px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.adv-minis{grid-template-columns:repeat(3,minmax(0,1fr))}
+.adv-mini{border:1px solid #485c4c;border-radius:8px;padding:10px;display:grid;gap:3px;min-width:0}
+.adv-mini b{font-size:clamp(18px,2.6vw,26px);font-weight:500;color:var(--accent);line-height:1.2;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.adv-mini small{font-size:11px;line-height:1.3}
+.adv-card h4{font-weight:500;margin:0}
+.adv-look{display:grid;grid-template-columns:100px minmax(0,1fr);gap:12px;align-items:start}
+.adv-look img{width:100%;height:140px;object-fit:cover;object-position:center 28%;border-radius:5px;background:#35473b}
+.adv-look img[hidden]{display:none}
+.adv-look-body{display:grid;gap:5px;min-width:0}
+.adv-look-body b{color:var(--accent);font-weight:500;font-size:13px}
+.adv-form{display:grid;gap:12px}
+.adv-field{display:grid;gap:4px;font-size:12px}
+.adv-field-label b{color:var(--accent);white-space:nowrap}
+.adv-field input{width:100%;accent-color:var(--accent);margin:3px 0 5px}
+.adv-mix{display:flex;gap:0;background:#3b4c40;height:13px;border-radius:4px;overflow:hidden}
+.adv-mix i{display:block;background:#81b6a0;height:100%}
+.adv-mix i+i{background:#e8c27b}
+.adv-journey{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.adv-journey-step{border:1px solid #4a5a50;border-radius:8px;padding:13px;display:grid;gap:8px;min-width:0}
+.adv-step{color:var(--accent);font-size:22px;font-weight:500}
+.adv-journey-step>div{display:grid;gap:5px}
+.adv-journey-step small{font-size:11px;color:var(--accent)}
+@media(max-width:760px){.advisor-grid{grid-template-columns:minmax(0,1fr)}.adv-journey{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:400px){.adv-card{padding:13px}.adv-title h3{font-size:23px}.adv-look{grid-template-columns:80px minmax(0,1fr)}.adv-look img{height:115px}.adv-minis{gap:5px}.adv-mini{padding:8px}.adv-journey{gap:7px}.adv-journey-step{padding:10px}}
 </style></head><body><main><div class="top"><div class="brand">ATELIER <span>23</span></div><a href="../">К видеовитрине ↗</a></div><div class="intro"><div class="eyebrow">BITOS · FASHION INTELLIGENCE</div><h1>Эффективность видео</h1><p>От первого просмотра до примерки и покупки. Сцены, интерес к образам и результат каждого шага.</p><div class="modes" role="group" aria-label="Источник данных"><button id="demo-mode" aria-pressed="false">Демо-данные</button><button id="local-mode" aria-pressed="true">Этот браузер</button></div></div><div id="mode-note" class="mode-note"></div><p id="status" role="status"></p><div class="actions"><button id="refresh">Обновить</button><button id="export">Экспорт JSON</button></div>
 <section class="section"><div class="section-head"><h2>Ключевые показатели</h2><small id="period"></small></div><div id="metrics" class="metrics"></div></section>
 <section class="section two"><div class="panel funnel-panel"><h2>Воронка продаж</h2><p id="funnel-note" class="caption"></p><div id="funnel-summary" class="funnel-summary"></div><div id="funnel" class="funnel" style="margin-top:18px"></div><div class="funnel-foot"><strong id="funnel-loss"></strong><p class="caption">Цветные ступени — схема пути. Тонкая полоса показывает точную долю от начальной когорты; под ней — конверсия относительно предыдущего шага и старта.</p></div></div><div class="panel"><h2>Удержание видео</h2><div id="retention"></div></div></section>
 <section class="section"><div class="section-head"><h2>Сцены и действия</h2><small>Просмотры сцен и нажатия CTA</small></div><div class="panel"><div class="scene head"><span>Сцена / секунды</span><span>Просмотры</span><span>Клики</span></div><div id="scenes"></div><p class="caption" style="margin-top:12px">Просмотр сцены: ≥ 1 с воспроизведения с соответствующим CTA, один раз за непрерывный визит к видео. Клики могут предшествовать квалифицированному просмотру; это не удержание и не CTR.</p></div></section>
 <section class="section"><div class="section-head"><h2>Образы</h2><small>Действия по изделиям</small></div><div id="products" class="products"></div></section>
-<section class="section"><h2>Результаты продаж</h2><p id="sales" class="notice"></p><details><summary>Все события и определения</summary><div id="extra" class="metrics"></div><p class="caption">Просмотр фильма: ≥ 3 с воспроизведения. Просмотр образа: загруженное фото видно ≥ 1 с. Визиты — идентификаторы загрузки страницы с событиями, не уникальные люди.</p></details></section>
+<section class="section" id="advisor-section"><div class="section-head"><h2>Fashion Advisor</h2><small>От данных к проверяемым действиям</small></div><p>Маркетинг, продукт, стиль, дополнительные продажи и отношения с клиентом. Сигналы — отдельно от гипотез и сценариев.</p><div id="advisor" class="advisor-grid"></div></section><section class="section"><h2>Результаты продаж</h2><p id="sales" class="notice"></p><details><summary>Все события и определения</summary><div id="extra" class="metrics"></div><p class="caption">Просмотр фильма: ≥ 3 с воспроизведения. Просмотр образа: загруженное фото видно ≥ 1 с. Визиты — идентификаторы загрузки страницы с событиями, не уникальные люди.</p></details></section>
 </main><script type="module">
 import {readLog,summarize} from "../analytics.js";
 import {DEMO,CATALOG,localProducts,localFunnel,rate} from "./showcase.js";
+import {renderAdvisor} from "./advisor.js";
 const $=id=>document.getElementById(id),num=n=>n==null?"—":n.toLocaleString("ru-RU"),pct=n=>n==null?"—":n.toLocaleString("ru-RU",{maximumFractionDigits:1})+" %",rub=n=>n==null?"—":num(n)+" ₽";
 let mode=new URLSearchParams(location.search).get("demo")==="1"?"demo":"local",log={rows:[],available:false,dropped:0};
 function element(tag,cls,text){const x=document.createElement(tag);if(cls)x.className=cls;if(text!=null)x.textContent=text;return x}
@@ -83,6 +128,7 @@ function render(){
  $("scenes").replaceChildren(...m.scenes.map(s=>{const el=element("div","scene"),name=element("div"),bar=element("div","bars"),fill=element("i"),v=element("span","",num(demo||log.available?s.views:null)),c=element("span","",num(demo||log.available?s.clicks:null));el.dataset.scene=s.id;fill.style.width=(s.views/max*100)+"%";bar.append(fill);name.append(element("strong","",s.label),element("small","",s.range+" с"),bar);v.dataset.count="views";c.dataset.count="clicks";el.append(name,v,c);return el}));
  const products=demo?DEMO.products:localProducts(log.rows);
  $("products").replaceChildren(...CATALOG.map(([id,name,item,photo])=>{const data=products.find(p=>p.id===id),card=element("article","product"),figure=element("figure"),img=element("img"),fallback=element("span","","Фото недоступно"),body=element("div","pbody"),stats=element("div","pstats"),book=element("div","pbook");card.dataset.product=id;img.loading="lazy";img.alt=item;img.src="https://atelier-23.ru/wp-content/uploads/"+photo;fallback.hidden=true;img.addEventListener("error",()=>{img.hidden=true;fallback.hidden=false});figure.append(img,fallback);for(const [label,key] of [["Просмотры","views"],["Лайки","likes"],["Сохранения","saves"],["Выбор образа","selected"]]){const d=element("div");d.append(element("b","",num(demo||log.available?data[key]:null)),element("small","",label));stats.append(d)}book.append(element("small","","К примерке"),element("b","",num(demo||log.available?data.booking:null)));body.append(element("h3","",name),element("small","",item),stats,book);card.append(figure,body);return card}));
+ renderAdvisor($("advisor"),{demo,available:demo||log.available,scenes:m.scenes,products,funnel});
  $("sales").textContent=demo?"Условно: 40 подтверждённых записей, 24 визита, 12 покупок, "+rub(DEMO.revenue)+" выручки. Не фактический результат и не прогноз.":"Подтверждённые записи, покупки и выручка: данных нет. Переход к форме примерки не означает запись или продажу.";
  const labels=[["Визиты с событиями","visits"],["Лайки (отмены)","unlikes"],["Отмены сохранений","unsaves"],["Поделиться (нажатия)","shares"],["Копирования ссылок","copied"],["Web Share завершён","shareResolved"],["Выбор повода","occasions"],["Переходы к пошиву","tailoring"]];
  $("extra").replaceChildren(...labels.map(([label,key])=>metric(label,key,value(key))));
