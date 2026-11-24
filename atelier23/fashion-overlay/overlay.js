@@ -1,4 +1,4 @@
-import {makeTracker} from "./analytics.js";
+import {makeTracker,attribution,tagURL} from "./analytics.js";
 const ROOT="https://atelier-23.ru/";
 const PHOTO=ROOT+"wp-content/uploads/";
 const BOOK=ROOT+"sign-up-for-a-fitting-room/";
@@ -76,7 +76,8 @@ const atelierMark='<svg aria-hidden="true" class="atelier-mark" viewBox="0 0 90 
 
 const screen=$("screen"),film=$("film"),app=document.querySelector(".app");
 let track=()=>false;
-try{track=makeTracker(localStorage,globalThis.crypto?.randomUUID?.()||("visit-"+Date.now()+"-"+Math.random().toString(36).slice(2)))}catch{}
+const campaignContext=attribution(new URLSearchParams(location.search));
+try{const write=makeTracker(localStorage,globalThis.crypto?.randomUUID?.()||("visit-"+Date.now()+"-"+Math.random().toString(36).slice(2)));track=(type,details)=>write(type,{...details,...campaignContext})}catch{}
 function log(type,details={}){
  const button=$("cue-cta");
  const filmContext=page==="film"&&button?{cue:button.dataset.cue,second:film.currentTime}:{};
@@ -243,14 +244,14 @@ screen.addEventListener("click",async e=>{
  if(a==="sound"){film.muted=!film.muted;return}
  if(a==="open-film")return go("film");
  if(d.share){
-  const item=product(d.share),link=item?shareURL(item):filmURL();
+  const item=product(d.share),rawLink=item?shareURL(item):filmURL(),campaign=item?state.event:"atelier23",link=tagURL(rawLink,"referral","share",campaign);
   const shareContext={target:d.share,page,occasion:state.event,...(page==="film"?{cue:$("cue-cta")?.dataset.cue,second:film.currentTime}:{})};
   track("share_click",shareContext);
   if(navigator.share){try{await navigator.share({title:"ATELIER 23 · "+(item?.name||"Ваш момент"),url:link});track("share_resolved",shareContext);return}catch(err){if(err.name==="AbortError"){track("share_cancelled",shareContext);return}}}
   const panel=$("share-panel"),input=$("share-link"),status=$("share-status");
   if(!panel||!input||!status)return;
   panel.hidden=false;input.value=link;
-  const telegram=$("share-telegram"),telegramURL=new URL("https://t.me/share/url");telegramURL.searchParams.set("url",link);telegramURL.searchParams.set("text","ATELIER 23 · "+(item?.name||"Ваш момент"));if(telegram)telegram.href=telegramURL.href;
+  const telegram=$("share-telegram"),telegramURL=new URL("https://t.me/share/url");telegramURL.searchParams.set("url",tagURL(rawLink,"telegram","share",campaign));telegramURL.searchParams.set("text","ATELIER 23 · "+(item?.name||"Ваш момент"));if(telegram)telegram.href=telegramURL.href;
   try{await navigator.clipboard.writeText(link);track("link_copied",shareContext);status.textContent="Ссылка скопирована."}catch{status.textContent="Скопируйте ссылку.";input.focus();input.select()}
   return;
  }
@@ -282,6 +283,7 @@ function logBookingLink(e){
  if(e.type==="auxclick"&&e.button!==1)return;
  const link=e.target.closest("a[href]");
  if(link?.href===BOOK)log("booking_click",{target:plan().chosen||undefined,intent:"booking"});
+ if(link?.id==="share-telegram")log("telegram_share_click");
 }
 screen.addEventListener("click",logBookingLink);
 screen.addEventListener("auxclick",logBookingLink);
@@ -291,6 +293,7 @@ screen.addEventListener("change",e=>{
  if(el.id==="visit"&&p.summary){p.visited=el.checked;persist()}
 });
 const incoming=new URLSearchParams(location.search);
+if(campaignContext.source)track("campaign_entry",{});
 const incomingEvent=incoming.get("event"),incomingLook=product(incoming.get("look"));
 if(Object.hasOwn(events,incomingEvent)&&incomingLook?.events.includes(incomingEvent)){
  state.event=incomingEvent;rebuildDeck();deck=[incomingLook,...deck.filter(p=>p.id!==incomingLook.id)];index=0;frontier=0;
