@@ -1,0 +1,17 @@
+import assert from "node:assert/strict";
+import {KEY,LIMIT,makeTracker,readLog,summarize} from "../atelier23/fashion-overlay/analytics.js";
+const data=new Map(),storage={getItem:k=>data.get(k)??null,setItem:(k,v)=>data.set(k,v)};
+const track=makeTracker(storage,"test-visit");
+assert.equal(readLog(storage).rows.length,0);
+assert.equal(track("sale",{target:"film"}),false);
+assert.equal(track("booking_click",{target:"film",cue:"fitting",second:15.04,occasion:"wedding",email:"private@example.com",name:"Private"}),true);
+let log=readLog(storage);
+assert.deepEqual(Object.keys(log.rows[0]).sort(),["cue","occasion","second","target","ts","type","visit"].sort());
+assert.equal(log.rows[0].second,15);
+assert.equal(summarize(log.rows).booking,1);
+for(let i=0;i<LIMIT;i++)track("reaction",{intent:"like_on",target:"navy"});
+log=readLog(storage);assert.equal(log.rows.length,LIMIT);assert.equal(log.dropped,1);assert.equal(summarize(log.rows).likes,LIMIT);
+data.set(KEY,"bad json");assert.equal(readLog(storage).available,false);assert.equal(track("film_view"),false);
+const blocked={getItem(){throw Error("blocked")},setItem(){throw Error("blocked")}};
+assert.equal(makeTracker(blocked,"test")("film_view"),false);
+console.log("PASS analytics schema, bounded storage, no personal data/sale event, safe storage failure");

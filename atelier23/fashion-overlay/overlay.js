@@ -1,3 +1,4 @@
+import {makeTracker} from "./analytics.js";
 const ROOT="https://atelier-23.ru/";
 const PHOTO=ROOT+"wp-content/uploads/";
 const BOOK=ROOT+"sign-up-for-a-fitting-room/";
@@ -74,6 +75,13 @@ const shareURL=item=>{const u=new URL(location.href);u.search="";u.hash="";u.sea
 const atelierMark='<svg aria-hidden="true" class="atelier-mark" viewBox="0 0 90 65" fill="none" stroke="currentColor" stroke-width=".9" stroke-linejoin="round" stroke-linecap="round"><path class="pattern" d="M31 9 39 5Q45 15 51 5L59 9 69 19 64 32 58 27 60 58 45 60 30 58 32 27 26 32 21 19Z M39 5 45 24 51 5 M45 24 42 59"/><path d="M10 48Q23 33 41 49T78 42" stroke-width="6" opacity=".20"/><path d="M10 48Q23 33 41 49T78 42 M15 43l3 4m5-7 1 5m7-4-1 5m8 0-2 5m9-1-1 5m8-1v5m7-5 2 4m4-8 3 4m3-9 4 3"/><path d="M68 5 84 23 65 9Q64 3 68 5Z" fill="currentColor"/><path d="M67 8Q85-3 86 16T81 39" stroke-dasharray="2 2"/></svg>';
 
 const screen=$("screen"),film=$("film"),app=document.querySelector(".app");
+let track=()=>false;
+try{track=makeTracker(localStorage,globalThis.crypto?.randomUUID?.()||("visit-"+Date.now()+"-"+Math.random().toString(36).slice(2)))}catch{}
+function log(type,details={}){
+ const button=$("cue-cta");
+ const filmContext=page==="film"&&button?{cue:button.dataset.cue,second:film.currentTime}:{};
+ return track(type,{page,occasion:state.event,...filmContext,...details});
+}
 const motion=matchMedia("(prefers-reduced-motion: reduce)");
 // Original 17.64s film, SHA256 e4a47584c6309e6baac87949fe6726108eccf337f356c0bee7c3328651d261c5.
 // Scene cuts verified against the actual MP4; 15s is the closing title fade.
@@ -114,6 +122,7 @@ let viewCleanup=()=>{};
 const viewText=id=>String(state.views[id]||0)+" просм. · на устройстве";
 const viewLabel=id=>'<span class="tiny" data-view-count="'+id+'" aria-label="Просмотры на этом устройстве: '+(state.views[id]||0)+'">'+viewText(id)+'</span>';
 function recordView(id){
+ log(id==="film"?"film_view":"look_view",{target:id});
  state.views[id]=Math.min(Number.MAX_SAFE_INTEGER,(state.views[id]||0)+1);persist();
  const el=screen.querySelector('[data-view-count="'+id+'"]');
  if(el){el.textContent=viewText(id);el.setAttribute("aria-label","Просмотры на этом устройстве: "+state.views[id])}
@@ -128,9 +137,21 @@ function watchPhoto(photo,id){
  viewCleanup=()=>{stop();observer?.disconnect();img.removeEventListener("load",check);document.removeEventListener("visibilitychange",check)};
 }
 function watchFilm(v){
- let counted=false,seconds=0,last=null;
- const tick=()=>{const now=v.currentTime;if(v.paused||v.seeking||document.hidden){last=null;return}if(last!==null&&now>=last&&now-last<=1.5)seconds+=now-last;last=now;if(!counted&&seconds>=3){counted=true;recordView("film")}};
- const reset=()=>{last=null};
+ let counted=false,seconds=0,last=null,lastCue="",sceneSeconds=0;
+ const seen=new Set();
+ const reset=()=>{last=null;lastCue="";sceneSeconds=0};
+ const tick=()=>{
+  const now=v.currentTime;
+  if(v.paused||v.seeking||document.hidden||!Number.isFinite(now)){reset();return}
+  const delta=last!==null&&now>=last&&now-last<=1.5?now-last:0;
+  if(delta>0)seconds+=delta;
+  const cue=page==="film"&&$("cue-cta")?.dataset.cue===currentCue().id?currentCue().id:"";
+  if(cue&&cue===lastCue&&delta>0){sceneSeconds+=delta}
+  else{sceneSeconds=0}
+  if(cue&&sceneSeconds>=1&&!seen.has(cue)){seen.add(cue);log("scene_view",{target:"film",cue,second:now})}
+  last=now;lastCue=cue;
+  if(!counted&&seconds>=3){counted=true;recordView("film")}
+ };
  v.addEventListener("timeupdate",tick);v.addEventListener("seeking",reset);v.addEventListener("pause",reset);document.addEventListener("visibilitychange",reset);
  viewCleanup=()=>{v.removeEventListener("timeupdate",tick);v.removeEventListener("seeking",reset);v.removeEventListener("pause",reset);document.removeEventListener("visibilitychange",reset)};
 }
@@ -216,34 +237,36 @@ $("back").addEventListener("click",()=>{const back={event:"film",look:"event",re
 $("plan").addEventListener("click",()=>{returnPage=page;go("plan")});
 screen.addEventListener("click",async e=>{
  const b=e.target.closest("button");if(!b||b.disabled)return;const d=b.dataset,p=plan(),a=d.action;
- if(d.event){state.event=d.event;rebuildDeck();persist();return go("look")}
- if(d.like||d.save){const key=d.like?"likes":"saved",id=d.like||d.save;toggle(key,id);b.setAttribute("aria-pressed",String(state[key].includes(id)));return}
+ if(d.event){state.event=d.event;log("occasion_selected");rebuildDeck();persist();return go("look")}
+ if(d.like||d.save){const key=d.like?"likes":"saved",id=d.like||d.save;toggle(key,id);const on=state[key].includes(id);log("reaction",{target:id,intent:(d.like?"like_":"save_")+(on?"on":"off")});b.setAttribute("aria-pressed",String(on));return}
  if(a==="play"){if(film.paused){filmWanted=true;film.play().catch(()=>{})}else{filmWanted=false;film.pause()}return}
  if(a==="sound"){film.muted=!film.muted;return}
  if(a==="open-film")return go("film");
  if(d.share){
   const item=product(d.share),link=item?shareURL(item):filmURL();
-  if(navigator.share){try{await navigator.share({title:"ATELIER 23 · "+(item?.name||"Ваш момент"),url:link});return}catch(err){if(err.name==="AbortError")return}}
+  const shareContext={target:d.share,page,occasion:state.event,...(page==="film"?{cue:$("cue-cta")?.dataset.cue,second:film.currentTime}:{})};
+  track("share_click",shareContext);
+  if(navigator.share){try{await navigator.share({title:"ATELIER 23 · "+(item?.name||"Ваш момент"),url:link});track("share_resolved",shareContext);return}catch(err){if(err.name==="AbortError"){track("share_cancelled",shareContext);return}}}
   const panel=$("share-panel"),input=$("share-link"),status=$("share-status");
   if(!panel||!input||!status)return;
   panel.hidden=false;input.value=link;
-  try{await navigator.clipboard.writeText(link);status.textContent="Ссылка скопирована."}catch{status.textContent="Скопируйте ссылку.";input.focus();input.select()}
+  try{await navigator.clipboard.writeText(link);track("link_copied",shareContext);status.textContent="Ссылка скопирована."}catch{status.textContent="Скопируйте ссылку.";input.focus();input.select()}
   return;
  }
  if(a==="close-share"){$("share-panel").hidden=true;return}
- if(d.remove){toggle("saved",d.remove);return render()}
+ if(d.remove){toggle("saved",d.remove);log("reaction",{target:d.remove,intent:"save_off"});return render()}
  if(d.jump)return go(d.jump);
  if(a==="cue"){
-  const intent=d.intent;
-  if(intent==="business"){state.event="business";rebuildDeck();persist();return go("look")}
-  if(intent==="tailoring"){location.assign(ROOT+"personal-tailoring/");return}
-  if(intent==="booking"){location.assign(BOOK);return}
+  const intent=d.intent;log("cta_click",{target:"film",intent});
+  if(intent==="business"){state.event="business";log("occasion_selected",{target:"film",intent});rebuildDeck();persist();return go("look")}
+  if(intent==="tailoring"){log("tailoring_click",{target:"film",intent});location.assign(ROOT+"personal-tailoring/");return}
+  if(intent==="booking"){log("booking_click",{target:"film",intent});location.assign(BOOK);return}
   return go("event");
  }
- if(a==="start")return go("event");
+ if(a==="start"){if(page==="film")log("cta_click",{target:"film",intent:"event"});return go("event")}
  if(a==="resume")return go(nextStep());
  if(a==="next"||a==="prev")return move(a==="next"?1:-1);
- if(a==="choose"){const id=list()[index].id;if(p.chosen!==id){p.chosen=id;p.wardrobe=false;invalidate(p)}persist();return go("result")}
+ if(a==="choose"){const id=list()[index].id;log("look_selected",{target:id});if(p.chosen!==id){p.chosen=id;p.wardrobe=false;invalidate(p)}persist();return go("result")}
  if(a==="details")return go("date");
  if(a==="date"||a==="unknown"){
   const d=a==="date"?$("date").value:"";
@@ -254,6 +277,13 @@ screen.addEventListener("click",async e=>{
  if(a==="copy"){const item=product(p.chosen);try{await navigator.clipboard.writeText("ATELIER 23\n"+events[state.event]+"\n"+item.name+"\n"+(p.date||"Дата уточняется")+"\n"+url(item));p.summary=true;persist();$("copy-status").textContent="Запрос скопирован."}catch{$("copy-status").textContent="Копирование недоступно."}return}
  if(a==="saved"||a==="plan")return go(a)
 });
+function logBookingLink(e){
+ if(e.type==="auxclick"&&e.button!==1)return;
+ const link=e.target.closest("a[href]");
+ if(link?.href===BOOK)log("booking_click",{target:plan().chosen||undefined,intent:"booking"});
+}
+screen.addEventListener("click",logBookingLink);
+screen.addEventListener("auxclick",logBookingLink);
 screen.addEventListener("change",e=>{
  const el=e.target,p=plan(),id=el.dataset.own;
  if(id&&Object.hasOwn(parts,id)){p.owned=el.checked?[...new Set([...p.owned,id])]:p.owned.filter(x=>x!==id);p.wardrobe=false;invalidate(p);persist()}
