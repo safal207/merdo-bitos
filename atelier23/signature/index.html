@@ -41,28 +41,13 @@
 .sig footer{margin-top:28px;border-top:1px solid var(--line);padding-top:18px;font-size:12px}
 @media(max-width:720px){.sig .spread{grid-template-columns:minmax(0,1fr)}.sig .rail{grid-template-columns:repeat(3,minmax(0,1fr))}.sig .plate{padding:12px}.sig .controls button,.sig .actions a{flex:1 1 100%}.sig .introcopy{padding-top:25px}}
 </style>
+<script type="importmap">
+{"imports":{"react":"https://esm.sh/react@19.0.0","react-dom/client":"https://esm.sh/react-dom@19.0.0/client?external=react"}}
+</script>
 <script type="module" src="./signature.js"></script>
 </head>
 <body>
-<main class="sig">
-<header><a class="wordmark" href="../">ATELIER <b>23</b><small>× BITOS</small></a><span class="edition">SIGNATURE<br>EXPERIENCE / 01</span></header>
-<div class="introcopy"><span class="eyebrow">Искусство индивидуального пошива</span><h1>Костюм начинается<br>с <em>вас.</em></h1><p>Шесть глав — от замысла и ткани до финальной примерки. Соберите заметки для разговора с мастером, прежде чем выбирать образ.</p></div>
-<nav class="rail" id="chapters" aria-label="Главы индивидуального пошива"></nav>
-<p id="progress" role="status" aria-live="polite">Глава 1 из 6</p>
-<section class="spread" aria-labelledby="chapter-title">
-<figure class="plate"><div id="illustration"></div><figcaption>Авторская условная схема процесса, не технический чертёж и не документальная съёмка ATELIER 23.</figcaption></figure>
-<div class="copy"><span class="eyebrow" id="chapter-label"></span><h2 id="chapter-title" tabindex="-1"></h2><p id="chapter-copy"></p><fieldset id="choice" hidden><legend id="choice-label"></legend><div id="options"></div></fieldset>
-<div class="controls"><button type="button" class="btn btn-ghost" id="prev">Назад</button><button type="button" class="btn btn-primary" id="next">Далее</button></div></div>
-</section>
-<section class="brief" id="brief" aria-labelledby="brief-title" hidden>
-<span class="eyebrow">Ваши заметки</span><h2 id="brief-title" tabindex="-1">Разговор с мастером</h2><p>Это предварительные предпочтения, а не мерки, заказ или подтверждение стоимости.</p><dl id="brief-items"></dl>
-<button class="btn btn-ghost" type="button" id="copy-brief">Скопировать заметки</button><textarea id="copy-fallback" aria-label="Заметки для ручного копирования" readonly hidden></textarea><p id="copy-status" role="status"></p>
-<div class="actions"><a class="btn btn-primary" id="advisor" href="../#journey">Перейти к подбору образа</a><a class="btn btn-ghost" id="journey" href="../fashion-journey/">Исследовать образы</a></div>
-<p class="notice">Подбор события, бюджета, сроков и запись на примерку уже находятся в существующем сервисе. Заметки можно скопировать вручную; они не передаются автоматически. Дополнительные изделия и стоимость обсуждаются с мастером, без платежей в этой демонстрации.</p>
-<button class="btn btn-ghost" type="button" id="reset">Начать заново</button>
-</section>
-<noscript><p>Для просмотра глав нужен JavaScript. <a href="../#journey">Перейти к подбору образа</a>.</p></noscript>
-<footer><p>Независимый демонстрационный концепт BitOS. Никаких реальных заказов, платежей, записей, сбора контактов или передачи мерок. Процесс схематичен; детали производства и сроки уточняет ателье.</p></footer>
-</main>
+<div id="root"><main class="sig" id="signature-fallback"><header><a class="wordmark" href="../">ATELIER <b>23</b><small>× BITOS</small></a><span class="edition">SIGNATURE EXPERIENCE</span></header><div class="introcopy"><h1>Костюм начинается с <em>вас.</em></h1><p>Интерактивные главы загружаются. Если они недоступны, воспользуйтесь существующим подбором образа.</p><a class="btn btn-primary" href="../#journey">Перейти к подбору образа</a></div></main></div>
+<noscript><p>Для просмотра интерактивных глав нужен JavaScript.</p></noscript>
 </body>
 </html>
