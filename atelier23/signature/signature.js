@@ -1,4 +1,4 @@
-import React, {useState,useLayoutEffect,useRef} from "react";
+import React, {useState,useLayoutEffect,useRef,useSyncExternalStore} from "react";
 import {createRoot} from "react-dom/client";
 const h=React.createElement;
 // Editorial craft layer; no product recommendation, booking, payment or analytics.
@@ -170,11 +170,18 @@ const sceneLines=[
  "Каждый стежок имеет значение.",
  "Финальный штрих — ощущение себя."
 ];
-function CinemaControls({step,motion,onMotion,onReplay}){
+const reducedQuery="(prefers-reduced-motion: reduce)";
+function subscribeReduced(notify){
+ const media=window.matchMedia(reducedQuery);
+ media.addEventListener("change",notify);
+ return ()=>media.removeEventListener("change",notify);
+}
+const getReduced=()=>window.matchMedia(reducedQuery).matches;
+function CinemaControls({step,motion,reduced,onMotion,onReplay}){
  return h("div",{className:"cinema-controls"},
  h("p",{className:"scene-line",key:step},sceneLines[step]),
  h("div",{className:"cinema-actions"},
- h("button",{type:"button",id:"motion-toggle","aria-pressed":motion,onClick:onMotion},"Анимация"),
+ h("button",{type:"button",id:"motion-toggle","aria-pressed":motion,disabled:reduced,onClick:onMotion},"Анимация"),
  h("button",{type:"button",id:"replay-scene",onClick:onReplay,disabled:!motion},"Повторить кадр")),
  h("p",{className:"cinema-hint"},"Главы переключаются только вами. Настройка системы «уменьшение движения» имеет приоритет."));
 }
@@ -182,6 +189,8 @@ function SignatureExperience(){
  const [state,setState]=useState(restore);
  const [copy,setCopy]=useState(emptyCopy);
  const [motion,setMotion]=useState(true),[direction,setDirection]=useState("forward"),[replay,setReplay]=useState(0);
+ const reduced=useSyncExternalStore(subscribeReduced,getReduced);
+ const effectiveMotion=motion&&!reduced;
  const chapterRef=useRef(null),briefRef=useRef(null),fallbackRef=useRef(null),focus=useRef(null),generation=useRef(0);
  useLayoutEffect(()=>{
   try{sessionStorage.setItem(KEY,JSON.stringify(state))}catch{}
@@ -202,11 +211,11 @@ function SignatureExperience(){
   try{await navigator.clipboard.writeText(value);if(ticket===generation.current)setCopy({status:"Заметки скопированы.",fallback:""})}
   catch{if(ticket===generation.current)setCopy({status:"Скопируйте текст вручную.",fallback:value})}
  }
- return h("main",{className:"sig","data-renderer":"react","data-motion":motion?"on":"off"},
+ return h("main",{className:"sig","data-renderer":"react","data-motion":effectiveMotion?"on":"off"},
  h("header",null,h("a",{className:"wordmark",href:"../"},"ATELIER ",h("b",null,"23"),h("small",null,"× BITOS")),h("span",{className:"edition"},"SIGNATURE",h("br"),"EXPERIENCE / 01")),
  h("div",{className:"introcopy"},h("span",{className:"eyebrow"},"Искусство индивидуального пошива"),h("h1",null,"Костюм начинается",h("br"),"с ",h("em",null,"вас.")),h("p",null,"Шесть глав — от замысла и ткани до финальной примерки. Соберите заметки для разговора с мастером, прежде чем выбирать образ.")),
  h(ChapterNav,{step:state.step,onNavigate:navigate}),h("div",{className:"progress-line"},h("p",{id:"progress",role:"status","aria-live":"polite"},"Глава "+(state.step+1)+" из "+chapters.length),h("progress",{max:chapters.length,value:state.step+1,"aria-label":"Прогресс знакомства с пошивом"})),
- h(CinemaControls,{step:state.step,motion,onMotion:()=>setMotion(m=>!m),onReplay:()=>setReplay(n=>n+1)}),
+ h(CinemaControls,{step:state.step,motion:effectiveMotion,reduced,onMotion:()=>setMotion(m=>!m),onReplay:()=>setReplay(n=>n+1)}),
  h(Chapter,{state,onChoose:choose,onNavigate:navigate,onNext:next,headingRef:chapterRef,direction,replay}),
  h(Brief,{state,headingRef:briefRef,onReset:reset,copy,onCopy:copyNotes,fallbackRef}),
  h("footer",null,h("p",null,"Независимый демонстрационный концепт BitOS. Никаких реальных заказов, платежей, записей, сбора контактов или передачи мерок. Процесс схематичен; детали производства и сроки уточняет ателье.")));
