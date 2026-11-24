@@ -75,6 +75,37 @@ const atelierMark='<svg aria-hidden="true" class="atelier-mark" viewBox="0 0 90 
 
 const screen=$("screen"),film=$("film"),app=document.querySelector(".app");
 const motion=matchMedia("(prefers-reduced-motion: reduce)");
+// Original 17.64s film, SHA256 e4a47584c6309e6baac87949fe6726108eccf337f356c0bee7c3328651d261c5.
+// Scene cuts verified against the actual MP4; 15s is the closing title fade.
+const timeline=[
+ {at:0,id:"emotion",line1:"Ваш момент.",line2:"Ваш стиль.",cta:"Выбрать повод",action:"event"},
+ {at:2.8,id:"business",line1:"Уверенность.",line2:"Без слов.",cta:"Деловой образ",action:"business"},
+ {at:5.8,id:"occasion",line1:"Особый момент.",line2:"Ваш образ.",cta:"Выбрать повод",action:"event"},
+ {at:8.8,id:"craft",line1:"Ткань.",line2:"Посадка.",cta:"Узнать о пошиве",action:"tailoring"},
+ {at:11.8,id:"detail",line1:"Каждая деталь.",line2:"Имеет значение.",cta:"Подобрать образ",action:"event"},
+ {at:15,id:"fitting",line1:"Ваш костюм.",line2:"Ваши мерки.",cta:"Записаться на примерку",action:"booking"}
+];
+function currentCue(){
+ const t=Number.isFinite(film.currentTime)?Math.max(0,film.currentTime):0;
+ return [...timeline].reverse().find(c=>t>=c.at)||timeline[0];
+}
+function syncTimeline(force=false){
+ if(page!=="film")return;
+ const title=$("cue-title"),sub=$("cue-subtitle"),button=$("cue-cta"),other=$("cue-other");
+ if(!title||!sub||!button||!other)return;
+ // Keep the meaning stable during an active keyboard or pointer interaction.
+ if(!force&&(button===document.activeElement||button.dataset.pressing==="true"))return;
+ const cue=currentCue();
+ if(!force&&button.dataset.cue===cue.id)return;
+ title.textContent=cue.line1;sub.textContent=cue.line2;
+ button.textContent=cue.id==="emotion"&&state.event?"Продолжить":cue.cta;
+ button.dataset.cue=cue.id;button.dataset.intent=cue.action;
+ other.hidden=cue.action==="event";
+}
+for(const event of ["timeupdate","seeked","loadedmetadata","ended","play"])film.addEventListener(event,()=>syncTimeline());
+screen.addEventListener("pointerdown",e=>{const b=e.target.closest("#cue-cta");if(b)b.dataset.pressing="true"});
+for(const event of ["pointerup","pointercancel"])screen.addEventListener(event,e=>{const b=$("cue-cta");if(b)delete b.dataset.pressing});
+screen.addEventListener("focusout",e=>{if(e.target.id==="cue-cta")queueMicrotask(()=>syncTimeline())});
 let filmCleanup=()=>{},filmActive=false,filmWanted=!motion.matches;
 const filmURL=()=>{const u=new URL(location.href);u.search="";u.hash="";return u.href};
 const sharePanel=()=>'<div class="share-panel" id="share-panel" hidden><p id="share-status" role="status"></p><input id="share-link" aria-label="Ссылка для отправки" readonly><button class="link" data-action="close-share">Закрыть</button></div>';
@@ -125,7 +156,7 @@ function render(){
  $("back").disabled=page==="film";$("plan").disabled=page==="plan";
  let body="";
  if(page==="film"){
-  body='<div class="story overlay"><div class="mark-overlay">'+atelierMark+'</div><div class="video-controls"><button class="icon" data-action="play" aria-label="Воспроизвести фильм">▶</button><button class="icon" data-action="sound" aria-label="Включить звук">♫</button></div><div class="overlay-actions"><div class="eye-stat">'+eye+viewLabel("film")+'</div><button class="icon" data-like="film" aria-label="Нравится фильм" aria-pressed="'+state.likes.includes("film")+'">'+icon("heart")+'</button><button class="icon" data-save="film" aria-label="Сохранить фильм" aria-pressed="'+state.saved.includes("film")+'">'+icon("save")+'</button><button class="icon" data-share="film" aria-label="Поделиться фильмом">'+icon("share")+'</button></div><div class="overlay-copy"><span class="eyebrow">FILM 01 · YOUR MOMENT</span><h1>Ваш момент.<br><i>Ваш стиль.</i></h1></div>'+primary(state.event?"Продолжить":"Выбрать повод","start")+'<span class="tiny">Рекламный концепт</span><a id="film-fallback" class="link" hidden href="../assets/atelier23-film.mp4">Открыть ролик ↗</a>'+sharePanel()+'</div>';
+  body='<div class="story overlay"><div class="mark-overlay">'+atelierMark+'</div><div class="video-controls"><button class="icon" data-action="play" aria-label="Воспроизвести фильм">▶</button><button class="icon" data-action="sound" aria-label="Включить звук">♫</button></div><div class="overlay-actions"><div class="eye-stat">'+eye+viewLabel("film")+'</div><button class="icon" data-like="film" aria-label="Нравится фильм" aria-pressed="'+state.likes.includes("film")+'">'+icon("heart")+'</button><button class="icon" data-save="film" aria-label="Сохранить фильм" aria-pressed="'+state.saved.includes("film")+'">'+icon("save")+'</button><button class="icon" data-share="film" aria-label="Поделиться фильмом">'+icon("share")+'</button></div><div class="overlay-copy"><span class="eyebrow">FILM 01 · YOUR MOMENT</span><h1><span id="cue-title">Ваш момент.</span><br><i id="cue-subtitle">Ваш стиль.</i></h1></div><button class="primary" id="cue-cta" data-action="cue" data-intent="event" data-cue="emotion">'+(state.event?"Продолжить":"Выбрать повод")+'</button><div class="cue-footer"><span class="tiny">Рекламный концепт</span><button class="link" id="cue-other" data-action="start" hidden>Выбрать повод</button></div><a id="film-fallback" class="link" hidden href="../assets/atelier23-film.mp4">Открыть ролик ↗</a>'+sharePanel()+'</div>';
  }else if(page==="event"){
   body='<div class="story overlay event-overlay"><div class="overlay-copy"><span class="eyebrow">01 / ПОВОД</span><h1>К чему вы<br><i>готовитесь?</i></h1></div><div class="choice-list">'+Object.entries(events).map(([id,label])=>'<button class="choice" data-event="'+id+'">'+label+'<span>↗</span></button>').join("")+'</div></div>';
  }else if(page==="look"){
@@ -154,7 +185,7 @@ function render(){
  }
  screen.innerHTML=body;
  screen.querySelectorAll(".media img").forEach(img=>{const fail=()=>{img.hidden=true;img.parentElement.querySelector(".image-fail").hidden=false};img.addEventListener("error",fail);if(img.complete&&!img.naturalWidth)fail()});
- if(page==="film"){updateFilmControls();if(film.error||film.querySelector("source").dataset.failed)$("film-fallback").hidden=false;}
+ if(page==="film"){syncTimeline(true);updateFilmControls();if(film.error||film.querySelector("source").dataset.failed)$("film-fallback").hidden=false;}
  if(page==="look"){
   const photo=$("look-photo");watchPhoto(photo,list()[index].id);let x=0,y=0;
   photo.addEventListener("touchstart",e=>{x=e.changedTouches[0].clientX;y=e.changedTouches[0].clientY},{passive:true});
@@ -202,6 +233,13 @@ screen.addEventListener("click",async e=>{
  if(a==="close-share"){$("share-panel").hidden=true;return}
  if(d.remove){toggle("saved",d.remove);return render()}
  if(d.jump)return go(d.jump);
+ if(a==="cue"){
+  const intent=d.intent;
+  if(intent==="business"){state.event="business";rebuildDeck();persist();return go("look")}
+  if(intent==="tailoring"){location.assign(ROOT+"personal-tailoring/");return}
+  if(intent==="booking"){location.assign(BOOK);return}
+  return go("event");
+ }
  if(a==="start")return go("event");
  if(a==="resume")return go(nextStep());
  if(a==="next"||a==="prev")return move(a==="next"?1:-1);
