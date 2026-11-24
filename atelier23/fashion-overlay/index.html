@@ -19,11 +19,11 @@ header{flex:none;display:flex;align-items:center;justify-content:space-between;g
 .mark-overlay{position:absolute;top:11px;left:11px;pointer-events:none;color:#e5c9a2;background:#17221dc9;border-radius:2px;padding:6px;animation:atelier-reveal .65s ease-out both}.atelier-mark{width:64px;height:46px;display:block}.atelier-mark .pattern{stroke-dasharray:170;animation:atelier-stitch .65s ease-out both}@keyframes atelier-reveal{from{opacity:0}to{opacity:1}}@keyframes atelier-stitch{from{stroke-dashoffset:170}to{stroke-dashoffset:0}}.share-panel{position:absolute;bottom:0;left:0;right:0;z-index:3;padding:14px;background:#17221df5;color:var(--paper);display:grid;gap:6px}.share-panel input{min-width:0;width:100%;padding:8px;background:#222e25;border:1px solid var(--line);color:var(--paper);font-size:12px}.share-panel p{font-size:13px}
 
 /* The stage and controls share the exact same mobile viewport. */
-.app{max-width:min(100%,calc(100dvh * .5625));min-width:min(100%,320px);isolation:isolate}
-.film-stage{position:absolute;inset:0;z-index:-2;background:#17221c}
+.app{max-width:100%;min-width:0;isolation:isolate}@media(min-width:600px){.app{max-width:min(100%,calc(100dvh * .5625));min-width:min(100%,320px)}}
+.film-stage{position:absolute;inset:0;z-index:0;background:#17221c}
 .film-stage video{width:100%;height:100%;object-fit:cover;display:block}
 .app:not([data-mode=film]):not([data-mode=event]) .film-stage{visibility:hidden}
-.app::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(180deg,rgba(10,15,12,.63),transparent 22%,transparent 36%,rgba(10,15,12,.70) 76%,rgba(10,15,12,.94))}
+.app::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(180deg,rgba(10,15,12,.63),transparent 22%,transparent 36%,rgba(10,15,12,.70) 76%,rgba(10,15,12,.94))}
 .app:not([data-mode=film]):not([data-mode=event])::after{display:none}
 header{background:transparent;position:relative;z-index:4;text-shadow:0 1px 8px #000}
 .progress{z-index:4;background:#ffffff45}
@@ -33,13 +33,13 @@ header{background:transparent;position:relative;z-index:4;text-shadow:0 1px 8px 
 .overlay-copy h1{font-size:clamp(33px,9vw,46px)}
 .overlay-copy .eyebrow{color:#ffe4b8}
 .overlay-copy p{font-size:13px;color:#fff3e2}
-.overlay-actions{position:absolute;right:0;bottom:142px;display:grid;gap:8px;justify-items:center}
+.overlay-actions{position:absolute;right:0;bottom:156px;display:grid;gap:8px;justify-items:center}
 .overlay-actions .icon{border-radius:50%;background:#111b15a8;color:#fff;min-width:46px;min-height:46px}
 .overlay-actions .icon[aria-pressed=true]{color:#edc6a2}
 .overlay-actions .icon[aria-pressed=true] svg{fill:currentColor}
 .eye-stat{display:grid;justify-items:center;gap:2px;font-size:10px;color:#fff;text-shadow:0 1px 5px #000}
 .eye-stat svg{width:22px;height:22px}
-.eye-stat .tiny{color:#fff;font-size:10px}
+.eye-stat .tiny{color:#fff;font-size:10px;max-width:52px;text-align:center;overflow-wrap:anywhere}
 .overlay .primary{margin-top:5px}
 .overlay .tiny{color:#e0e0d6}
 .overlay .mark-overlay{top:4px;left:0;background:none}
@@ -50,7 +50,7 @@ header{background:transparent;position:relative;z-index:4;text-shadow:0 1px 8px 
 .overlay .share-panel{z-index:5;bottom:65px;border:1px solid #737b70;border-radius:3px}
 .footer{z-index:3;color:#ddd;text-shadow:0 1px 5px #111}
 [data-mode=look] #screen,[data-mode=result] #screen{overflow:hidden}
-.product-overlay{position:relative;justify-content:flex-end;gap:8px}
+.product-overlay{position:relative;isolation:isolate;justify-content:flex-end;gap:8px}
 .product-overlay .media{position:absolute;inset:-12px -18px -12px;border-radius:0;z-index:-1;min-height:100%;background:#26322a}
 .product-overlay .media::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#121b1680,transparent 24%,transparent 36%,#121b16b0 70%,#121b16f5);pointer-events:none}
 .product-overlay .media .reactions,.product-overlay .media .number,.product-overlay .media .share-panel{z-index:2}
