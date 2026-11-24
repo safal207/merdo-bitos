@@ -241,6 +241,23 @@ try {
     const socialRows=await social.evaluate(()=>JSON.parse(localStorage.getItem("bitos.atelier23.fashionAnalytics.v1")||'{"rows":[]}').rows);
     if(!socialRows.some(r=>r.type==="social_landing"&&r.source==="instagram"&&r.topic==="gift")||!socialRows.some(r=>r.type==="social_handoff"&&r.destination==="whatsapp"&&r.topic==="gift"))failures.push(width+" Social attribution missing");
     await social.screenshot({path:join(root,"artifacts","atelier23-signature",width+"-social.png"),fullPage:true,animations:"disabled"});
+    await social.locator('[data-topic="wedding"]').click();
+    if(await social.locator("#wedding-contact").count()!==0||await social.locator(".wedding-edit input:checked").count()!==0)failures.push(width+" Wedding defaults must be opt-in");
+    if(await social.locator("#wedding-site").getAttribute("href")!=="https://atelier23.store/pages/wedding-suits")failures.push(width+" Wedding official route");
+    await social.locator('input[name="wedding-style"][value="both"]').check();
+    await social.locator('input[name="wedding-guests"][value="father"]').check();
+    await social.locator("#wedding-date").fill("2000-01-01");
+    if(await social.locator("#wedding-date").getAttribute("aria-invalid")!=="true"||await social.locator("#wedding-contact").count()!==0)failures.push(width+" Wedding rejects past date");
+    const future=await social.locator("#wedding-date").getAttribute("min");
+    await social.locator("#wedding-date").fill(future);
+    const weddingLink=new URL(await social.locator("#wedding-contact").getAttribute("href"));
+    if(weddingLink.hostname!=="wa.me"||weddingLink.pathname!=="/351912204778"||!weddingLink.searchParams.get("text").includes(future)||!weddingLink.searchParams.get("text").includes("Pai do noivo")||!weddingLink.searchParams.get("text").includes("Fato e smoking"))failures.push(width+" Wedding consultation content");
+    await social.evaluate(()=>document.addEventListener("click",e=>e.preventDefault(),{once:true}));
+    await social.locator("#wedding-contact").click();
+    const weddingRows=await social.evaluate(()=>JSON.parse(localStorage.getItem("bitos.atelier23.fashionAnalytics.v1")||'{"rows":[]}').rows);
+    if(!weddingRows.some(r=>r.type==="social_handoff"&&r.topic==="wedding"&&r.destination==="whatsapp")||JSON.stringify(weddingRows).includes(future))failures.push(width+" Wedding analytics privacy or handoff");
+    if(await social.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))failures.push(width+" Wedding overflow");
+    await social.screenshot({path:join(root,"artifacts","atelier23-signature",width+"-wedding.png"),fullPage:true,animations:"disabled"});
     await social.close();
     console.log("PASS "+width+"px: Lisbon social campaign routing, topic selection, local attribution and overflow");
 
