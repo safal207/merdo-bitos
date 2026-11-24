@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#141c18">
+<title>ATELIER 23 × BitOS — Signature Experience</title>
+<link rel="stylesheet" href="../styles.css">
+<style>
+.sig{width:min(1120px,calc(100% - 36px));margin:auto;padding:24px 0 50px}
+.sig header{display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid var(--line);padding:0 0 18px}
+.sig .edition{font-size:10px;letter-spacing:.16em;color:var(--gold);text-align:right}
+.sig .introcopy{max-width:740px;padding:36px 0 20px}
+.sig h1{font:normal clamp(42px,8vw,76px)/1.04 Georgia,serif;letter-spacing:-.04em;margin:12px 0 18px}
+.sig h1 em{color:var(--gold)}
+.sig p{line-height:1.65;color:#c4cbbf}
+.sig .rail{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin:12px 0 22px}
+.sig .rail button{min-width:0;min-height:48px;background:transparent;color:#c4cbbf;border:1px solid #5b675e;font-size:12px;padding:5px;overflow-wrap:anywhere}
+.sig .rail button[aria-current=step]{background:var(--gold);color:#18231c;border-color:var(--gold)}
+.sig .spread{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);border:1px solid var(--line);min-width:0}
+.sig .plate{min-width:0;margin:0;background:#20332e;display:flex;flex-direction:column;justify-content:center;padding:18px}
+.sig .plate svg{width:100%;height:auto;display:block}
+.sig .plate figcaption{font-size:11px;color:#e0e0cd;padding:10px 2px 0;line-height:1.5}
+.sig .copy{min-width:0;padding:clamp(20px,4vw,44px)}
+.sig h2{font:normal clamp(32px,5vw,48px)/1.05 Georgia,serif;letter-spacing:-.035em;margin:12px 0}
+.sig fieldset{margin:18px 0;border:1px solid #657365;padding:12px;min-width:0}
+.sig legend{font-size:13px;color:var(--gold);padding:0 6px}
+.sig label{display:flex;align-items:center;min-height:44px;gap:10px;line-height:1.4}
+.sig input{accent-color:#c5a678;width:19px;height:19px;flex:none}
+.sig .controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.sig .controls button,.sig .actions a,.sig #copy-brief,.sig #reset{white-space:normal;min-height:48px;justify-content:center;line-height:1.35;text-align:center;overflow-wrap:anywhere}
+.sig button:disabled{opacity:.45}
+.sig [hidden]{display:none!important}
+.sig .brief{margin-top:24px;border-top:1px solid var(--line);padding-top:24px}
+.sig .brief dl{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin:18px 0}
+.sig dt{color:#bbc5b8}.sig dd{margin:0;overflow-wrap:anywhere}
+.sig .actions{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0}
+.sig .notice{font-size:13px;color:#d0c5b0;max-width:780px}
+.sig textarea{font:inherit;width:100%;max-width:100%;min-height:130px;color:var(--ivory);background:#20332e;border:1px solid #657365;padding:10px}
+.sig footer{margin-top:28px;border-top:1px solid var(--line);padding-top:18px;font-size:12px}
+@media(max-width:720px){.sig .spread{grid-template-columns:minmax(0,1fr)}.sig .rail{grid-template-columns:repeat(3,minmax(0,1fr))}.sig .plate{padding:12px}.sig .controls button,.sig .actions a{flex:1 1 100%}.sig .introcopy{padding-top:25px}}
+
+/* Signature editorial plates: local vector art, no remote image payload. */
+.sig .introcopy{position:relative;border-bottom:1px solid var(--line);margin-bottom:22px;padding-bottom:28px}
+.sig .introcopy h1{max-width:750px;text-wrap:balance}
+.sig .rail{gap:8px}
+.sig .rail button{font-weight:600;letter-spacing:.02em;border-color:#5b675e;transition:background .18s,color .18s}
+.sig .rail button:not([aria-current]):hover{background:#293a30;color:var(--ivory)}
+.sig .progress-line{display:flex;align-items:center;gap:18px;margin:0 0 18px}
+.sig .progress-line p{font-size:12px;margin:0;white-space:nowrap}
+.sig progress{appearance:none;flex:1;min-width:0;height:4px;border:0;background:#405046;color:var(--gold);border-radius:4px;overflow:hidden}
+.sig progress::-webkit-progress-bar{background:#405046}.sig progress::-webkit-progress-value{background:var(--gold)}.sig progress::-moz-progress-bar{background:var(--gold)}
+.sig .spread{background:linear-gradient(135deg,#1b2821,#141c18);box-shadow:0 14px 42px #0b120e55}
+.sig .plate{background:#182920;justify-content:flex-start;padding:clamp(14px,2.5vw,30px);gap:12px;border-right:1px solid var(--line)}
+.sig .plate-meta{display:flex;justify-content:space-between;gap:8px;color:#d3bb93;font-size:10px;letter-spacing:.13em;line-height:1.5}
+.sig .plate-art{min-width:0;background:#16251f;overflow:hidden;border:1px solid #667467}
+.sig .plate-art svg{display:block;width:100%;height:auto;aspect-ratio:360/280}
+.sig .plate-note{display:grid;gap:4px;border-bottom:1px solid var(--line);padding:2px 0 12px}
+.sig .plate-note strong{font:normal clamp(16px,2vw,21px) Georgia,serif;color:var(--ivory)}
+.sig .plate-note span{font-size:11px;color:#d3bb93;line-height:1.45}
+.sig .plate figcaption{padding:0;font-size:10px;color:#b6c2b5}
+.sig .copy{align-self:center}
+.sig .copy fieldset{border:0;border-top:1px solid #657365;padding:9px 0 0}
+.sig .copy label{padding:9px 11px;border:1px solid #526056;margin:6px 0;cursor:pointer}
+.sig .copy label:has(input:checked){background:#314137;border-color:var(--gold)}
+.sig .copy label:focus-within{outline:2px solid var(--gold);outline-offset:2px}
+.sig .controls{margin-top:24px}
+.sig .brief{background:#203029;padding:24px;border:1px solid #536153}
+.sig .brief dl{border-top:1px solid var(--line);padding-top:12px;font-size:14px}
+.sig .brief dd{color:var(--ivory)}
+.sig .stitch,.sig .thread-line{animation:sig-reveal .55s ease-out both}
+@keyframes sig-reveal{from{opacity:.18}to{opacity:.9}}
+@media(max-width:720px){.sig .introcopy{padding-bottom:16px;margin-bottom:16px}.sig .plate{border-right:0;border-bottom:1px solid var(--line);gap:9px}.sig .rail{gap:6px}.sig .plate-meta{font-size:9px;letter-spacing:.08em}.sig .brief{padding:18px}.sig .brief dl{grid-template-columns:1fr;gap:5px}.sig .brief dd{margin-bottom:9px}.sig .brief button{max-width:100%;white-space:normal}}
+@media(prefers-reduced-motion:reduce){.sig .stitch,.sig .thread-line{animation:none}.sig .rail button{transition:none}}
+
+/* Cinematic editorial transitions: one finite reveal, no autoplay or timed navigation. */
+.sig .cinema-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px 16px;margin:0 0 14px}
+.sig .cinema-controls .scene-line{margin:0;font:italic clamp(17px,2.3vw,24px)/1.35 Georgia,serif;color:#dcc6a3}
+.sig .cinema-actions{display:flex;gap:6px;flex-wrap:wrap}
+.sig .cinema-actions button{font-size:12px;min-height:44px;padding:8px 12px;border:1px solid #718071;color:#e3ddcf;background:#1c2a23}
+.sig .cinema-actions button[aria-pressed=true]{border-color:var(--gold);color:var(--gold)}
+.sig .cinema-hint{grid-column:1/-1;font-size:11px;line-height:1.45;margin:0}
+.sig .plate-art{isolation:isolate}
+.sig .plate-art .film-frame{position:relative;transform-origin:50% 54%}
+.sig[data-motion=on] .plate-art[data-direction=forward] .film-frame{animation:sig-film-forward .58s cubic-bezier(.2,.7,.25,1) both}
+.sig[data-motion=on] .plate-art[data-direction=backward] .film-frame{animation:sig-film-back .48s cubic-bezier(.2,.7,.25,1) both}
+.sig[data-motion=on] .plate-art .film-frame::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 25%,#efd6a024 48%,transparent 70%);pointer-events:none;animation:sig-light .75s ease-out both}
+.sig[data-motion=on] .scene-line{animation:sig-caption .35s ease-out both}
+.sig[data-motion=on] .plate-art[data-direction=forward] .stitch{animation:sig-reveal .65s ease-out both}
+.sig[data-motion=off] .film-frame,.sig[data-motion=off] .film-frame::after,.sig[data-motion=off] .scene-line,.sig[data-motion=off] .stitch,.sig[data-motion=off] .thread-line{animation:none!important;transition:none!important}
+@keyframes sig-film-forward{from{opacity:.48;transform:translateX(7px) scale(1.035)}to{opacity:1;transform:none}}
+@keyframes sig-film-back{from{opacity:.48;transform:translateX(-7px) scale(1.035)}to{opacity:1;transform:none}}
+@keyframes sig-light{from{transform:translateX(-100%);opacity:0}35%{opacity:1}to{transform:translateX(100%);opacity:0}}
+@keyframes sig-caption{from{opacity:.5;transform:translateY(3px)}to{opacity:1;transform:none}}
+@media(max-width:720px){.sig .cinema-controls{grid-template-columns:minmax(0,1fr);gap:8px}.sig .cinema-actions button{flex:1 1 auto}.sig .cinema-actions{width:100%}}
+@media(prefers-reduced-motion:reduce){.sig .film-frame,.sig .film-frame::after,.sig .scene-line,.sig .stitch,.sig .thread-line{animation:none!important;transition:none!important}}
+
+/* Optional consultation composition, not a checkout. */
+.sig .commerce-edit{margin:26px 0;border-top:1px solid var(--line);padding-top:22px}
+.sig .commerce-edit h3{font:normal clamp(27px,4vw,40px)/1.1 Georgia,serif;color:var(--ivory);margin:10px 0 20px}
+.sig .core-offer{display:grid;gap:5px;padding:17px;border:1px solid #9e8967;background:#28392e}
+.sig .core-offer strong{font:normal 25px Georgia,serif;color:#efe6d3}
+.sig .core-offer span{color:var(--gold);font-size:12px}
+.sig .core-offer p{font-size:13px;margin:0}
+.sig .commerce-edit fieldset{border:0;padding:0;margin:20px 0 12px}
+.sig .commerce-edit legend{padding:0;font-size:15px;color:#efe6d3}
+.sig .commerce-hint{font-size:12px;line-height:1.6;margin:10px 0;color:#c8c5b9}
+.sig .extra-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.sig .extra-card{padding:15px 12px;align-items:flex-start;min-width:0;border:1px solid #667367;background:#192920;cursor:pointer}
+.sig .extra-card:has(input:checked){border-color:var(--gold);background:#354238}
+.sig .extra-card:focus-within{outline:2px solid var(--gold);outline-offset:2px}
+.sig .extra-card input{margin:3px 0}
+.sig .extra-info{display:grid;gap:8px;min-width:0;overflow-wrap:anywhere}
+.sig .extra-info strong{font:normal 19px/1.2 Georgia,serif;color:#eee5d2}
+.sig .extra-info span{font-size:12px;color:#c4cbbf;line-height:1.5}
+.sig .extra-info small{font-size:11px;color:#e1cda8;line-height:1.5}
+.sig #extra-count{font-size:13px;margin:12px 0}
+.sig #clear-extras{white-space:normal;min-height:48px;text-align:center}
+@media(max-width:720px){.sig .extra-grid{grid-template-columns:minmax(0,1fr)}.sig .extra-card{min-height:76px}.sig #clear-extras{width:100%;justify-content:center}}
+</style>
+<script type="importmap">
+{"imports":{"react":"https://esm.sh/react@19.0.0","react-dom/client":"https://esm.sh/react-dom@19.0.0/client?external=react"}}
+</script>
+<script type="module" src="./signature.js"></script>
+</head>
+<body>
+<div id="root"><main class="sig" id="signature-fallback"><header><a class="wordmark" href="../">ATELIER <b>23</b><small>× BITOS</small></a><span class="edition">SIGNATURE EXPERIENCE</span></header><div class="introcopy"><h1>Костюм начинается с <em>вас.</em></h1><p>Интерактивные главы загружаются. Если они недоступны, воспользуйтесь существующим подбором образа.</p><a class="btn btn-primary" href="../#journey">Перейти к подбору образа</a></div></main></div>
+<noscript><p>Для просмотра интерактивных глав нужен JavaScript.</p></noscript>
+</body>
+</html>
