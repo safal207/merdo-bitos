@@ -16,6 +16,7 @@ try{
  const step=async(n)=>assert.equal(await page.locator(".progress").getAttribute("aria-valuenow"),String(n));
  const viewport=async()=>{assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1&&document.documentElement.scrollHeight<=innerHeight+1),"Document overflow");const c=page.locator("#screen .primary");if(await c.count()){const b=await c.boundingBox();assert.ok(b&&b.y>=0&&b.y+b.height<=844,"CTA outside viewport")}};
  await page.goto(url);await page.locator("#film").waitFor();await viewport();
+ assert.equal(await page.locator(".atelier-mark").count(),1);assert.equal(await page.locator(".mark-overlay").evaluate(el=>getComputedStyle(el).pointerEvents),"none");
  assert.ok(await page.locator("#film").evaluate(v=>v.paused&&v.muted&&v.playsInline));
  assert.equal(await page.locator("#film source").getAttribute("src"),"../assets/atelier23-film.mp4");
  assert.match(await page.locator("[data-view-count=film]").textContent(),/^0 просм\./);
@@ -67,6 +68,15 @@ try{
  await page.locator("#back").click();await page.locator('[data-event="evening"]').click();
  assert.equal(await title(),"Вечерняя классика");await forward();assert.equal(await title(),"Светлый акцент");assert.ok(await page.getByRole("button",{name:"↓ Другой образ"}).isDisabled());
  await page.reload();await page.getByRole("button",{name:"Продолжить",exact:true}).click();await page.locator("#back").click();await page.locator('[data-event="wardrobe"]').click();assert.equal(await title(),"Свободная элегантность");
+ // Shared card entry must preserve the exact product, never choose it automatically.
+ await page.goto(url+"?event=wedding&look=ivory");await page.locator("#look-photo").waitFor();
+ assert.equal(await title(),"Светлый акцент");await step(1);await viewport();
+ await page.evaluate(()=>{Object.defineProperty(navigator,"share",{configurable:true,value:undefined})});
+ await page.getByRole("button",{name:"Поделиться образом"}).click();
+ await page.locator("#share-link").waitFor();
+ const shared=new URL(await page.locator("#share-link").inputValue());assert.equal(shared.searchParams.get("event"),"wedding");assert.equal(shared.searchParams.get("look"),"ivory");
+ await page.getByRole("button",{name:"Закрыть",exact:true}).click();
+ await page.goto(url+"?event=business&look=ivory");await page.locator("#film").waitFor();
  assert.deepEqual(errors,[]);console.log("PASS "+width+"px: portrait CTA, swipe, direct booking path, optional plan, persistence, preference ranking and event isolation");await context.close();
  }
 }finally{await browser.close();server.close()}
