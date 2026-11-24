@@ -167,6 +167,18 @@ try {
     await signature.locator("#copy-fallback").waitFor();
     const copied=await signature.locator("#copy-fallback").inputValue();
     if(!copied.includes("Свобода плеч")||!copied.includes("Индивидуальный костюм")||!copied.includes("Вторая пара брюк")||!copied.includes("Акцентные аксессуары")||copied.includes("Сорочка к костюму"))failures.push(width+" Signature commerce copy fallback");
+    // Test the real React handler without leaving the isolated page.
+    await signature.evaluate(()=>document.addEventListener("click",e=>e.preventDefault(),{once:true}));
+    await signature.locator("#advisor").click();
+    const logBeforeReload=await signature.evaluate(()=>JSON.parse(localStorage.getItem("bitos.atelier23.fashionAnalytics.v1")||"null"));
+    const events=logBeforeReload?.rows||[],sigRows=events.filter(r=>r.type.startsWith("signature_"));
+    for(const type of ["signature_open","signature_chapter","signature_choice","signature_extra","signature_brief","signature_handoff","signature_replay"]){
+      if(!sigRows.some(r=>r.type===type))failures.push(width+" Signature analytics missing "+type);
+    }
+    if(new Set(sigRows.filter(r=>r.type==="signature_chapter").map(r=>r.chapter)).size!==6)failures.push(width+" Signature analytics chapter coverage");
+    if(!sigRows.some(r=>r.type==="signature_choice"&&r.chapter==="fabric"&&r.choice==="Выраженная фактура"))failures.push(width+" Signature analytics fabric choice");
+    if(!sigRows.some(r=>r.type==="signature_handoff"&&r.destination==="advisor"))failures.push(width+" Signature analytics handoff");
+    if(sigRows.some(r=>Object.keys(r).some(k=>!["type","visit","ts","chapter","choice","extra","action","destination"].includes(k))))failures.push(width+" Signature analytics unexpected data");
     await signature.reload({waitUntil:"domcontentloaded"});
     await signature.locator("#brief").waitFor();
     if(!await signature.locator("#brief-items").getByText("Подкладка и отделка",{exact:true}).isVisible())failures.push(width+" Signature reload lost notes");
@@ -186,13 +198,25 @@ try {
     await signature.reload({waitUntil:"domcontentloaded"});
     await signature.getByRole("heading",{name:"Сначала — характер."}).waitFor();
     if(external.length)failures.push(width+" Signature unexpected non-runtime network: "+external.join(", "));
+    const dashboard=await signature.context().newPage();
+    dashboard.on("pageerror",e=>failures.push(width+" Signature dashboard JS: "+e.message));
+    await dashboard.route("**/*",route=>new URL(route.request().url()).origin===new URL(base).origin?route.continue():route.abort());
+    await dashboard.goto(base+"fashion-overlay/analytics/",{waitUntil:"domcontentloaded"});
+    await dashboard.locator('[data-metric="sigStarts"] b').waitFor();
+    if(Number(await dashboard.locator('[data-metric="sigStarts"] b').textContent())<1)failures.push(width+" Signature dashboard missing local visits");
+    if(await dashboard.locator('[data-metric="sigHandoffs"] b').textContent()!=="1")failures.push(width+" Signature dashboard handoff count");
+    await dashboard.locator("#demo-mode").click();
+    if(await dashboard.locator('[data-metric="sigStarts"] b').textContent()!=="—")failures.push(width+" Signature dashboard mixed synthetic/local data");
+    await dashboard.locator("#local-mode").click();
+    await dashboard.locator("#signature-section").screenshot({path:join(root,"artifacts","atelier23-signature",width+"-analytics.png"),animations:"disabled"});
+    await dashboard.close();
     await signature.close();
     const offline=await browser.newPage({viewport:{width,height:850}});
     await offline.route("https://esm.sh/**",route=>route.abort());
     await offline.goto(base+"signature/",{waitUntil:"load"});
     if(!await offline.locator("#signature-fallback").isVisible()||await offline.locator("#signature-fallback a.btn").getAttribute("href")!=="../#journey")failures.push(width+" Signature unavailable runtime fallback");
     await offline.close();
-    process.stdout.write("PASS "+width+"px: Signature React mount, cinematic transitions, reduced motion, chapters, touch targets, selections, notes, reload, reset, optional commerce, runtime fallback and network guard\n");
+    process.stdout.write("PASS "+width+"px: Signature React mount, cinematic transitions, reduced motion, chapters, touch targets, selections, notes, reload, reset, optional commerce, shared analytics, runtime fallback and network guard\n");
     process.stdout.write("PASS "+width+"px: episode, video source, reduced motion, fallback, primary CTA route\n");
     process.stdout.write("PASS "+width+"px: wizard, guardrails, overflow, links\n");
   }
