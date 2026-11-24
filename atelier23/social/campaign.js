@@ -17,3 +17,23 @@ export function destination(topic,kind){
  if(kind==="whatsapp")return WHATSAPP+"?text="+encodeURIComponent(topics[topic].prompt);
  return null;
 }
+
+ // Official 2026 Christmas guide, checked 2026-11-25. No checkout or guaranteed delivery.
+ export const GIFT_GUIDE="https://atelier23.store/pt/pages/christmas-gift-guide";
+ export const giftValues=Object.freeze([350,1000,1500,2000]);
+ export const giftFormats=Object.freeze(["digital","printed"]);
+ export function giftDeadline(format,date){
+  if(!giftFormats.includes(format)||typeof date!=="string"||!/^\d{4}-\d{2}-\d{2}$/.test(date)||!Number.isFinite(Date.parse(date))||new Date(date+"T00:00:00Z").toISOString().slice(0,10)!==date)return null;
+  if(date<"2026-11-25"||date>"2026-12-24")return "outside";
+  return date<=(format==="printed"?"2026-12-18":"2026-12-24")?"within":"past";
+ }
+ export function giftContact(value,format){
+  if(!giftValues.includes(value)||!giftFormats.includes(format))return null;
+  const message="Gostaria de saber mais sobre o cartão oferta de "+value+" € ("+(format==="digital"?"digital":"impresso")+").";
+  return WHATSAPP+"?text="+encodeURIComponent(message);
+ }
+ export function lisbonDate(){
+  const parts=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Lisbon",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());
+  const get=t=>parts.find(x=>x.type===t)?.value;
+  return [get("year"),get("month"),get("day")].join("-");
+ }
