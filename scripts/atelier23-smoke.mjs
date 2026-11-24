@@ -217,6 +217,26 @@ try {
     await offline.goto(base+"signature/",{waitUntil:"load"});
     if(!await offline.locator("#signature-fallback").isVisible()||await offline.locator("#signature-fallback a.btn").getAttribute("href")!=="../#journey")failures.push(width+" Signature unavailable runtime fallback");
     await offline.close();
+    const social=await browser.newPage({viewport:{width,height:850}});
+    social.on("pageerror",e=>failures.push(width+" Social JS: "+e.message));
+    await social.route("**/*",route=>{const u=new URL(route.request().url());return u.origin===new URL(base).origin||(u.origin==="https://esm.sh"&&/^\/(?:react(?:-dom)?|scheduler)@/.test(u.pathname)&&route.request().resourceType()==="script")?route.continue():route.abort()});
+    await social.goto(base+"social/?utm_source=instagram&utm_content=gift",{waitUntil:"domcontentloaded"});
+    await social.getByRole("heading",{name:"Ofereça uma experiência pessoal."}).waitFor();
+    for(const topic of ["craft","wedding","wardrobe","gift"]){
+      await social.locator('[data-topic="'+topic+'"]').click();
+      if(await social.locator('[data-topic="'+topic+'"]').getAttribute("aria-pressed")!=="true")failures.push(width+" Social topic selection "+topic);
+      if(await social.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))failures.push(width+" Social overflow "+topic);
+    }
+    if(!(await social.locator("#social-whatsapp").getAttribute("href")).startsWith("https://wa.me/351912204778?text="))failures.push(width+" Social wrong Lisbon contact");
+    if(await social.locator("#social-site").getAttribute("href")!=="https://atelier23.store/pt")failures.push(width+" Social wrong market");
+    await social.evaluate(()=>document.addEventListener("click",e=>e.preventDefault(),{once:true}));
+    await social.locator("#social-whatsapp").click();
+    const socialRows=await social.evaluate(()=>JSON.parse(localStorage.getItem("bitos.atelier23.fashionAnalytics.v1")||'{"rows":[]}').rows);
+    if(!socialRows.some(r=>r.type==="social_landing"&&r.source==="instagram"&&r.topic==="gift")||!socialRows.some(r=>r.type==="social_handoff"&&r.destination==="whatsapp"&&r.topic==="gift"))failures.push(width+" Social attribution missing");
+    await social.screenshot({path:join(root,"artifacts","atelier23-signature",width+"-social.png"),fullPage:true,animations:"disabled"});
+    await social.close();
+    console.log("PASS "+width+"px: Lisbon social campaign routing, topic selection, local attribution and overflow");
+
     process.stdout.write("PASS "+width+"px: Signature React mount, cinematic transitions, reduced motion, chapters, touch targets, selections, notes, reload, reset, optional commerce, shared analytics, runtime fallback and network guard\n");
     process.stdout.write("PASS "+width+"px: episode, video source, reduced motion, fallback, primary CTA route\n");
     process.stdout.write("PASS "+width+"px: wizard, guardrails, overflow, links\n");
