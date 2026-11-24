@@ -37,3 +37,18 @@ export function destination(topic,kind){
   const get=t=>parts.find(x=>x.type===t)?.value;
   return [get("year"),get("month"),get("day")].join("-");
  }
+
+ // Source: https://atelier23.store/pages/wedding-suits (official wedding page).
+ export const WEDDING_PAGE="https://atelier23.store/pages/wedding-suits";
+ export const weddingStyles=Object.freeze({day:"Fato de três peças",evening:"Smoking",both:"Fato e smoking",unsure:"A decidir com o atelier"});
+ export const weddingGuests=Object.freeze({father:"Pai do noivo",groomsmen:"Padrinhos"});
+ export function validWeddingDate(date,today){
+  const valid=d=>typeof d==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(d)&&Number.isFinite(Date.parse(d))&&new Date(d+"T00:00:00Z").toISOString().slice(0,10)===d;
+  return valid(date)&&valid(today)&&date>=today;
+ }
+ export function weddingContact({date="",style="",guests=[]}={},today=lisbonDate()){
+  if(!Object.hasOwn(weddingStyles,style)||!Array.isArray(guests)||guests.some(id=>!Object.hasOwn(weddingGuests,id))||(date!==""&&!validWeddingDate(date,today)))return null;
+  const selected=Object.keys(weddingGuests).filter(id=>guests.includes(id)).map(id=>weddingGuests[id]);
+  const message=["Gostaria de conversar sobre o fato de noivo.","Estilo: "+weddingStyles[style]+".",date?"Data do casamento: "+date+".":"Data a confirmar.",selected.length?"Também gostaria de falar sobre: "+selected.join(", ")+".":""].filter(Boolean).join(" ");
+  return WHATSAPP+"?text="+encodeURIComponent(message);
+ }
