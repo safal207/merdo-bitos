@@ -62,6 +62,15 @@ try {
   assert.equal(await page.locator("#growth-copy").isEnabled(),true);
   assert.match(await page.locator("#growth-brief").inputValue(),/Лиссабон.*Индивидуальный пошив/);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,"CTA page overflow at "+width);
+  const cover=await page.locator('meta[property="og:image"]').getAttribute("content");
+  assert.equal(cover,"https://raw.githubusercontent.com/safal207/merdo-bitos/41f353c3efb9a13d876c48d6a1887ac96e6e91ae/atelier23/audit/gentleman-share.jpg");
+  assert.equal(await page.locator('meta[property="og:image:type"]').getAttribute("content"),"image/jpeg");
+  assert.equal(await page.locator(".trust-grid article").count(),3);
+  assert.equal(await page.locator(".trust-faq details").count(),4);
+  await page.locator(".trust-faq summary").nth(1).click();
+  assert.equal(await page.locator(".trust-faq details").nth(1).evaluate(e=>e.open),true);
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,"FAQ overflow at "+width);
+  await page.locator(".trust-faq summary").nth(1).click();
   await page.locator("#next-step").screenshot({path:"artifacts/audit-mobile/"+width+"-cta.png"});
   await page.evaluate(()=>window.scrollTo(0,0));
   await page.screenshot({path:"artifacts/audit-mobile/"+width+"-hero.png"});
