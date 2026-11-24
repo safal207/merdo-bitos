@@ -7,7 +7,7 @@
 import React,{useState,useLayoutEffect,useRef} from "react";
 import {createRoot} from "react-dom/client";
 import {makeTracker} from "../fashion-overlay/analytics.js";
-import {campaign,topics,destination,GIFT_GUIDE,giftValues,giftFormats,giftDeadline,giftContact,lisbonDate,WEDDING_PAGE,weddingStyles,weddingGuests,validWeddingDate,weddingContact} from "./campaign.js";
+import {campaign,topics,destination,GIFT_GUIDE,giftValues,giftFormats,giftDeadline,giftContact,lisbonDate,WEDDING_PAGE,weddingStyles,weddingGuests,validWeddingDate,weddingContact,wardrobeStages,wardrobeGoals,wardrobePieces,wardrobeHorizons,emptyWardrobe,normalizeWardrobe,wardrobeContact,loadWardrobe,saveWardrobe,clearWardrobe} from "./campaign.js";
 const h=React.createElement;
 function GiftEdit({onHandoff}){
  const [value,setValue]=useState(null),[format,setFormat]=useState(null);
@@ -42,6 +42,32 @@ function WeddingEdit({onHandoff}){
  h("div",{className:"actions"},h("a",{id:"wedding-site",className:"btn btn-primary",href:WEDDING_PAGE,onClick:()=>onHandoff("site")},"Consultar prazos no site oficial (EN)"),contact?h("a",{id:"wedding-contact",className:"btn btn-ghost",href:contact,onClick:()=>onHandoff("whatsapp")},"Conversar com o atelier"):null),
  h("p",{className:"notice"},"A data e as preferências ficam nesta página até sair. Ao abrir o WhatsApp, o texto é preparado para sua revisão; nenhuma mensagem é enviada automaticamente. Os eventos locais não incluem a data do casamento. Preço, disponibilidade e provas a confirmar com o atelier."));
 }
+function WardrobeEdit({onHandoff}){
+ const [plan,setPlan]=useState(()=>{try{return loadWardrobe(localStorage)}catch{return emptyWardrobe()}});
+ const [status,setStatus]=useState("");
+ const update=(key,value)=>{setPlan(prev=>normalizeWardrobe({...prev,[key]:value}));setStatus("")};
+ const toggle=(key,id)=>{setPlan(prev=>normalizeWardrobe({...prev,[key]:prev[key].includes(id)?prev[key].filter(x=>x!==id):[...prev[key],id]}));setStatus("")};
+ const radio=(key,legend,options)=>h("fieldset",null,h("legend",null,legend),h("div",{className:"gift-grid formats"},Object.entries(options).map(([id,label])=>h("label",{key:id},h("input",{type:"radio",name:"wardrobe-"+key,value:id,checked:plan[key]===id,onChange:()=>update(key,id)}),label))));
+ const check=(key,legend)=>h("fieldset",null,h("legend",null,legend),h("div",{className:"gift-grid formats"},Object.entries(wardrobePieces).map(([id,label])=>h("label",{key:id},h("input",{type:"checkbox",name:"wardrobe-"+key,value:id,checked:plan[key].includes(id),onChange:()=>toggle(key,id)}),label))));
+ const contact=wardrobeContact(plan);
+ const persist=()=>{try{setStatus(saveWardrobe(localStorage,plan)?"Plano guardado neste navegador.":"Não foi possível guardar o plano.")}catch{setStatus("Não foi possível guardar o plano.")}};
+ const reset=()=>{setPlan(emptyWardrobe());try{setStatus(clearWardrobe(localStorage)?"Plano apagado deste navegador.":"Plano limpo nesta página; não foi possível apagar o armazenamento.")}catch{setStatus("Plano limpo nesta página; não foi possível apagar o armazenamento.")}};
+ return h("div",{className:"gift-edit wardrobe-edit"},
+ h("p",{className:"gift-kicker"},"PRIVATE WARDROBE · LISBOA"),
+ h("h2",null,"Um guarda-roupa que cresce consigo."),
+ h("p",null,"Comece pelo que já tem. Escolha apenas as peças que gostaria de explorar, incluindo uma segunda peça da mesma categoria, se fizer sentido."),
+ radio("stage","Já visitou o atelier?",wardrobeStages),
+ plan.stage==="returning"?h("p",{className:"notice"},"Se já fez encomendas, o atelier pode confirmar as medidas e os detalhes anteriores. Este demonstrador não tem acesso a fichas de clientes."):null,
+ radio("goal","O que precisa de melhorar?",wardrobeGoals),
+ check("owned","Peças que já tem (opcional)"),
+ check("wanted","Peças que gostaria de explorar"),
+ radio("horizon","Quando pretende avançar? (opcional)",wardrobeHorizons),
+ h("div",{className:"gift-preview","aria-live":"polite"},h("span",null,"O SEU PLANO"),h("strong",null,plan.goal?wardrobeGoals[plan.goal]:"Escolha o objetivo"),h("small",null,plan.wanted.length?plan.wanted.map(id=>wardrobePieces[id]).join(" · "):"Nenhuma peça selecionada"),h("small",null,plan.horizon?wardrobeHorizons[plan.horizon]:"Prazo a combinar")),
+ h("div",{className:"actions"},h("button",{id:"wardrobe-save",className:"btn btn-ghost",type:"button",onClick:persist},"Guardar neste navegador"),h("button",{id:"wardrobe-reset",className:"btn btn-ghost",type:"button",onClick:reset},"Limpar plano")),
+ h("p",{id:"wardrobe-status",role:"status"},status),
+ h("div",{className:"actions"},contact?h("a",{id:"wardrobe-contact",className:"btn btn-primary",href:contact,onClick:()=>onHandoff("whatsapp")},"Conversar com o atelier"):null,h("a",{id:"wardrobe-site",className:"btn btn-ghost",href:destination("wardrobe","site"),onClick:()=>onHandoff("site")},"Visitar o site oficial")),
+ h("p",{className:"notice"},"Guardar é opcional e funciona apenas neste navegador, inclusive em dispositivos partilhados. Limpe o plano se necessário. Não são recolhidos nomes, contactos, medidas ou histórico de compras. Ao abrir o WhatsApp pode rever e enviar o texto; nenhuma mensagem é enviada automaticamente. Não há encomendas, lembretes automáticos ou preços confirmados."));
+}
 function App(){
  const [entry]=useState(()=>campaign(location.search)),[topic,setTopic]=useState(entry.topic);
  const [track]=useState(()=>{try{return makeTracker(localStorage,"social-"+crypto.randomUUID())}catch{return ()=>false}});
@@ -56,7 +82,7 @@ function App(){
  h("section",{className:"hero","aria-labelledby":"offer-title"},
  h("span",{className:"eyebrow"},item.label),
  h("h1",{id:"offer-title","aria-live":"polite"},item.title),h("p",null,item.copy),
- topic==="gift"?h(GiftEdit,{onHandoff:click}):topic==="wedding"?h(WeddingEdit,{onHandoff:click}):h("div",{className:"actions"},h("a",{id:"social-whatsapp",className:"btn btn-primary",href:destination(topic,"whatsapp"),onClick:()=>click("whatsapp")},"Conversar no WhatsApp"),h("a",{id:"social-site",className:"btn btn-ghost",href:destination(topic,"site"),onClick:()=>click("site")},"Visitar o site oficial")),
+ topic==="gift"?h(GiftEdit,{onHandoff:click}):topic==="wedding"?h(WeddingEdit,{onHandoff:click}):topic==="wardrobe"?h(WardrobeEdit,{onHandoff:click}):h("div",{className:"actions"},h("a",{id:"social-whatsapp",className:"btn btn-primary",href:destination(topic,"whatsapp"),onClick:()=>click("whatsapp")},"Conversar no WhatsApp"),h("a",{id:"social-site",className:"btn btn-ghost",href:destination(topic,"site"),onClick:()=>click("site")},"Visitar o site oficial")),
  h("p",{className:"notice"},"A conversa abre no WhatsApp; nenhuma mensagem é enviada automaticamente. Disponibilidade, condições e preços a confirmar com o atelier.")),
  h("footer",null,h("p",{className:"notice"},"Demonstração independente, não uma loja ou reserva. Apenas eventos técnicos neste navegador, sem transmissão de dados para um servidor. Nenhuma compra ou marcação é confirmada.")));
 }
