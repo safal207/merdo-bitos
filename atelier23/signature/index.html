@@ -73,6 +73,28 @@
 @keyframes sig-reveal{from{opacity:.18}to{opacity:.9}}
 @media(max-width:720px){.sig .introcopy{padding-bottom:16px;margin-bottom:16px}.sig .plate{border-right:0;border-bottom:1px solid var(--line);gap:9px}.sig .rail{gap:6px}.sig .plate-meta{font-size:9px;letter-spacing:.08em}.sig .brief{padding:18px}.sig .brief dl{grid-template-columns:1fr;gap:5px}.sig .brief dd{margin-bottom:9px}.sig .brief button{max-width:100%;white-space:normal}}
 @media(prefers-reduced-motion:reduce){.sig .stitch,.sig .thread-line{animation:none}.sig .rail button{transition:none}}
+
+/* Cinematic editorial transitions: one finite reveal, no autoplay or timed navigation. */
+.sig .cinema-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px 16px;margin:0 0 14px}
+.sig .cinema-controls .scene-line{margin:0;font:italic clamp(17px,2.3vw,24px)/1.35 Georgia,serif;color:#dcc6a3}
+.sig .cinema-actions{display:flex;gap:6px;flex-wrap:wrap}
+.sig .cinema-actions button{font-size:12px;min-height:44px;padding:8px 12px;border:1px solid #718071;color:#e3ddcf;background:#1c2a23}
+.sig .cinema-actions button[aria-pressed=true]{border-color:var(--gold);color:var(--gold)}
+.sig .cinema-hint{grid-column:1/-1;font-size:11px;line-height:1.45;margin:0}
+.sig .plate-art{isolation:isolate}
+.sig .plate-art .film-frame{position:relative;transform-origin:50% 54%}
+.sig[data-motion=on] .plate-art[data-direction=forward] .film-frame{animation:sig-film-forward .58s cubic-bezier(.2,.7,.25,1) both}
+.sig[data-motion=on] .plate-art[data-direction=backward] .film-frame{animation:sig-film-back .48s cubic-bezier(.2,.7,.25,1) both}
+.sig[data-motion=on] .plate-art .film-frame::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 25%,#efd6a024 48%,transparent 70%);pointer-events:none;animation:sig-light .75s ease-out both}
+.sig[data-motion=on] .scene-line{animation:sig-caption .35s ease-out both}
+.sig[data-motion=on] .plate-art[data-direction=forward] .stitch{animation:sig-reveal .65s ease-out both}
+.sig[data-motion=off] .film-frame,.sig[data-motion=off] .film-frame::after,.sig[data-motion=off] .scene-line,.sig[data-motion=off] .stitch,.sig[data-motion=off] .thread-line{animation:none!important;transition:none!important}
+@keyframes sig-film-forward{from{opacity:.48;transform:translateX(7px) scale(1.035)}to{opacity:1;transform:none}}
+@keyframes sig-film-back{from{opacity:.48;transform:translateX(-7px) scale(1.035)}to{opacity:1;transform:none}}
+@keyframes sig-light{from{transform:translateX(-100%);opacity:0}35%{opacity:1}to{transform:translateX(100%);opacity:0}}
+@keyframes sig-caption{from{opacity:.5;transform:translateY(3px)}to{opacity:1;transform:none}}
+@media(max-width:720px){.sig .cinema-controls{grid-template-columns:minmax(0,1fr);gap:8px}.sig .cinema-actions button{flex:1 1 auto}.sig .cinema-actions{width:100%}}
+@media(prefers-reduced-motion:reduce){.sig .film-frame,.sig .film-frame::after,.sig .scene-line,.sig .stitch,.sig .thread-line{animation:none!important;transition:none!important}}
 </style>
 <script type="importmap">
 {"imports":{"react":"https://esm.sh/react@19.0.0","react-dom/client":"https://esm.sh/react-dom@19.0.0/client?external=react"}}
