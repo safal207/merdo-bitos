@@ -79,6 +79,55 @@ try {
     await episode.locator("#journey .quiz-body").waitFor({timeout:40000});
     if(new URL(episode.url()).hash!=="#journey") failures.push(width+" episode destination not reached");
     await episode.close();
+    const signature=await browser.newPage({viewport:{width,height:850},reducedMotion:"reduce"});
+    signature.on("pageerror",e=>failures.push(width+" Signature JS: "+e.message));
+    const external=[];
+    await signature.route("**/*",route=>{
+      if(new URL(route.request().url()).origin!==new URL(base).origin){external.push(route.request().url());return route.abort()}
+      return route.continue();
+    });
+    await signature.addInitScript(()=>{Object.defineProperty(navigator,"clipboard",{configurable:true,value:{writeText:async()=>{throw Error("test fallback")}}})});
+    await signature.goto(base+"signature/",{waitUntil:"domcontentloaded"});
+    const next=signature.locator("#next"),prev=signature.locator("#prev");
+    await signature.getByRole("heading",{name:"Сначала — характер."}).waitFor();
+    if(!await prev.isDisabled())failures.push(width+" Signature back enabled on initial step");
+    for(let i=0;i<6;i++){
+      if(await signature.locator("#progress").textContent()!=="Глава "+(i+1)+" из 6")failures.push(width+" Signature wrong chapter "+i);
+      if(await signature.locator("#chapters button[aria-current=step]").count()!==1)failures.push(width+" Signature current step indicator");
+      if(await signature.locator("#illustration svg").count()!==1)failures.push(width+" Signature missing drawing "+i);
+      if(await signature.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))failures.push(width+" Signature horizontal overflow chapter "+i);
+      for(const control of [next,prev]){
+        const rect=await control.boundingBox();if(!rect||rect.height<44)failures.push(width+" Signature touch target chapter "+i);
+      }
+      if(i===0)await signature.getByLabel("Комфорт в движении").check();
+      if(i===1)await signature.getByLabel("Выраженная фактура").check();
+      if(i===2){await signature.getByLabel("Свобода плеч").check();await prev.click();if(!await signature.getByLabel("Выраженная фактура").isChecked())failures.push(width+" Signature back lost selection");await next.click()}
+      if(i===4)await signature.getByLabel("Подкладка и отделка").check();
+      await next.click();
+    }
+    await signature.locator("#brief").waitFor();
+    if(!await signature.locator("#brief-items").getByText("Свобода плеч",{exact:true}).isVisible())failures.push(width+" Signature summary missing selection");
+    if(await signature.locator("#advisor").getAttribute("href")!=="../#journey")failures.push(width+" Signature advisor handoff");
+    if(await signature.locator("#journey").getAttribute("href")!=="../fashion-journey/")failures.push(width+" Signature journey handoff");
+    await signature.locator("#copy-brief").click();
+    await signature.locator("#copy-fallback").waitFor();
+    if(!(await signature.locator("#copy-fallback").inputValue()).includes("Свобода плеч"))failures.push(width+" Signature copy fallback");
+    await signature.reload({waitUntil:"domcontentloaded"});
+    await signature.locator("#brief").waitFor();
+    if(!await signature.locator("#brief-items").getByText("Подкладка и отделка",{exact:true}).isVisible())failures.push(width+" Signature reload lost notes");
+    if(await signature.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))failures.push(width+" Signature summary overflow");
+    await signature.locator("#reset").click();
+    if(!await signature.locator("#brief").isHidden()||await signature.getByLabel("Комфорт в движении").isChecked())failures.push(width+" Signature reset");
+    await signature.evaluate(()=>sessionStorage.setItem("bitos.atelier23.signature.v1",'{"step":99,"complete":true,"choices":{"concept":"invalid"}}'));
+    await signature.reload({waitUntil:"domcontentloaded"});
+    await signature.getByRole("heading",{name:"Сначала — характер."}).waitFor();
+    if(await signature.locator("#progress").textContent()!=="Глава 1 из 6"||!await signature.locator("#brief").isHidden()||await signature.locator('input:checked').count()!==0)failures.push(width+" Signature corrupt-state guard");
+    await signature.evaluate(()=>sessionStorage.setItem("bitos.atelier23.signature.v1","not json"));
+    await signature.reload({waitUntil:"domcontentloaded"});
+    await signature.getByRole("heading",{name:"Сначала — характер."}).waitFor();
+    if(external.length)failures.push(width+" Signature unexpected network: "+external.join(", "));
+    await signature.close();
+    process.stdout.write("PASS "+width+"px: Signature chapters, touch targets, selections, notes, reload, reset, fallback and no external requests\n");
     process.stdout.write("PASS "+width+"px: episode, video source, reduced motion, fallback, primary CTA route\n");
     process.stdout.write("PASS "+width+"px: wizard, guardrails, overflow, links\n");
   }
