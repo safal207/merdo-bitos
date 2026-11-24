@@ -131,6 +131,23 @@ try{
  assert.match(await page.locator("#sales").textContent(),/данных нет/);
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
  const recorded=await rows();assert.equal(recorded.filter(r=>r.type==="booking_click").length,2);assert.ok(recorded.every(r=>!["sale","purchase","booking_confirmed"].includes(r.type)));
+ // Demo is separate from the local log, even with actual booking clicks.
+ const beforeDemo=await page.evaluate(key=>localStorage.getItem(key),analyticsKey);
+ await page.locator("#demo-mode").click();
+ assert.match(await page.locator("#mode-note").textContent(),/Все цифры условные/);
+ assert.equal(await page.locator('[data-metric="sales"] b').textContent(),"12");
+ assert.equal(await page.locator('[data-metric="booking"] b').textContent(),"72");
+ assert.equal(await page.locator("#funnel .frow").count(),8);
+ assert.match(await page.locator("#retention").textContent(),/35\s*%/);
+ assert.equal(await page.locator("#products .product").count(),6);
+ assert.equal(await page.evaluate(key=>localStorage.getItem(key),analyticsKey),beforeDemo);
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),"Demo dashboard overflow");
+ await page.reload();await page.locator('[data-metric="sales"] b').waitFor();assert.equal(await page.locator('[data-metric="sales"] b').textContent(),"12");
+ await page.locator("#local-mode").click();
+ assert.equal(await page.locator('[data-metric="sales"] b').textContent(),"—");
+ assert.equal(await page.locator('[data-metric="booking"] b').textContent(),"2");
+ assert.match(await page.locator("#retention").textContent(),/Пока нет измерения/);
+ assert.equal(await page.evaluate(key=>localStorage.getItem(key),analyticsKey),beforeDemo);
  // Empty and corrupt storage must never present fabricated sales/engagement.
  await page.evaluate(key=>localStorage.removeItem(key),analyticsKey);await page.locator("#refresh").click();
  assert.match(await page.locator("#status").textContent(),/Пока нет/);assert.equal(await page.locator('[data-metric="booking"] b').textContent(),"0");
