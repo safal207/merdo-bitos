@@ -35,7 +35,35 @@ let state=restore(),page="film",index=0,returnPage="event";
 const $=id=>document.getElementById(id);
 const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(state))}catch{}};
 const plan=()=>state.event?state.plans[state.event]:blank();
-const list=()=>products.filter(p=>!state.event||p.events.includes(state.event));
+// Explicit editorial tags; not inferred from sensitive traits or purchase history.
+const styleTags={
+ navy:["tailored","formal","suit","navy"],
+ grey:["tailored","formal","suit","grey"],
+ black:["tailored","formal","black-tie","black"],
+ ivory:["tailored","formal","black-tie","ivory"],
+ "travel-navy":["relaxed","separates","trousers","navy"],
+ "travel-black":["relaxed","separates","trousers","black"]
+};
+function preferenceScore(item){
+ const target=styleTags[item.id];
+ return products.reduce((total,source)=>{
+  const weight=(state.likes.includes(source.id)?1:0)+(state.saved.includes(source.id)?3:0);
+  if(!weight)return total;
+  const from=styleTags[source.id],shared=target.filter(tag=>from.includes(tag)).length;
+  return total+weight*shared/(new Set([...target,...from]).size);
+ },0);
+}
+const rank=items=>items.map((item,i)=>({item,i,score:preferenceScore(item)})).sort((a,b)=>b.score-a.score||a.i-b.i).map(x=>x.item);
+let deckEvent="",deck=[],frontier=0;
+function rebuildDeck(){
+ deckEvent=state.event;deck=rank(products.filter(p=>p.events.includes(state.event)));index=0;frontier=0;
+}
+// Preserve the whole already-visited prefix, even if the user goes backwards.
+// Only the not-yet-shown tail is re-ranked on the next forward gesture.
+function list(){
+ if(deckEvent!==state.event||!deck.length)rebuildDeck();
+ return deck;
+}
 const completion=()=>{const p=plan();return [!!state.event,p.dateSet,!!p.chosen,p.wardrobe,p.summary,p.visited]};
 const fmt=n=>n.toLocaleString("ru-RU")+" ₽";
 const icons={heart:'<path d="M20.8 8.6c0 5-8.8 10.7-8.8 10.7S3.2 13.6 3.2 8.6a4.9 4.9 0 0 1 8.8-3 4.9 4.9 0 0 1 8.8 3z"/>',save:'<path d="M6 3h12v18l-6-4-6 4z"/>',share:'<path d="m22 2-7 20-4-9-9-4 20-7zM22 2 11 13"/>'};
@@ -127,13 +155,21 @@ function render(){
   photo.addEventListener("keydown",e=>{if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)){e.preventDefault();move(["ArrowUp","ArrowLeft"].includes(e.key)?-1:1);$("look-photo")?.focus()}});
  }
 }
-function move(n){let next=Math.max(0,Math.min(list().length-1,index+n));if(next!==index){index=next;render()}}
+function move(n){
+ const a=list(),next=Math.max(0,Math.min(a.length-1,index+n));
+ if(next===index)return;
+ if(next>frontier){
+  deck=[...a.slice(0,frontier+1),...rank(a.slice(frontier+1))];
+  frontier=next;
+ }
+ index=next;render();
+}
 function toggle(key,id){state[key]=state[key].includes(id)?state[key].filter(x=>x!==id):[...state[key],id];persist()}
 $("back").addEventListener("click",()=>{const back={event:"film",look:"event",result:"look",date:"result",wardrobe:"date",plan:returnPage,saved:"plan",summary:"plan",visit:"plan"};go(back[page]||"film")});
 $("plan").addEventListener("click",()=>{returnPage=page;go("plan")});
 screen.addEventListener("click",async e=>{
  const b=e.target.closest("button");if(!b||b.disabled)return;const d=b.dataset,p=plan(),a=d.action;
- if(d.event){state.event=d.event;index=0;persist();return go("look")}
+ if(d.event){state.event=d.event;rebuildDeck();persist();return go("look")}
  if(d.like||d.save){const key=d.like?"likes":"saved",id=d.like||d.save;toggle(key,id);b.setAttribute("aria-pressed",String(state[key].includes(id)));return}
  if(d.remove){toggle("saved",d.remove);return render()}
  if(d.jump)return go(d.jump);
