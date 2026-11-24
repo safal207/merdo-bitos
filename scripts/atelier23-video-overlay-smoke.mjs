@@ -85,8 +85,13 @@ try{
  await page.evaluate(()=>{Object.defineProperty(navigator,"share",{configurable:true,value:undefined})});
  await page.getByRole("button",{name:"Поделиться образом"}).click();
  await page.locator("#share-link").waitFor();
- const shared=new URL(await page.locator("#share-link").inputValue());assert.equal(shared.searchParams.get("event"),"wedding");assert.equal(shared.searchParams.get("look"),"ivory");
+ const shared=new URL(await page.locator("#share-link").inputValue());assert.equal(shared.searchParams.get("event"),"wedding");assert.ok(shared.pathname.endsWith("/share/ivory/"));
+ const telegram=new URL(await page.locator("#share-telegram").getAttribute("href"));assert.equal(telegram.origin,"https://t.me");assert.equal(telegram.searchParams.get("url"),shared.href);
+ const preview=await (await page.request.get(shared.href)).text();assert.match(preview,/og:title" content="ATELIER 23 · Светлый акцент"/);assert.match(preview,/og:image" content="https:\/\/atelier-23.ru\/wp-content\/uploads\/2025\/08\/Atelier23_26_09_16_-41-600x800.jpg"/);
  await page.getByRole("button",{name:"Закрыть",exact:true}).click();
+ await page.goto(shared.href);await page.locator("#look-photo").waitFor();assert.equal(await title(),"Светлый акцент");await step(1);
+ await page.goto(url+"share/ivory/?event=business");await page.locator("#look-photo").waitFor();assert.equal(await title(),"Светлый акцент");assert.equal(new URL(page.url()).searchParams.get("event"),"wedding");
+ for(const id of ["navy","grey","black","ivory","travel-navy","travel-black"]){const response=await page.request.get(url+"share/"+id+"/");assert.ok(response.ok(),id+" preview missing");assert.match(await response.text(),/og:image/)}
  await page.goto(url+"?event=business&look=ivory");await page.locator(".app[data-mode=film]").waitFor();
  // Exercise scene boundaries deterministically, independent of browser codec support.
  await page.goto(url);await page.locator("#cue-cta").waitFor();
