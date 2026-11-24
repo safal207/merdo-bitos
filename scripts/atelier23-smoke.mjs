@@ -1,5 +1,5 @@
 import { createServer } from "node:http";
-import { readFile } from "node:fs/promises";
+import { readFile, mkdir } from "node:fs/promises";
 import { extname, join, resolve } from "node:path";
 import { chromium } from "playwright";
 import { createHash } from "node:crypto";
@@ -79,6 +79,7 @@ try {
     await episode.locator("#journey .quiz-body").waitFor({timeout:40000});
     if(new URL(episode.url()).hash!=="#journey") failures.push(width+" episode destination not reached");
     await episode.close();
+    await mkdir(join(root,"artifacts","atelier23-signature"),{recursive:true});
     const signature=await browser.newPage({viewport:{width,height:850},reducedMotion:"reduce"});
     signature.on("pageerror",e=>failures.push(width+" Signature JS: "+e.message));
     const external=[];
@@ -99,6 +100,16 @@ try {
       if(await signature.locator("#progress").textContent()!=="Глава "+(i+1)+" из 6")failures.push(width+" Signature wrong chapter "+i);
       if(await signature.locator("#chapters button[aria-current=step]").count()!==1)failures.push(width+" Signature current step indicator");
       if(await signature.locator("#illustration svg").count()!==1)failures.push(width+" Signature missing drawing "+i);
+      const plateId=["concept","fabric","measure","pattern","making","fitting"][i];
+      const plate=signature.locator(".sig .plate");
+      const svg=signature.locator("#illustration svg");
+      if(await plate.getAttribute("data-chapter")!==plateId||await svg.getAttribute("data-plate")!==plateId||!await svg.getAttribute("aria-label"))failures.push(width+" Signature visual identity "+i);
+      if(await signature.locator(".progress-line progress").getAttribute("value")!==String(i+1))failures.push(width+" Signature visual progress "+i);
+      if(i===2&&await svg.locator(".measuring-tape").count()!==1)failures.push(width+" Signature measuring tape");
+      if(i===3&&await svg.locator(".blueprint-sheet").count()!==1)failures.push(width+" Signature blueprint");
+      if(i===4&&await svg.locator(".thread-line").count()!==1)failures.push(width+" Signature thread detail");
+      if(!/Не фотография производства/.test(await plate.locator("figcaption").textContent()||"")||!await plate.locator("figcaption").isVisible())failures.push(width+" Signature illustration disclosure");
+      await signature.screenshot({path:join(root,"artifacts","atelier23-signature",width+"-"+plateId+".png"),fullPage:true,animations:"disabled"});
       if(await signature.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))failures.push(width+" Signature horizontal overflow chapter "+i);
       for(const control of [next,prev]){
         const rect=await control.boundingBox();if(!rect||rect.height<44)failures.push(width+" Signature touch target chapter "+i);
@@ -110,6 +121,7 @@ try {
       await next.click();
     }
     await signature.locator("#brief").waitFor();
+    await signature.screenshot({path:join(root,"artifacts","atelier23-signature",width+"-brief.png"),fullPage:true,animations:"disabled"});
     if(!await signature.locator("#brief-items").getByText("Свобода плеч",{exact:true}).isVisible())failures.push(width+" Signature summary missing selection");
     if(await signature.locator("#advisor").getAttribute("href")!=="../#journey")failures.push(width+" Signature advisor handoff");
     if(await signature.locator("#journey").getAttribute("href")!=="../fashion-journey/")failures.push(width+" Signature journey handoff");
