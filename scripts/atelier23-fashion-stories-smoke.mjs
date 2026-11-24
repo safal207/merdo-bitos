@@ -18,9 +18,12 @@ try{
  await page.goto(url);await page.locator("#film").waitFor();await viewport();
  assert.ok(await page.locator("#film").evaluate(v=>v.paused&&v.muted&&v.playsInline));
  assert.equal(await page.locator("#film source").getAttribute("src"),"../assets/atelier23-film.mp4");
+ assert.match(await page.locator("[data-view-count=film]").textContent(),/^0 просм\./);
  await page.getByRole("button",{name:"Найти свой образ"}).click();
  await page.getByRole("button",{name:"Деловая встреча"}).click();await step(1);await viewport();
+ await page.waitForFunction(()=>document.querySelector("[data-view-count=navy]")?.textContent.startsWith("1 просм."));await step(1);
  await page.getByRole("button",{name:"Нравится"}).click();await step(1);
+ assert.match(await page.locator("[data-view-count=navy]").textContent(),/^1 просм\./);
  await page.getByRole("button",{name:"В избранное"}).click();
  assert.equal(await page.getByRole("button",{name:"В избранное"}).getAttribute("aria-pressed"),"true");
  await page.locator("#look-photo").evaluate(el=>{const t=(x,y)=>new Touch({identifier:1,target:el,clientX:x,clientY:y});el.dispatchEvent(new TouchEvent("touchstart",{changedTouches:[t(130,400)],bubbles:true}));el.dispatchEvent(new TouchEvent("touchend",{changedTouches:[t(132,120)],bubbles:true}))});
@@ -35,7 +38,7 @@ try{
  await page.locator('[data-own="shirt"]').check();await page.getByRole("button",{name:"Готово",exact:true}).click();await step(4);await viewport();
  await page.getByRole("button",{name:"Мой план",exact:true}).click();assert.equal(await page.locator(".plan-list .done").count(),4);
  await page.getByRole("button",{name:"Избранное · 1"}).click();assert.equal(await page.locator(".saved-item").count(),1);
- await page.reload();await page.getByRole("button",{name:"Продолжить",exact:true}).click();await step(4);await viewport();
+ await page.reload();assert.ok(await page.evaluate(()=>JSON.parse(localStorage.getItem("bitos.atelier23.fashionStories.v1")).views.navy>=1));await page.getByRole("button",{name:"Продолжить",exact:true}).click();await step(4);await viewport();
  assert.deepEqual(errors,[]);console.log("PASS "+width+"px: portrait CTA, swipe, direct booking path, optional plan, persistence");await context.close();
  }
 }finally{await browser.close();server.close()}
