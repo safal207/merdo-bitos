@@ -145,3 +145,22 @@ for(const style of Object.keys(weddingStyles)){
 }
 assert.ok(new URL(weddingContact({style:"unsure"})).searchParams.get("text").includes("Data a confirmar."));
 console.log("PASS wedding optional date, leap year, style allowlist, family preferences and Lisbon handoff");
+
+import {WARDROBE_KEY,emptyWardrobe,normalizeWardrobe,wardrobeContact,loadWardrobe,saveWardrobe,clearWardrobe} from "../atelier23/social/campaign.js";
+const wdata=new Map(),wstore={getItem:k=>wdata.get(k)??null,setItem:(k,v)=>wdata.set(k,v),removeItem:k=>wdata.delete(k)};
+assert.deepEqual(loadWardrobe(wstore),emptyWardrobe());
+assert.equal(wardrobeContact(emptyWardrobe()),null);
+const plan={stage:"returning",goal:"business",owned:["suit","shirt","shirt","unknown"],wanted:["shirt","coat"],horizon:"season",email:"private@example.com"};
+const cleanPlan=normalizeWardrobe(plan);
+assert.deepEqual(cleanPlan,{stage:"returning",goal:"business",owned:["suit","shirt"],wanted:["shirt","coat"],horizon:"season"});
+assert.deepEqual(normalizeWardrobe({stage:"__proto__",goal:"constructor",owned:"suit",wanted:[null,12],horizon:"bad"}),emptyWardrobe());
+assert.equal(saveWardrobe(wstore,plan),true);assert.deepEqual(loadWardrobe(wstore),cleanPlan);
+assert.equal(wdata.get(WARDROBE_KEY).includes("private@example.com"),false);
+const wl=new URL(wardrobeContact(plan));assert.equal(wl.origin,"https://wa.me");assert.equal(wl.pathname,"/351912204778");
+const wm=wl.searchParams.get("text");assert.ok(wm.includes("Já sou cliente"));assert.ok(wm.includes("Já tenho: Fato, Camisa"));assert.ok(wm.includes("Gostaria de explorar: Camisa, Sobretudo"));assert.ok(wm.includes("medidas anteriores"));
+assert.equal(wm.includes("private@example.com"),false);
+assert.equal(clearWardrobe(wstore),true);assert.deepEqual(loadWardrobe(wstore),emptyWardrobe());
+wdata.set(WARDROBE_KEY,"bad json");assert.deepEqual(loadWardrobe(wstore),emptyWardrobe());
+assert.deepEqual(loadWardrobe(blocked),emptyWardrobe());assert.equal(saveWardrobe(blocked,plan),false);
+assert.equal(clearWardrobe({removeItem(){throw Error("blocked")}}),false);
+console.log("PASS wardrobe consent-based persistence, allowlist, repeat purchase brief, reset and blocked storage");
