@@ -138,6 +138,17 @@ try{
  assert.equal(await page.locator('[data-metric="sales"] b').textContent(),"12");
  assert.equal(await page.locator('[data-metric="booking"] b').textContent(),"72");
  assert.equal(await page.locator("#funnel .frow").count(),8);
+ assert.equal(await page.locator("#funnel .fshape").count(),8);
+ const funnelColors=await page.locator("#funnel .frow").evaluateAll(rows=>rows.map(r=>r.style.getPropertyValue("--light")));
+ assert.equal(new Set(funnelColors).size,8);
+ const exactRails=await page.locator("#funnel .track i").evaluateAll(els=>els.map(e=>parseFloat(e.style.width)));
+ assert.deepEqual(exactRails.map(n=>Math.round(n*10)/10),[100,82,42,18,7.2,4,2.4,1.2],"actual scaled rails");
+ assert.match(await page.locator("#funnel-summary").textContent(),/1,2\s*%/);
+ assert.match(await page.locator("#funnel-summary").textContent(),/40\s*%/);
+ assert.match(await page.locator("#funnel-loss").textContent(),/400/);
+ assert.ok(await page.locator("#funnel").evaluate(el=>el.scrollWidth<=el.clientWidth+1),"Funnel overflow");
+ await page.locator(".funnel-panel").screenshot({path:"artifacts/atelier23-funnel-"+width+".png"});
+
  assert.match(await page.locator("#retention").textContent(),/35\s*%/);
  assert.equal(await page.locator("#products .product").count(),6);
  assert.equal(await page.evaluate(key=>localStorage.getItem(key),analyticsKey),beforeDemo);
@@ -147,6 +158,9 @@ try{
  assert.equal(await page.locator('[data-metric="sales"] b').textContent(),"—");
  assert.equal(await page.locator('[data-metric="booking"] b').textContent(),"2");
  assert.match(await page.locator("#retention").textContent(),/Пока нет измерения/);
+ assert.equal(await page.locator("#funnel .frow").count(),4);
+ assert.ok(!(await page.locator("#funnel-summary").textContent()).includes("покупку"));
+
  assert.equal(await page.evaluate(key=>localStorage.getItem(key),analyticsKey),beforeDemo);
  // Empty and corrupt storage must never present fabricated sales/engagement.
  await page.evaluate(key=>localStorage.removeItem(key),analyticsKey);await page.locator("#refresh").click();
