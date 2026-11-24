@@ -227,10 +227,17 @@ try {
       if(await social.locator('[data-topic="'+topic+'"]').getAttribute("aria-pressed")!=="true")failures.push(width+" Social topic selection "+topic);
       if(await social.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))failures.push(width+" Social overflow "+topic);
     }
-    if(!(await social.locator("#social-whatsapp").getAttribute("href")).startsWith("https://wa.me/351912204778?text="))failures.push(width+" Social wrong Lisbon contact");
-    if(await social.locator("#social-site").getAttribute("href")!=="https://atelier23.store/pt")failures.push(width+" Social wrong market");
+    if(await social.locator('input[name="gift-value"]').count()!==4||await social.locator('input[name="gift-format"]').count()!==2)failures.push(width+" Gift options missing");
+    if(await social.locator(".gift-edit input:checked").count()!==0||await social.locator("#gift-contact").count()!==0)failures.push(width+" Gift must be opt-in");
+    if(await social.locator("#gift-guide").getAttribute("href")!=="https://atelier23.store/pt/pages/christmas-gift-guide")failures.push(width+" Gift official guide");
+    await social.locator('input[name="gift-value"][value="1500"]').check();
+    await social.locator('input[name="gift-format"][value="printed"]').check();
+    const giftLink=new URL(await social.locator("#gift-contact").getAttribute("href"));
+    if(giftLink.hostname!=="wa.me"||giftLink.pathname!=="/351912204778"||!giftLink.searchParams.get("text").includes("1500 € (impresso)"))failures.push(width+" Gift wrong Lisbon contact or preference");
     await social.evaluate(()=>document.addEventListener("click",e=>e.preventDefault(),{once:true}));
-    await social.locator("#social-whatsapp").click();
+    await social.locator("#gift-contact").click();
+    if(await social.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))failures.push(width+" Gift overflow");
+    await social.screenshot({path:join(root,"artifacts","atelier23-signature",width+"-gift.png"),fullPage:true,animations:"disabled"});
     const socialRows=await social.evaluate(()=>JSON.parse(localStorage.getItem("bitos.atelier23.fashionAnalytics.v1")||'{"rows":[]}').rows);
     if(!socialRows.some(r=>r.type==="social_landing"&&r.source==="instagram"&&r.topic==="gift")||!socialRows.some(r=>r.type==="social_handoff"&&r.destination==="whatsapp"&&r.topic==="gift"))failures.push(width+" Social attribution missing");
     await social.screenshot({path:join(root,"artifacts","atelier23-signature",width+"-social.png"),fullPage:true,animations:"disabled"});
