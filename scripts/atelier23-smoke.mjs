@@ -96,6 +96,29 @@ try {
     await signature.getByRole("heading",{name:"Сначала — характер."}).waitFor();
     if(await signature.locator('main[data-renderer="react"]').count()!==1||await signature.locator("#signature-fallback").count()!==0)failures.push(width+" Signature React root not mounted");
     if(!await prev.isDisabled())failures.push(width+" Signature back enabled on initial step");
+    const motionToggle=signature.locator("#motion-toggle"),replayScene=signature.locator("#replay-scene");
+    const frame=signature.locator(".sig .film-frame");
+    const animationName=()=>frame.evaluate(el=>getComputedStyle(el).animationName);
+    if(await animationName()!=="none"||!await motionToggle.isDisabled()||!await replayScene.isDisabled())failures.push(width+" Signature reduced-motion guard");
+    await signature.emulateMedia({reducedMotion:"no-preference"});
+    await signature.waitForFunction(()=>document.querySelector(".sig")?.dataset.motion==="on");
+    if(await animationName()!=="sig-film-forward"||await motionToggle.isDisabled()||await replayScene.isDisabled())failures.push(width+" Signature cinematic activation");
+    await signature.getByLabel("Комфорт в движении").check();
+    await next.click();
+    if(await animationName()!=="sig-film-forward")failures.push(width+" Signature forward transition");
+    await prev.click();
+    if(await animationName()!=="sig-film-back"||!await signature.getByLabel("Комфорт в движении").isChecked())failures.push(width+" Signature reverse transition/state");
+    const previousFrame=await frame.elementHandle();
+    await replayScene.click();
+    if(previousFrame&&await previousFrame.evaluate(el=>el.isConnected))failures.push(width+" Signature replay did not remount frame");
+    if(!await signature.getByLabel("Комфорт в движении").isChecked()||await signature.locator("#progress").textContent()!=="Глава 1 из 6")failures.push(width+" Signature replay changed choices or progress");
+    await motionToggle.click();
+    if(await animationName()!=="none"||!await replayScene.isDisabled())failures.push(width+" Signature manual motion off");
+    await motionToggle.click();
+    await signature.emulateMedia({reducedMotion:"reduce"});
+    await signature.waitForFunction(()=>document.querySelector(".sig")?.dataset.motion==="off");
+    if(await animationName()!=="none"||!await motionToggle.isDisabled())failures.push(width+" Signature live system reduced motion");
+
     for(let i=0;i<6;i++){
       if(await signature.locator("#progress").textContent()!=="Глава "+(i+1)+" из 6")failures.push(width+" Signature wrong chapter "+i);
       if(await signature.locator("#chapters button[aria-current=step]").count()!==1)failures.push(width+" Signature current step indicator");
@@ -148,7 +171,7 @@ try {
     await offline.goto(base+"signature/",{waitUntil:"load"});
     if(!await offline.locator("#signature-fallback").isVisible()||await offline.locator("#signature-fallback a.btn").getAttribute("href")!=="../#journey")failures.push(width+" Signature unavailable runtime fallback");
     await offline.close();
-    process.stdout.write("PASS "+width+"px: Signature React mount, chapters, touch targets, selections, notes, reload, reset, runtime fallback and network guard\n");
+    process.stdout.write("PASS "+width+"px: Signature React mount, cinematic transitions, reduced motion, chapters, touch targets, selections, notes, reload, reset, runtime fallback and network guard\n");
     process.stdout.write("PASS "+width+"px: episode, video source, reduced motion, fallback, primary CTA route\n");
     process.stdout.write("PASS "+width+"px: wizard, guardrails, overflow, links\n");
   }
