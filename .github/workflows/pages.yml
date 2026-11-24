@@ -72,6 +72,8 @@ jobs:
       - name: Atelier 23 Video Commerce Overlay acceptance
         run: |
           node --check atelier23/fashion-overlay/overlay.js
+          node --check atelier23/fashion-overlay/analytics.js
+          node scripts/atelier23-fashion-analytics-unit.mjs
           node scripts/atelier23-video-overlay-smoke.mjs
       - uses: actions/upload-artifact@v4
         if: always()
