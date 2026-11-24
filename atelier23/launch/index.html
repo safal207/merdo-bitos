@@ -8,7 +8,7 @@ const h=React.createElement,key=id=>"bitos.launch.v1."+id,labels={visits:"Пос
 function load(id){try{return readPlan(localStorage,key(id))}catch{return newPlan()}}
 function Workspace({id}){
  const c=campaigns[id],[plan,setPlan]=useState(()=>load(id)),[status,setStatus]=useState("");
- const update=(k,v)=>{setPlan(p=>({...p,[k]:v}));setStatus("")};
+ const update=(k,v)=>{setPlan(p=>({...p,[k]:v,...(k==="open"&&p.open!==v?{done:[]}:{})}));setStatus("")};
  const m=economics(plan.numbers), money=x=>x===null?"—":new Intl.NumberFormat("ru",{style:"currency",currency:c.currency,maximumFractionDigits:2}).format(x),rate=x=>x===null?"—":(x*100).toFixed(1)+"%";
  let social=null;try{social=c.topic?socialEvidence(localStorage,c.topic):null}catch{}
  return h("div",null,h("section",null,h("small",null,c.market+" · "+c.currency),h("h2",null,c.title),h("p",null,"Черновик. Все даты и этапы требуют согласования. Ничего не отправляется и не публикуется."),
