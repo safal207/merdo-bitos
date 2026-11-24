@@ -89,7 +89,15 @@ const diagrams=[
  path("M94 235H266",{stroke:"#c1ac84",strokeWidth:.8,opacity:.7}))
 ];
 const KEY="bitos.atelier23.signature.v1";
-const blank=()=>({step:0,choices:{},complete:false});
+// Consultation intentions only; the existing advisor owns budget and product matching.
+const extras=[
+ {id:"trousers",name:"Вторая пара брюк",benefit:"Возможность чередовать брюки при регулярном использовании костюма.",reason:"Комфорт и повседневное использование"},
+ {id:"shirt",name:"Сорочка к костюму",benefit:"Согласовать воротник, манжеты и пропорции с будущим пиджаком.",reason:"Цельный образ"},
+ {id:"accessory",name:"Акцентные аксессуары",benefit:"Подобрать детали, которые поддержат характер выбранного образа.",reason:"Выразительные детали"}
+];
+const extraIds=new Set(extras.map(x=>x.id));
+const cleanExtras=value=>Array.isArray(value)?[...new Set(value.filter(id=>extraIds.has(id)))]:[];
+const blank=()=>({step:0,choices:{},complete:false,extras:[]});
 function restore(){
  const s=blank();
  try{
@@ -98,6 +106,7 @@ function restore(){
   if(Number.isInteger(v.step)&&v.step>=0&&v.step<chapters.length)s.step=v.step;
   for(const c of chapters)if(c.options?.includes(v.choices?.[c.id]))s.choices[c.id]=v.choices[c.id];
   s.complete=v.complete===true&&s.step===chapters.length-1;
+  s.extras=cleanExtras(v.extras);
  }catch{}
  return s;
 }
@@ -148,13 +157,32 @@ function Chapter({state,onChoose,onNavigate,onNext,headingRef,direction,replay})
  h("button",{type:"button",className:"btn btn-ghost",id:"prev",disabled:state.step===0,onClick:()=>onNavigate(state.step-1)},"Назад"),
  h("button",{type:"button",className:"btn btn-primary",id:"next",onClick:onNext},state.step===chapters.length-1?"Собрать заметки":"Далее"))));
 }
-function Brief({state,headingRef,onReset,copy,onCopy,fallbackRef}){
+function CommerceEdit({state,onExtra,onClear}){
+ const priority=state.choices.concept==="Выразительные детали"?"accessory":state.choices.concept==="Комфорт в движении"?"trousers":null;
+ const ordered=priority?[...extras.filter(x=>x.id===priority),...extras.filter(x=>x.id!==priority)]:extras;
+ return h("section",{className:"commerce-edit","aria-labelledby":"commerce-title"},
+ h("span",{className:"eyebrow"},"SIGNATURE EDIT / КОМПЛЕКТАЦИЯ"),
+ h("h3",{id:"commerce-title"},"Один костюм. Больше сочетаний."),
+ h("div",{className:"core-offer"},h("strong",null,"Индивидуальный костюм"),h("span",null,"Основная идея консультации"),h("p",null,"Состав, ткань, сроки и стоимость определяет мастер. Это не сформированный заказ.")),
+ h("fieldset",null,h("legend",null,"Что ещё хочется обсудить?"),
+ h("p",{className:"commerce-hint"},"Выберите только то, чего не хватает. Все дополнения необязательны, ничего не выбрано заранее."),
+ h("div",{className:"extra-grid"},ordered.map(item=>h("label",{className:"extra-card",key:item.id,"data-extra":item.id},
+ h("input",{type:"checkbox",checked:state.extras.includes(item.id),onChange:()=>onExtra(item.id)}),
+ h("span",{className:"extra-info"},h("strong",null,item.name),h("span",null,item.benefit),priority===item.id?h("small",null,"По вашему предпочтению: "+item.reason):null))))),
+ h("p",{id:"extra-count",role:"status"},"Дополнений для обсуждения: "+state.extras.length),
+ h("button",{type:"button",id:"clear-extras",className:"btn btn-ghost",onClick:onClear,disabled:state.extras.length===0},"Оставить только костюм"),
+ h("p",{className:"commerce-hint"},"Наличие, цены и условия подтверждает ателье. Нет корзины, оплаты, депозита или автоматической записи."));
+}
+function Brief({state,headingRef,onReset,copy,onCopy,fallbackRef,onExtra,onClearExtras}){
  const summary=chapters.filter(c=>c.options).map(c=>[c.question,state.choices[c.id]||"Обсудить на встрече"]);
+ const selected=extras.filter(x=>state.extras.includes(x.id)).map(x=>x.name);
+ const notes=[...summary,["Основная идея:","Индивидуальный костюм"],["Дополнения для обсуждения:",selected.length?selected.join(", "):"Без дополнений"]];
  return h("section",{className:"brief",id:"brief","aria-labelledby":"brief-title",hidden:!state.complete},
  h("span",{className:"eyebrow"},"Ваши заметки"),h("h2",{id:"brief-title",tabIndex:-1,ref:headingRef},"Разговор с мастером"),
  h("p",null,"Это предварительные предпочтения, а не мерки, заказ или подтверждение стоимости."),
  h("dl",{id:"brief-items"},state.complete?summary.map(([q,a])=>h(React.Fragment,{key:q},h("dt",null,q),h("dd",null,a))):null),
- h("button",{className:"btn btn-ghost",type:"button",id:"copy-brief",onClick:()=>onCopy(summary)},"Скопировать заметки"),
+ h(CommerceEdit,{state,onExtra,onClear:onClearExtras}),
+ h("button",{className:"btn btn-ghost",type:"button",id:"copy-brief",onClick:()=>onCopy(notes)},"Скопировать заметки"),
  h("textarea",{id:"copy-fallback","aria-label":"Заметки для ручного копирования",readOnly:true,hidden:!copy.fallback,value:copy.fallback,ref:fallbackRef}),
  h("p",{id:"copy-status",role:"status"},copy.status),
  h("div",{className:"actions"},h("a",{className:"btn btn-primary",id:"advisor",href:"../#journey"},"Перейти к подбору образа"),h("a",{className:"btn btn-ghost",id:"journey",href:"../fashion-journey/"},"Исследовать образы")),
@@ -203,6 +231,8 @@ function SignatureExperience(){
   clearCopy();setDirection(i<state.step?"backward":"forward");focus.current="chapter";setState(s=>({...s,step:i,complete:false}));
  }
  function choose(id,value){if(!chapters.find(c=>c.id===id)?.options?.includes(value))return;clearCopy();setState(s=>({...s,choices:{...s.choices,[id]:value}}))}
+ function toggleExtra(id){if(!extraIds.has(id))return;clearCopy();setState(s=>({...s,extras:s.extras.includes(id)?s.extras.filter(x=>x!==id):[...s.extras,id]}))}
+ function clearExtras(){clearCopy();setState(s=>({...s,extras:[]}))}
  function next(){if(state.step<chapters.length-1)navigate(state.step+1);else{clearCopy();focus.current="brief";setState(s=>({...s,complete:true}))}}
  function reset(){clearCopy();setDirection("backward");focus.current="chapter";setState(blank())}
  async function copyNotes(summary){
@@ -217,7 +247,7 @@ function SignatureExperience(){
  h(ChapterNav,{step:state.step,onNavigate:navigate}),h("div",{className:"progress-line"},h("p",{id:"progress",role:"status","aria-live":"polite"},"Глава "+(state.step+1)+" из "+chapters.length),h("progress",{max:chapters.length,value:state.step+1,"aria-label":"Прогресс знакомства с пошивом"})),
  h(CinemaControls,{step:state.step,motion:effectiveMotion,reduced,onMotion:()=>setMotion(m=>!m),onReplay:()=>setReplay(n=>n+1)}),
  h(Chapter,{state,onChoose:choose,onNavigate:navigate,onNext:next,headingRef:chapterRef,direction,replay}),
- h(Brief,{state,headingRef:briefRef,onReset:reset,copy,onCopy:copyNotes,fallbackRef}),
+ h(Brief,{state,headingRef:briefRef,onReset:reset,copy,onCopy:copyNotes,fallbackRef,onExtra:toggleExtra,onClearExtras:clearExtras}),
  h("footer",null,h("p",null,"Независимый демонстрационный концепт BitOS. Никаких реальных заказов, платежей, записей, сбора контактов или передачи мерок. Процесс схематичен; детали производства и сроки уточняет ателье.")));
 }
 createRoot(document.getElementById("root")).render(h(SignatureExperience));
