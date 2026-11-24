@@ -88,6 +88,16 @@ try{
  const shared=new URL(await page.locator("#share-link").inputValue());assert.equal(shared.searchParams.get("event"),"wedding");assert.equal(shared.searchParams.get("look"),"ivory");
  await page.getByRole("button",{name:"Закрыть",exact:true}).click();
  await page.goto(url+"?event=business&look=ivory");await page.locator(".app[data-mode=film]").waitFor();
+ // Exercise scene boundaries deterministically, independent of browser codec support.
+ await page.goto(url);await page.locator("#cue-cta").waitFor();
+ const seek=async(t)=>page.evaluate(t=>{const v=document.querySelector("#film");Object.defineProperty(v,"currentTime",{configurable:true,value:t});v.dispatchEvent(new Event("seeked"))},t);
+ for(const [t,id,intent] of [[0,"emotion","event"],[2.79,"emotion","event"],[2.8,"business","business"],[5.79,"business","business"],[5.8,"occasion","event"],[8.79,"occasion","event"],[8.8,"craft","tailoring"],[11.79,"craft","tailoring"],[11.8,"detail","event"],[14.99,"detail","event"],[15,"fitting","booking"],[17.64,"fitting","booking"],[0,"emotion","event"]]){
+  await seek(t);assert.equal(await page.locator("#cue-cta").getAttribute("data-cue"),id);assert.equal(await page.locator("#cue-cta").getAttribute("data-intent"),intent);
+  assert.equal(await page.locator("#cue-other").isVisible(),intent!=="event");await viewport();
+ }
+ await seek(2.8);await page.locator("#cue-cta").focus();await seek(8.8);assert.equal(await page.locator("#cue-cta").getAttribute("data-intent"),"business");await page.locator("#cue-cta").blur();await page.waitForFunction(()=>document.querySelector("#cue-cta").dataset.intent==="tailoring");
+ await seek(15);await page.locator("#cue-other").click();await page.locator('[data-event="wedding"]').waitFor();await page.locator("#back").click();assert.equal(await page.locator("#cue-cta").getAttribute("data-intent"),"booking");
+ await seek(2.8);await page.locator("#cue-cta").click();assert.equal(await page.locator(".app").getAttribute("data-mode"),"look");assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem("bitos.atelier23.fashionOverlay.v1")).event),"business");
  assert.deepEqual(errors,[]);console.log("PASS "+width+"px: full-bleed video, overlay actions, same-player transition, swipe, direct booking, plan and personalization");await context.close();
  }
 }finally{await browser.close();server.close()}
