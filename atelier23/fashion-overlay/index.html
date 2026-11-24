@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#171d19">
+<title>ATELIER 23 · Interactive Fashion</title>
+<meta name="description" content="Один образ, один шаг. Независимый концепт персонального подбора BitOS.">
+<meta property="og:type" content="video.other"><meta property="og:title" content="ATELIER 23 · Ваш момент"><meta property="og:description" content="Смотрите. Выбирайте. Готовьтесь."><meta property="og:video" content="https://safal207.github.io/merdo-bitos/atelier23/assets/atelier23-film.mp4"><meta property="og:video:type" content="video/mp4"><meta property="og:image" content="https://atelier-23.ru/wp-content/uploads/2024/12/Atelier23_24_11_14_0844-600x800.jpg">
+<style>
+:root{color-scheme:dark;--bg:#171d19;--paper:#f4eee2;--muted:#bfc6bb;--gold:#d0b38a;--line:#424b40;font-family:Arial,Helvetica,sans-serif;background:#101612;color:var(--paper)}
+*{box-sizing:border-box}body{margin:0;min-width:0}button,a,input{font:inherit}button{color:inherit;cursor:pointer}button:disabled{opacity:.35;cursor:default}button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-offset:3px}a{color:inherit}button[hidden],[hidden]{display:none!important}h1,h2,p{margin:0}h1,h2{font-family:Georgia,'Times New Roman',serif;font-weight:400;letter-spacing:-.045em}h1{font-size:clamp(34px,9vw,49px);line-height:1.03}h1 i{color:var(--gold);font-weight:400}p{line-height:1.5}svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.app{height:100vh;height:100dvh;width:100%;max-width:460px;margin:auto;display:flex;flex-direction:column;background:var(--bg);position:relative;overflow:hidden;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+header{flex:none;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 15px;min-height:57px;z-index:2}.brand{font:21px Georgia,serif;letter-spacing:.1em;white-space:nowrap}.brand em{font-style:normal;color:var(--gold)}.icon{background:none;border:0;min-width:44px;min-height:44px;display:grid;place-items:center;padding:7px}.progress{flex:none;height:3px;background:var(--line);margin:0 18px 9px;border-radius:8px;overflow:hidden}.progress b{display:block;height:100%;width:0;background:var(--gold)}
+#screen{flex:1;min-height:0;display:flex;flex-direction:column;overflow-y:auto;overscroll-behavior:contain;padding:0 18px 12px;gap:12px}.story{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px}.media{flex:1;min-height:0;position:relative;background:#26322a;overflow:hidden;border-radius:3px;touch-action:pan-x}.media video,.media img{height:100%;width:100%;display:block;object-fit:cover}.media video{object-fit:contain;background:#111712}.media .image-fail{position:absolute;inset:0;display:grid;place-content:center;text-align:center;padding:15px;color:var(--muted)}.media .number{position:absolute;top:10px;right:10px;border-radius:20px;background:#18231de0;padding:5px 9px;font-size:11px}.media .reactions{position:absolute;bottom:10px;right:7px;display:grid;gap:7px}.reactions .icon{border-radius:50%;background:#111b15d9;color:white}.reactions .icon[aria-pressed=true]{color:#edc6a2}.reactions .icon[aria-pressed=true] svg{fill:currentColor}
+.copy{flex:none;display:grid;gap:6px}.copy p{color:var(--muted);font-size:13px}.eyebrow{font-size:10px;color:var(--gold);letter-spacing:.15em;text-transform:uppercase}.tiny{font-size:10px;color:var(--muted);line-height:1.4}.primary,.secondary{flex:none;display:flex;align-items:center;justify-content:center;text-align:center;min-height:50px;width:100%;background:var(--paper);color:var(--bg);border:1px solid var(--paper);text-decoration:none;border-radius:3px;padding:11px 12px;font-size:15px;font-weight:bold}.secondary{background:transparent;color:var(--paper);border-color:var(--line);font-size:13px;min-height:44px}.link{background:none;border:0;min-height:44px;padding:9px 5px;color:var(--muted);font-size:12px;text-decoration:underline;text-underline-offset:4px}.action-row{display:flex;gap:8px;align-items:center}.action-row>*{flex:1}.center{justify-content:center}.choice-list{display:grid;gap:9px}.choice{display:flex;justify-content:space-between;align-items:center;text-align:left;min-height:57px;background:#242e26;border:1px solid #3f4b40;padding:12px 16px;font:21px Georgia,serif;letter-spacing:-.01em;border-radius:3px}.choice span{color:var(--gold);font:17px Arial,sans-serif}
+.field{display:grid;gap:10px;font-size:13px;color:var(--muted)}input[type=date]{width:100%;min-height:53px;background:#222e25;color:var(--paper);border:1px solid var(--line);padding:10px;border-radius:3px;font-size:18px}.checkrow{display:flex;align-items:center;gap:13px;border-bottom:1px solid var(--line);min-height:53px;font-size:16px}.checkrow input{width:22px;height:22px;accent-color:#b39a74}.checkrow input:checked+span,.done{text-decoration:line-through;color:var(--muted)}.notice{font-size:12px;color:var(--gold);line-height:1.5}.plan-list{display:grid;gap:2px}.plan-list button{display:flex;align-items:center;gap:12px;min-height:46px;background:none;border:0;border-bottom:1px solid var(--line);text-align:left;padding:8px 0;font-size:14px}.plan-list b{font-weight:normal;color:var(--gold);width:23px}.saved-item{display:flex;align-items:center;gap:10px;min-height:70px;border-bottom:1px solid var(--line)}.saved-item img{width:50px;height:64px;object-fit:cover}.saved-item span{flex:1;font-size:14px}.saved-item button{min-height:44px;background:transparent;border:0;text-decoration:underline;color:var(--muted);font-size:12px}.summary{display:grid;gap:9px;font-size:14px}.summary p{border-bottom:1px solid var(--line);padding:10px 0}.footer{flex:none;display:flex;justify-content:space-between;gap:12px;align-items:center;padding:5px 18px;font-size:10px;color:var(--muted)}.footer a{text-underline-offset:3px}
+@media(max-height:690px){header{min-height:48px;padding:3px 12px}.copy h1,h1{font-size:31px}.choice{min-height:48px;font-size:18px}.choice-list{gap:6px}#screen{gap:8px}.story{gap:7px}.footer{font-size:9px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+
+.mark-overlay{position:absolute;top:11px;left:11px;pointer-events:none;color:#e5c9a2;background:#17221dc9;border-radius:2px;padding:6px;animation:atelier-reveal .65s ease-out both}.atelier-mark{width:64px;height:46px;display:block}.atelier-mark .pattern{stroke-dasharray:170;animation:atelier-stitch .65s ease-out both}@keyframes atelier-reveal{from{opacity:0}to{opacity:1}}@keyframes atelier-stitch{from{stroke-dashoffset:170}to{stroke-dashoffset:0}}.share-panel{position:absolute;bottom:0;left:0;right:0;z-index:3;padding:14px;background:#17221df5;color:var(--paper);display:grid;gap:6px}.share-panel input{min-width:0;width:100%;padding:8px;background:#222e25;border:1px solid var(--line);color:var(--paper);font-size:12px}.share-panel p{font-size:13px}
+
+/* The stage and controls share the exact same mobile viewport. */
+.app{max-width:min(100%,calc(100dvh * .5625));min-width:min(100%,320px);isolation:isolate}
+.film-stage{position:absolute;inset:0;z-index:-2;background:#17221c}
+.film-stage video{width:100%;height:100%;object-fit:cover;display:block}
+.app:not([data-mode=film]):not([data-mode=event]) .film-stage{visibility:hidden}
+.app::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(180deg,rgba(10,15,12,.63),transparent 22%,transparent 36%,rgba(10,15,12,.70) 76%,rgba(10,15,12,.94))}
+.app:not([data-mode=film]):not([data-mode=event])::after{display:none}
+header{background:transparent;position:relative;z-index:4;text-shadow:0 1px 8px #000}
+.progress{z-index:4;background:#ffffff45}
+#screen{position:relative;z-index:2;overflow-y:auto}
+.story.overlay{position:relative;justify-content:flex-end;gap:8px;min-height:100%;padding-bottom:4px}
+.overlay-copy{padding-right:60px;display:grid;gap:6px;text-shadow:0 2px 12px #111}
+.overlay-copy h1{font-size:clamp(33px,9vw,46px)}
+.overlay-copy .eyebrow{color:#ffe4b8}
+.overlay-copy p{font-size:13px;color:#fff3e2}
+.overlay-actions{position:absolute;right:0;bottom:142px;display:grid;gap:8px;justify-items:center}
+.overlay-actions .icon{border-radius:50%;background:#111b15a8;color:#fff;min-width:46px;min-height:46px}
+.overlay-actions .icon[aria-pressed=true]{color:#edc6a2}
+.overlay-actions .icon[aria-pressed=true] svg{fill:currentColor}
+.eye-stat{display:grid;justify-items:center;gap:2px;font-size:10px;color:#fff;text-shadow:0 1px 5px #000}
+.eye-stat svg{width:22px;height:22px}
+.eye-stat .tiny{color:#fff;font-size:10px}
+.overlay .primary{margin-top:5px}
+.overlay .tiny{color:#e0e0d6}
+.overlay .mark-overlay{top:4px;left:0;background:none}
+.video-controls{position:absolute;top:5px;right:0;display:flex;gap:4px}
+.video-controls .icon{border-radius:50%;background:#111b15a8}
+.event-overlay{background:linear-gradient(transparent,#17221ce8 25%);padding:12px 0}
+.event-overlay .choice{background:#17221cc9}
+.overlay .share-panel{z-index:5;bottom:65px;border:1px solid #737b70;border-radius:3px}
+.footer{z-index:3;color:#ddd;text-shadow:0 1px 5px #111}
+[data-mode=look] #screen,[data-mode=result] #screen{overflow:hidden}
+.product-overlay{position:relative;justify-content:flex-end;gap:8px}
+.product-overlay .media{position:absolute;inset:-12px -18px -12px;border-radius:0;z-index:-1;min-height:100%;background:#26322a}
+.product-overlay .media::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#121b1680,transparent 24%,transparent 36%,#121b16b0 70%,#121b16f5);pointer-events:none}
+.product-overlay .media .reactions,.product-overlay .media .number,.product-overlay .media .share-panel{z-index:2}
+.product-overlay .media .reactions{bottom:175px;right:18px}
+.product-overlay .media .number{right:18px;top:16px}
+.product-overlay .media .share-panel{bottom:100px;left:18px;right:18px}
+.product-overlay .copy{padding-right:58px;text-shadow:0 1px 8px #000;pointer-events:none}
+.product-overlay .copy a{pointer-events:auto}
+.product-overlay .copy h1{font-size:29px}
+.product-overlay .copy p,.product-overlay .tiny{color:#f0eee6}
+.product-overlay .action-row .link{color:#f4eee2}
+.product-overlay .copy:first-child{display:none}
+.product-overlay .action-row{gap:4px}
+@media(max-height:690px){.overlay-actions{bottom:121px;gap:3px}.overlay-actions .icon{min-height:44px}.overlay-copy h1{font-size:32px}.product-overlay .media .reactions{bottom:150px}.event-overlay .choice{min-height:45px}}
+@media(prefers-reduced-motion:reduce){.mark-overlay,.atelier-mark .pattern{animation:none!important}}
+</style><script type="module" src="./overlay.js"></script>
+</head><body><div class="app" data-mode="film"><div class="film-stage" id="film-stage"><video id="film" muted playsinline loop preload="metadata" poster="https://atelier-23.ru/wp-content/uploads/2024/12/Atelier23_24_11_14_0844-600x800.jpg" aria-label="Рекламный фильм"><source src="../assets/atelier23-film.mp4" type="video/mp4"></video></div><header><button class="icon" id="back" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></svg></button><div class="brand">ATELIER <em>23</em></div><button class="icon" id="plan" aria-label="Мой план"><svg viewBox="0 0 24 24"><path d="m3 6 2 2 4-4m2 2h10M3 13l2 2 4-4m2 2h10M3 20l2 2 4-4m2 2h10"/></svg></button></header><div class="progress" role="progressbar" aria-label="Готовность плана" aria-valuemin="0" aria-valuemax="6" aria-valuenow="0"><b></b></div><main id="screen" aria-live="polite"></main><div class="footer"><span>Независимый концепт BitOS</span><a href="https://atelier-23.ru/">Официальный сайт ↗</a></div><noscript>Для подбора включите JavaScript.</noscript></div></body></html>
