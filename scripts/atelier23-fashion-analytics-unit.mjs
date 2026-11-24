@@ -108,3 +108,22 @@ assert.equal(summarize(socialRows).visits,0);
 assert.equal(summarizeSignature(socialRows).starts,0);
 assert.equal(JSON.stringify(socialRows).includes("private@example.com"),false);
 console.log("PASS Lisbon campaign attribution, allowlists, valid destinations, deduplication and isolation");
+
+import {GIFT_GUIDE,giftValues,giftFormats,giftDeadline,giftContact,lisbonDate} from "../atelier23/social/campaign.js";
+assert.deepEqual(giftValues,[350,1000,1500,2000]);
+assert.equal(GIFT_GUIDE,"https://atelier23.store/pt/pages/christmas-gift-guide");
+assert.equal(giftDeadline("printed","2026-12-18"),"within");
+assert.equal(giftDeadline("printed","2026-12-19"),"past");
+assert.equal(giftDeadline("digital","2026-12-24"),"within");
+assert.equal(giftDeadline("digital","2026-12-25"),"outside");
+assert.equal(giftDeadline("printed","2027-12-18"),"outside");
+assert.equal(giftDeadline("printed","2026-02-30"),null);
+assert.equal(giftDeadline("unknown","2026-12-18"),null);
+assert.equal(giftContact(100,"digital"),null);
+assert.equal(giftContact(350,"unknown"),null);
+assert.match(lisbonDate(),/^\d{4}-\d{2}-\d{2}$/);
+for(const value of giftValues)for(const format of giftFormats){
+ const u=new URL(giftContact(value,format));assert.equal(u.origin,"https://wa.me");assert.equal(u.pathname,"/351912204778");
+ assert.ok(u.searchParams.get("text").includes(String(value)+" €"));
+}
+console.log("PASS Christmas gift denomination, format, Lisbon date boundaries and safe handoff");
