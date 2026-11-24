@@ -122,11 +122,11 @@ function Diagram({step}){
  rect(9,9,342,262,{rx:1,fill:"none",stroke:"#a18d69",strokeWidth:.6,opacity:.55}),
  diagrams[step]());
 }
-function CraftPlate({step}){
+function CraftPlate({step,direction,replay}){
  const item=art[step];
  return h("figure",{className:"plate","data-chapter":chapters[step].id},
  h("div",{className:"plate-meta"},h("span",null,item.en),h("span",null,"0"+(step+1)+" / 06")),
- h("div",{id:"illustration",className:"plate-art"},h(Diagram,{step})),
+ h("div",{id:"illustration",className:"plate-art","data-direction":direction},h("div",{className:"film-frame",key:step+":"+replay},h(Diagram,{step}))),
  h("div",{className:"plate-note"},h("strong",null,item.note),h("span",null,item.detail)),
  h("figcaption",null,"Авторская иллюстрация BitOS. Не фотография производства ATELIER 23 и не рабочий технический чертёж."));
 }
@@ -134,11 +134,11 @@ function ChapterNav({step,onNavigate}){
  return h("nav",{className:"rail",id:"chapters","aria-label":"Главы индивидуального пошива"},
  chapters.map((c,i)=>h("button",{key:c.id,type:"button","aria-current":i===step?"step":undefined,onClick:()=>onNavigate(i)},(i+1)+". "+c.name)));
 }
-function Chapter({state,onChoose,onNavigate,onNext,headingRef}){
+function Chapter({state,onChoose,onNavigate,onNext,headingRef,direction,replay}){
  const c=chapters[state.step];
  return h("section",{className:"spread","aria-labelledby":"chapter-title"},
- h(CraftPlate,{step:state.step}),
- h("div",{className:"copy"},
+ h(CraftPlate,{step:state.step,direction,replay}),
+ h("div",{className:"copy","data-direction":direction},
  h("span",{className:"eyebrow",id:"chapter-label"},String(state.step+1).padStart(2,"0")+" / "+c.name),
  h("h2",{id:"chapter-title",tabIndex:-1,ref:headingRef},c.title),
  h("p",{id:"chapter-copy"},c.copy),
@@ -162,9 +162,26 @@ function Brief({state,headingRef,onReset,copy,onCopy,fallbackRef}){
  h("button",{className:"btn btn-ghost",type:"button",id:"reset",onClick:onReset},"Начать заново"));
 }
 const emptyCopy=()=>({status:"",fallback:""});
+const sceneLines=[
+ "Каждое изделие начинается с идеи.",
+ "Характер костюма рождается в ткани.",
+ "Точность — это внимание к человеку.",
+ "Линии превращаются в конструкцию.",
+ "Каждый стежок имеет значение.",
+ "Финальный штрих — ощущение себя."
+];
+function CinemaControls({step,motion,onMotion,onReplay}){
+ return h("div",{className:"cinema-controls"},
+ h("p",{className:"scene-line",key:step},sceneLines[step]),
+ h("div",{className:"cinema-actions"},
+ h("button",{type:"button",id:"motion-toggle","aria-pressed":motion,onClick:onMotion},"Анимация"),
+ h("button",{type:"button",id:"replay-scene",onClick:onReplay,disabled:!motion},"Повторить кадр")),
+ h("p",{className:"cinema-hint"},"Главы переключаются только вами. Настройка системы «уменьшение движения» имеет приоритет."));
+}
 function SignatureExperience(){
  const [state,setState]=useState(restore);
  const [copy,setCopy]=useState(emptyCopy);
+ const [motion,setMotion]=useState(true),[direction,setDirection]=useState("forward"),[replay,setReplay]=useState(0);
  const chapterRef=useRef(null),briefRef=useRef(null),fallbackRef=useRef(null),focus=useRef(null),generation=useRef(0);
  useLayoutEffect(()=>{
   try{sessionStorage.setItem(KEY,JSON.stringify(state))}catch{}
@@ -174,22 +191,23 @@ function SignatureExperience(){
  function clearCopy(){generation.current++;setCopy(emptyCopy())}
  function navigate(i){
   if(!Number.isInteger(i)||i<0||i>=chapters.length)return;
-  clearCopy();focus.current="chapter";setState(s=>({...s,step:i,complete:false}));
+  clearCopy();setDirection(i<state.step?"backward":"forward");focus.current="chapter";setState(s=>({...s,step:i,complete:false}));
  }
  function choose(id,value){if(!chapters.find(c=>c.id===id)?.options?.includes(value))return;clearCopy();setState(s=>({...s,choices:{...s.choices,[id]:value}}))}
  function next(){if(state.step<chapters.length-1)navigate(state.step+1);else{clearCopy();focus.current="brief";setState(s=>({...s,complete:true}))}}
- function reset(){clearCopy();focus.current="chapter";setState(blank())}
+ function reset(){clearCopy();setDirection("backward");focus.current="chapter";setState(blank())}
  async function copyNotes(summary){
   const ticket=++generation.current;
   const value=["ATELIER 23 — заметки для консультации",...summary.map(([q,a])=>q+" "+a),"Не заказ и не мерки."].join("\n");
   try{await navigator.clipboard.writeText(value);if(ticket===generation.current)setCopy({status:"Заметки скопированы.",fallback:""})}
   catch{if(ticket===generation.current)setCopy({status:"Скопируйте текст вручную.",fallback:value})}
  }
- return h("main",{className:"sig","data-renderer":"react"},
+ return h("main",{className:"sig","data-renderer":"react","data-motion":motion?"on":"off"},
  h("header",null,h("a",{className:"wordmark",href:"../"},"ATELIER ",h("b",null,"23"),h("small",null,"× BITOS")),h("span",{className:"edition"},"SIGNATURE",h("br"),"EXPERIENCE / 01")),
  h("div",{className:"introcopy"},h("span",{className:"eyebrow"},"Искусство индивидуального пошива"),h("h1",null,"Костюм начинается",h("br"),"с ",h("em",null,"вас.")),h("p",null,"Шесть глав — от замысла и ткани до финальной примерки. Соберите заметки для разговора с мастером, прежде чем выбирать образ.")),
  h(ChapterNav,{step:state.step,onNavigate:navigate}),h("div",{className:"progress-line"},h("p",{id:"progress",role:"status","aria-live":"polite"},"Глава "+(state.step+1)+" из "+chapters.length),h("progress",{max:chapters.length,value:state.step+1,"aria-label":"Прогресс знакомства с пошивом"})),
- h(Chapter,{state,onChoose:choose,onNavigate:navigate,onNext:next,headingRef:chapterRef}),
+ h(CinemaControls,{step:state.step,motion,onMotion:()=>setMotion(m=>!m),onReplay:()=>setReplay(n=>n+1)}),
+ h(Chapter,{state,onChoose:choose,onNavigate:navigate,onNext:next,headingRef:chapterRef,direction,replay}),
  h(Brief,{state,headingRef:briefRef,onReset:reset,copy,onCopy:copyNotes,fallbackRef}),
  h("footer",null,h("p",null,"Независимый демонстрационный концепт BitOS. Никаких реальных заказов, платежей, записей, сбора контактов или передачи мерок. Процесс схематичен; детали производства и сроки уточняет ателье.")));
 }
