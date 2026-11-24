@@ -1,14 +1,30 @@
 <!doctype html>
 <html lang="pt-PT"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>ATELIER 23 Lisboa × BitOS — Social Commerce</title><link rel="stylesheet" href="../styles.css"><style>
 .social{width:min(900px,calc(100% - 32px));margin:auto;padding:28px 0 48px;color:#f2ebdc}.social header{border-bottom:1px solid #667467;padding-bottom:18px}.social header p{font-size:12px;color:#d4bb94}.social h1{font:normal clamp(38px,7vw,70px)/1.05 Georgia,serif;margin:26px 0 18px;overflow-wrap:anywhere}.social p{line-height:1.6;color:#c4cbbf}.social .topics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:24px 0}.social button,.social a.btn{min-height:48px;white-space:normal;text-align:center;justify-content:center;overflow-wrap:anywhere}.social .topics button{background:#203329;border:1px solid #7b897a;color:#e9e3d5;padding:8px}.social .topics button[aria-pressed=true]{border-color:#d4bb94;color:#171f19;background:#d4bb94}.social .hero{padding:clamp(20px,5vw,52px);background:linear-gradient(125deg,#293d31,#17251d);border:1px solid #68776a}.social .actions{display:flex;flex-wrap:wrap;gap:12px;margin:22px 0}.social .notice{font-size:12px}.social :focus-visible{outline:2px solid #d4bb94;outline-offset:4px}@media(max-width:620px){.social .topics{grid-template-columns:repeat(2,minmax(0,1fr))}.social .actions a{flex:1 1 100%}}
-</style><script type="importmap">{"imports":{"react":"https://esm.sh/react@19.0.0","react-dom/client":"https://esm.sh/react-dom@19.0.0/client?external=react"}}</script></head>
+.social .gift-edit{border-top:1px solid #68776a;margin-top:24px;padding-top:22px}.social .gift-kicker{font-size:12px;letter-spacing:.15em;color:#d4bb94}.social .gift-edit h2{font:normal clamp(25px,4vw,38px) Georgia,serif}.social .gift-edit fieldset{border:0;padding:0;margin:22px 0;min-width:0}.social .gift-edit legend{color:#d4bb94;margin-bottom:8px}.social .gift-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.social .gift-grid.formats{grid-template-columns:repeat(2,minmax(0,1fr))}.social .gift-grid label{min-height:48px;display:flex;align-items:center;gap:8px;border:1px solid #68776a;padding:10px;cursor:pointer;overflow-wrap:anywhere}.social .gift-grid label:has(input:checked){border-color:#d4bb94;background:#354437}.social .gift-grid input{accent-color:#d4bb94;flex:none}.social .gift-preview{display:grid;gap:14px;border:1px solid #b69d73;background:#19231d;padding:22px;margin:16px 0}.social .gift-preview span,.social .gift-preview small{color:#d4bb94;font-size:12px}.social .gift-preview strong{font:normal 32px Georgia,serif}@media(max-width:620px){.social .gift-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.social .gift-grid.formats{grid-template-columns:1fr}}</style><script type="importmap">{"imports":{"react":"https://esm.sh/react@19.0.0","react-dom/client":"https://esm.sh/react-dom@19.0.0/client?external=react"}}</script></head>
 <body><div id="root"><main class="social"><h1>ATELIER 23 Lisboa</h1><p>Conceito de demonstração BitOS.</p><a href="https://atelier23.store/pt">Visitar o site oficial</a></main></div>
 <script type="module">
 import React,{useState,useLayoutEffect,useRef} from "react";
 import {createRoot} from "react-dom/client";
 import {makeTracker} from "../fashion-overlay/analytics.js";
-import {campaign,topics,destination} from "./campaign.js";
+import {campaign,topics,destination,GIFT_GUIDE,giftValues,giftFormats,giftDeadline,giftContact,lisbonDate} from "./campaign.js";
 const h=React.createElement;
+function GiftEdit({onHandoff}){
+ const [value,setValue]=useState(null),[format,setFormat]=useState(null);
+ const status=giftDeadline(format,lisbonDate());
+ const message=status==="past"?"A data de referência para o cartão impresso já passou. Consulte o atelier ou escolha o formato digital.":status==="within"?"Dentro da data de referência publicada. Confirme a disponibilidade e a entrega.":status==="outside"?"Campanha de Natal 2026 fora do período de referência. Consulte o atelier.":"Escolha o formato para consultar a data de referência.";
+ return h("div",{className:"gift-edit"},
+ h("p",{className:"gift-kicker"},"NATAL 2026 · LISBOA"),
+ h("h2",null,"Uma prenda que se torna pessoal."),
+ h("p",null,"Deixe a pessoa escolher a peça e o tecido. O valor é um crédito, não uma promessa de preço final."),
+ h("fieldset",null,h("legend",null,"Valor do cartão oferta"),h("div",{className:"gift-grid"},giftValues.map(n=>h("label",{key:n},h("input",{type:"radio",name:"gift-value",value:n,checked:value===n,onChange:()=>setValue(n)}),n.toLocaleString("pt-PT")+" €")))),
+ h("fieldset",null,h("legend",null,"Como prefere oferecer?"),h("div",{className:"gift-grid formats"},giftFormats.map(id=>h("label",{key:id},h("input",{type:"radio",name:"gift-format",value:id,checked:format===id,onChange:()=>setFormat(id)}),id==="digital"?"Digital · email":"Impresso · envelope")))),
+ h("p",{id:"gift-deadline",role:"status"},message),
+ h("p",{className:"notice"},"Datas publicadas no guia de Natal: 18 de dezembro (impresso) e 24 de dezembro (digital). Não constituem garantia de entrega."),
+ h("div",{className:"gift-preview","aria-live":"polite"},h("span",null,"CARTÃO OFERTA · ATELIER 23"),h("strong",null,value===null?"Escolha o valor":value.toLocaleString("pt-PT")+" €"),h("small",null,format===null?"Escolha o formato":format==="digital"?"Digital":"Impresso")),
+ h("div",{className:"actions"},h("a",{id:"gift-guide",className:"btn btn-primary",href:GIFT_GUIDE,onClick:()=>onHandoff("site")},"Continuar no guia oficial"),value!==null&&format!==null?h("a",{id:"gift-contact",className:"btn btn-ghost",href:giftContact(value,format),onClick:()=>onHandoff("whatsapp")},"Confirmar com o atelier"):null),
+ h("p",{className:"notice"},"Volte a escolher o valor e o formato no site oficial. Este demonstrador não transfere a seleção, não recolhe dados do destinatário e não cria encomendas. Validade e condições a confirmar antes da compra."));
+}
 function App(){
  const [entry]=useState(()=>campaign(location.search)),[topic,setTopic]=useState(entry.topic);
  const [track]=useState(()=>{try{return makeTracker(localStorage,"social-"+crypto.randomUUID())}catch{return ()=>false}});
@@ -23,7 +39,7 @@ function App(){
  h("section",{className:"hero","aria-labelledby":"offer-title"},
  h("span",{className:"eyebrow"},item.label),
  h("h1",{id:"offer-title","aria-live":"polite"},item.title),h("p",null,item.copy),
- h("div",{className:"actions"},h("a",{id:"social-whatsapp",className:"btn btn-primary",href:destination(topic,"whatsapp"),onClick:()=>click("whatsapp")},"Conversar no WhatsApp"),h("a",{id:"social-site",className:"btn btn-ghost",href:destination(topic,"site"),onClick:()=>click("site")},"Visitar o site oficial")),
+ topic==="gift"?h(GiftEdit,{onHandoff:click}):h("div",{className:"actions"},h("a",{id:"social-whatsapp",className:"btn btn-primary",href:destination(topic,"whatsapp"),onClick:()=>click("whatsapp")},"Conversar no WhatsApp"),h("a",{id:"social-site",className:"btn btn-ghost",href:destination(topic,"site"),onClick:()=>click("site")},"Visitar o site oficial")),
  h("p",{className:"notice"},"A conversa abre no WhatsApp; nenhuma mensagem é enviada automaticamente. Disponibilidade, condições e preços a confirmar com o atelier.")),
  h("footer",null,h("p",{className:"notice"},"Demonstração independente, não uma loja ou reserva. Apenas eventos técnicos neste navegador, sem transmissão de dados para um servidor. Nenhuma compra ou marcação é confirmada.")));
 }
