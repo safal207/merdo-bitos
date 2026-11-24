@@ -1,0 +1,90 @@
+name: External storefront QA (read only)
+on:
+  push:
+    branches: [qa/external-site-audit-20261124]
+    paths: [.github/workflows/external-storefront-qa.yml, scripts/external-storefront-qa.mjs]
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        browser: [chromium, firefox, webkit]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save --package-lock=false playwright@1.51.1 @axe-core/playwright@4.10.2
+      - run: npx playwright install --with-deps ${{ matrix.browser }}
+      - run: node scripts/external-storefront-qa.mjs
+        env:
+          QA_BROWSER: ${{ matrix.browser }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-${{ matrix.browser }}
+          path: qa-evidence/
+          retention-days: 3
+  lighthouse:
+    needs: browser
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        site: [ru, pt]
+        device: [mobile, desktop]
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save --package-lock=false lighthouse@12.4.0
+      - name: Measure each route three times
+        shell: bash
+        env:
+          SITE: ${{ matrix.site }}
+          DEVICE: ${{ matrix.device }}
+        run: |
+          mkdir -p qa-evidence
+          if [[ "$SITE" == ru ]]; then
+            urls=("https://atelier-23.ru/" "https://atelier-23.ru/sign-up-for-a-fitting-room/" "https://atelier-23.ru/shop/dark-navy-classic-suit/")
+          else
+            urls=("https://atelier23.store/pt" "https://atelier23.store/pages/made-to-measure" "https://atelier23.store/pt/products/camisola-gola-redonda-merino-azul-marinho")
+          fi
+          preset=()
+          if [[ "$DEVICE" == desktop ]]; then preset=(--preset=desktop); fi
+          for i in "${!urls[@]}"; do
+            for n in 1 2 3; do
+              timeout 150s npx --no-install lighthouse "${urls[$i]}" "${preset[@]}" --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" --output=json --output-path="qa-evidence/page-$i-run-$n.json" --quiet --only-categories=performance,accessibility,best-practices,seo || echo "Measurement unavailable: page $i run $n"
+              sleep 3
+            done
+          done
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
+          const rows=[];
+          for(const f of fs.readdirSync('qa-evidence').filter(x=>x.endsWith('.json'))){
+            try{
+              const j=JSON.parse(fs.readFileSync('qa-evidence/'+f));
+              const a=j.audits;
+              if(j.runtimeError) {rows.push({file:f,error:j.runtimeError.code});continue;}
+              rows.push({file:f,url:j.finalDisplayedUrl||j.finalUrl,score:j.categories?.performance?.score,lcp:a['largest-contentful-paint']?.numericValue,cls:a['cumulative-layout-shift']?.numericValue,tbt:a['total-blocking-time']?.numericValue,fcp:a['first-contentful-paint']?.numericValue,ttfb:a['server-response-time']?.numericValue,bytes:a['total-byte-weight']?.numericValue});
+            }catch(e){rows.push({file:f,error:String(e)});}
+          }
+          fs.writeFileSync('qa-evidence/summary.json',JSON.stringify(rows,null,2));
+          const valid=rows.filter(r=>!r.error&&Number.isFinite(r.score)).length;
+          console.log(JSON.stringify({measurements:rows.length,valid,expected:9}));
+          if(valid!==9)process.exitCode=1;
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse-${{ matrix.site }}-${{ matrix.device }}
+          path: qa-evidence/
+          retention-days: 3
