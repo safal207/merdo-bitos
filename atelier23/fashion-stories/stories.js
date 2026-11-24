@@ -18,8 +18,9 @@ const today=()=>{let d=new Date();return [d.getFullYear(),String(d.getMonth()+1)
 const validDate=d=>typeof d==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(d)&&!Number.isNaN(Date.parse(d))&&new Date(d+"T00:00:00Z").toISOString().slice(0,10)===d&&d>=today();
 function restore(){
  let r={};try{r=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch{}
- const a={event:Object.hasOwn(events,r.event)?r.event:"",likes:[],saved:[],plans:{}};
+ const a={event:Object.hasOwn(events,r.event)?r.event:"",likes:[],saved:[],plans:{},views:{}};
  for(const k of ["likes","saved"])a[k]=Array.isArray(r[k])?[...new Set(r[k].filter(x=>product(x)))]:[];
+ for(const id of ["film",...products.map(p=>p.id)]){const v=r.views?.[id];a.views[id]=Number.isSafeInteger(v)&&v>=0?v:0}
  for(const e of Object.keys(events)){
   const t=r.plans?.[e]||{},p=blank();
   p.date=validDate(t.date)?t.date:"";p.dateSet=!!t.dateSet&&(!t.date||!!p.date);
@@ -43,6 +44,30 @@ const price=p=>p.price?fmt(p.price):"Уточнить цену";
 const url=p=>ROOT+"shop/"+p.link+"/";
 
 const screen=$("screen");
+let viewCleanup=()=>{};
+const viewText=id=>String(state.views[id]||0)+" просм. · на устройстве";
+const viewLabel=id=>'<span class="tiny" data-view-count="'+id+'" aria-label="Просмотры на этом устройстве: '+(state.views[id]||0)+'">'+viewText(id)+'</span>';
+function recordView(id){
+ state.views[id]=Math.min(Number.MAX_SAFE_INTEGER,(state.views[id]||0)+1);persist();
+ const el=screen.querySelector('[data-view-count="'+id+'"]');
+ if(el){el.textContent=viewText(id);el.setAttribute("aria-label","Просмотры на этом устройстве: "+state.views[id])}
+}
+function watchPhoto(photo,id){
+ const img=photo.querySelector("img");let timer=null,visible=false,counted=false,observer=null;
+ const stop=()=>{if(timer!==null)clearTimeout(timer);timer=null};
+ const check=()=>{stop();if(!counted&&visible&&!document.hidden&&img.complete&&img.naturalWidth>0)timer=setTimeout(()=>{if(!counted&&visible&&!document.hidden&&photo.isConnected&&img.naturalWidth>0){counted=true;recordView(id)}},1000)};
+ if("IntersectionObserver" in window){observer=new IntersectionObserver(entries=>{visible=entries[0].intersectionRatio>=.5;check()},{threshold:.5});observer.observe(photo)}
+ else{visible=true;check()}
+ img.addEventListener("load",check);document.addEventListener("visibilitychange",check);
+ viewCleanup=()=>{stop();observer?.disconnect();img.removeEventListener("load",check);document.removeEventListener("visibilitychange",check)};
+}
+function watchFilm(v){
+ let counted=false,seconds=0,last=null;
+ const tick=()=>{const now=v.currentTime;if(v.paused||v.seeking||document.hidden){last=null;return}if(last!==null&&now>=last&&now-last<=1.5)seconds+=now-last;last=now;if(!counted&&seconds>=3){counted=true;recordView("film")}};
+ const reset=()=>{last=null};
+ v.addEventListener("timeupdate",tick);v.addEventListener("seeking",reset);v.addEventListener("pause",reset);document.addEventListener("visibilitychange",reset);
+ viewCleanup=()=>{v.removeEventListener("timeupdate",tick);v.removeEventListener("seeking",reset);v.removeEventListener("pause",reset);document.removeEventListener("visibilitychange",reset)};
+}
 const primary=(label,action,disabled=false)=>'<button type="button" class="primary" data-action="'+action+'" '+(disabled?"disabled":"")+'>'+label+'</button>';
 const secondary=(label,action)=>'<button type="button" class="secondary" data-action="'+action+'">'+label+'</button>';
 const heading=(num,title,text="")=>'<div class="copy"><span class="eyebrow">'+num+'</span><h1>'+title+'</h1>'+(text?'<p>'+text+'</p>':"")+'</div>';
@@ -54,18 +79,19 @@ function go(p){
  page=p;render();screen.scrollTop=0;
 }
 function render(){
+ viewCleanup();viewCleanup=()=>{};
  const p=plan(),n=completion().filter(Boolean).length;
  document.querySelector(".progress b").style.width=(n/6*100)+"%";
  document.querySelector(".progress").setAttribute("aria-valuenow",String(n));
  $("back").disabled=page==="film";$("plan").disabled=page==="plan";
  let body="";
  if(page==="film"){
-  body='<div class="story"><div class="media"><video id="film" muted playsinline controls preload="none" poster="https://atelier-23.ru/wp-content/uploads/2024/12/Atelier23_24_11_14_0844-600x800.jpg" aria-label="Рекламный фильм"><source src="../assets/atelier23-film.mp4" type="video/mp4"></video><a id="film-fallback" class="image-fail" hidden href="../assets/atelier23-film.mp4">Открыть ролик ↗</a></div>'+heading("FILM 01","Ваш момент.<br><i>Ваш стиль.</i>")+primary(state.event?"Продолжить":"Найти свой образ","start")+'<span class="tiny">Рекламный концепт, не съёмка производства.</span></div>';
+  body='<div class="story"><div class="media"><video id="film" muted playsinline controls preload="none" poster="https://atelier-23.ru/wp-content/uploads/2024/12/Atelier23_24_11_14_0844-600x800.jpg" aria-label="Рекламный фильм"><source src="../assets/atelier23-film.mp4" type="video/mp4"></video><a id="film-fallback" class="image-fail" hidden href="../assets/atelier23-film.mp4">Открыть ролик ↗</a></div>'+heading("FILM 01","Ваш момент.<br><i>Ваш стиль.</i>")+primary(state.event?"Продолжить":"Найти свой образ","start")+'<span class="tiny">Рекламный концепт · '+viewLabel("film")+'</span></div>';
  }else if(page==="event"){
   body='<div class="story center">'+heading("01 / ПОВОД","К чему вы<br><i>готовитесь?</i>")+'<div class="choice-list">'+Object.entries(events).map(([id,label])=>'<button class="choice" data-event="'+id+'">'+label+'<span>↗</span></button>').join("")+'</div></div>';
  }else if(page==="look"){
   const a=list();index=Math.max(0,Math.min(index,a.length-1));const item=a[index];
-  body='<div class="story">'+heading("02 / "+events[state.event],"Ваш образ?")+'<div class="media" id="look-photo" tabindex="0" aria-label="Фото; свайп вверх или вниз, либо клавиши стрелок"><img src="'+PHOTO+item.image+'" alt="'+item.item+'"><div class="image-fail" hidden>Фото недоступно</div><span class="number">'+(index+1)+' / '+a.length+'</span><div class="reactions"><button class="icon" data-like="'+item.id+'" aria-label="Нравится" aria-pressed="'+state.likes.includes(item.id)+'">'+icon("heart")+'</button><button class="icon" data-save="'+item.id+'" aria-label="В избранное" aria-pressed="'+state.saved.includes(item.id)+'">'+icon("save")+'</button></div></div><div class="copy"><h2>'+item.name+'</h2><p>'+item.item+' · '+price(item)+'</p><span class="tiny">Цена изделия · <a href="'+url(item)+'">Каталог ↗</a></span></div>'+primary("Выбрать образ","choose")+'<div class="action-row"><button class="link" data-action="prev" '+(index===0?"disabled":"")+'>↑ Назад</button><button class="link" data-action="next" '+(index===a.length-1?"disabled":"")+'>↓ Другой образ</button></div></div>';
+  body='<div class="story">'+heading("02 / "+events[state.event],"Ваш образ?")+'<div class="media" id="look-photo" tabindex="0" aria-label="Фото; свайп вверх или вниз, либо клавиши стрелок"><img src="'+PHOTO+item.image+'" alt="'+item.item+'"><div class="image-fail" hidden>Фото недоступно</div><span class="number">'+(index+1)+' / '+a.length+'</span><div class="reactions"><button class="icon" data-like="'+item.id+'" aria-label="Нравится" aria-pressed="'+state.likes.includes(item.id)+'">'+icon("heart")+'</button><button class="icon" data-save="'+item.id+'" aria-label="В избранное" aria-pressed="'+state.saved.includes(item.id)+'">'+icon("save")+'</button></div></div><div class="copy"><h2>'+item.name+'</h2><p>'+item.item+' · '+price(item)+'</p><span class="tiny">Цена изделия · <a href="'+url(item)+'">Каталог ↗</a> · '+viewLabel(item.id)+'</span></div>'+primary("Выбрать образ","choose")+'<div class="action-row"><button class="link" data-action="prev" '+(index===0?"disabled":"")+'>↑ Назад</button><button class="link" data-action="next" '+(index===a.length-1?"disabled":"")+'>↓ Другой образ</button></div></div>';
  }else if(page==="date"){
   body='<div class="story center">'+heading("СРОК","Когда ваш<br><i>момент?</i>")+'<label class="field">Дата события<input id="date" type="date" min="'+today()+'" value="'+p.date+'"></label>'+primary("Готово","date")+secondary("Пока не знаю","unknown")+'<p class="notice" id="date-error" role="status"></p></div>';
  }else if(page==="wardrobe"){
@@ -91,10 +117,11 @@ function render(){
  screen.querySelectorAll(".media img").forEach(img=>{const fail=()=>{img.hidden=true;img.parentElement.querySelector(".image-fail").hidden=false};img.addEventListener("error",fail);if(img.complete&&!img.naturalWidth)fail()});
  if(page==="film"){
   const v=$("film"),fallback=$("film-fallback");const fail=()=>fallback.hidden=false;v.addEventListener("error",fail);v.querySelector("source").addEventListener("error",fail);
+  watchFilm(v);
   if(!matchMedia("(prefers-reduced-motion: reduce)").matches)v.play().catch(()=>{});
  }
  if(page==="look"){
-  const photo=$("look-photo");let x=0,y=0;
+  const photo=$("look-photo");watchPhoto(photo,list()[index].id);let x=0,y=0;
   photo.addEventListener("touchstart",e=>{x=e.changedTouches[0].clientX;y=e.changedTouches[0].clientY},{passive:true});
   photo.addEventListener("touchend",e=>{const dx=e.changedTouches[0].clientX-x,dy=e.changedTouches[0].clientY-y;if(Math.abs(dy)>45&&Math.abs(dy)>Math.abs(dx)*1.2)move(dy<0?1:-1)},{passive:true});
   photo.addEventListener("keydown",e=>{if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)){e.preventDefault();move(["ArrowUp","ArrowLeft"].includes(e.key)?-1:1);$("look-photo")?.focus()}});
