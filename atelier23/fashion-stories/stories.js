@@ -35,13 +35,43 @@ let state=restore(),page="film",index=0,returnPage="event";
 const $=id=>document.getElementById(id);
 const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(state))}catch{}};
 const plan=()=>state.event?state.plans[state.event]:blank();
-const list=()=>products.filter(p=>!state.event||p.events.includes(state.event));
+// Explicit editorial tags; not inferred from sensitive traits or purchase history.
+const styleTags={
+ navy:["tailored","formal","suit","navy"],
+ grey:["tailored","formal","suit","grey"],
+ black:["tailored","formal","black-tie","black"],
+ ivory:["tailored","formal","black-tie","ivory"],
+ "travel-navy":["relaxed","separates","trousers","navy"],
+ "travel-black":["relaxed","separates","trousers","black"]
+};
+function preferenceScore(item){
+ const target=styleTags[item.id];
+ return products.reduce((total,source)=>{
+  const weight=(state.likes.includes(source.id)?1:0)+(state.saved.includes(source.id)?3:0);
+  if(!weight)return total;
+  const from=styleTags[source.id],shared=target.filter(tag=>from.includes(tag)).length;
+  return total+weight*shared/(new Set([...target,...from]).size);
+ },0);
+}
+const rank=items=>items.map((item,i)=>({item,i,score:preferenceScore(item)})).sort((a,b)=>b.score-a.score||a.i-b.i).map(x=>x.item);
+let deckEvent="",deck=[],frontier=0;
+function rebuildDeck(){
+ deckEvent=state.event;deck=rank(products.filter(p=>p.events.includes(state.event)));index=0;frontier=0;
+}
+// Preserve the whole already-visited prefix, even if the user goes backwards.
+// Only the not-yet-shown tail is re-ranked on the next forward gesture.
+function list(){
+ if(deckEvent!==state.event||!deck.length)rebuildDeck();
+ return deck;
+}
 const completion=()=>{const p=plan();return [!!state.event,p.dateSet,!!p.chosen,p.wardrobe,p.summary,p.visited]};
 const fmt=n=>n.toLocaleString("ru-RU")+" ₽";
 const icons={heart:'<path d="M20.8 8.6c0 5-8.8 10.7-8.8 10.7S3.2 13.6 3.2 8.6a4.9 4.9 0 0 1 8.8-3 4.9 4.9 0 0 1 8.8 3z"/>',save:'<path d="M6 3h12v18l-6-4-6 4z"/>',share:'<path d="m22 2-7 20-4-9-9-4 20-7zM22 2 11 13"/>'};
 const icon=name=>'<svg aria-hidden="true" viewBox="0 0 24 24">'+icons[name]+'</svg>';
 const price=p=>p.price?fmt(p.price):"Уточнить цену";
 const url=p=>ROOT+"shop/"+p.link+"/";
+const shareURL=item=>{const u=new URL(location.href);u.search="";u.hash="";u.searchParams.set("event",state.event);u.searchParams.set("look",item.id);return u.href};
+const atelierMark='<svg aria-hidden="true" class="atelier-mark" viewBox="0 0 90 65" fill="none" stroke="currentColor" stroke-width=".9" stroke-linejoin="round" stroke-linecap="round"><path class="pattern" d="M31 9 39 5Q45 15 51 5L59 9 69 19 64 32 58 27 60 58 45 60 30 58 32 27 26 32 21 19Z M39 5 45 24 51 5 M45 24 42 59"/><path d="M10 48Q23 33 41 49T78 42" stroke-width="6" opacity=".20"/><path d="M10 48Q23 33 41 49T78 42 M15 43l3 4m5-7 1 5m7-4-1 5m8 0-2 5m9-1-1 5m8-1v5m7-5 2 4m4-8 3 4m3-9 4 3"/><path d="M68 5 84 23 65 9Q64 3 68 5Z" fill="currentColor"/><path d="M67 8Q85-3 86 16T81 39" stroke-dasharray="2 2"/></svg>';
 
 const screen=$("screen");
 let viewCleanup=()=>{};
@@ -86,12 +116,12 @@ function render(){
  $("back").disabled=page==="film";$("plan").disabled=page==="plan";
  let body="";
  if(page==="film"){
-  body='<div class="story"><div class="media"><video id="film" muted playsinline controls preload="none" poster="https://atelier-23.ru/wp-content/uploads/2024/12/Atelier23_24_11_14_0844-600x800.jpg" aria-label="Рекламный фильм"><source src="../assets/atelier23-film.mp4" type="video/mp4"></video><a id="film-fallback" class="image-fail" hidden href="../assets/atelier23-film.mp4">Открыть ролик ↗</a></div>'+heading("FILM 01","Ваш момент.<br><i>Ваш стиль.</i>")+primary(state.event?"Продолжить":"Найти свой образ","start")+'<span class="tiny">Рекламный концепт · '+viewLabel("film")+'</span></div>';
+  body='<div class="story"><div class="media"><video id="film" muted playsinline controls preload="none" poster="https://atelier-23.ru/wp-content/uploads/2024/12/Atelier23_24_11_14_0844-600x800.jpg" aria-label="Рекламный фильм"><source src="../assets/atelier23-film.mp4" type="video/mp4"></video><div class="mark-overlay">'+atelierMark+'</div><a id="film-fallback" class="image-fail" hidden href="../assets/atelier23-film.mp4">Открыть ролик ↗</a></div>'+heading("FILM 01","Ваш момент.<br><i>Ваш стиль.</i>")+primary(state.event?"Продолжить":"Найти свой образ","start")+'<span class="tiny">Рекламный концепт · '+viewLabel("film")+'</span></div>';
  }else if(page==="event"){
   body='<div class="story center">'+heading("01 / ПОВОД","К чему вы<br><i>готовитесь?</i>")+'<div class="choice-list">'+Object.entries(events).map(([id,label])=>'<button class="choice" data-event="'+id+'">'+label+'<span>↗</span></button>').join("")+'</div></div>';
  }else if(page==="look"){
   const a=list();index=Math.max(0,Math.min(index,a.length-1));const item=a[index];
-  body='<div class="story">'+heading("02 / "+events[state.event],"Ваш образ?")+'<div class="media" id="look-photo" tabindex="0" aria-label="Фото; свайп вверх или вниз, либо клавиши стрелок"><img src="'+PHOTO+item.image+'" alt="'+item.item+'"><div class="image-fail" hidden>Фото недоступно</div><span class="number">'+(index+1)+' / '+a.length+'</span><div class="reactions"><button class="icon" data-like="'+item.id+'" aria-label="Нравится" aria-pressed="'+state.likes.includes(item.id)+'">'+icon("heart")+'</button><button class="icon" data-save="'+item.id+'" aria-label="В избранное" aria-pressed="'+state.saved.includes(item.id)+'">'+icon("save")+'</button></div></div><div class="copy"><h2>'+item.name+'</h2><p>'+item.item+' · '+price(item)+'</p><span class="tiny">Цена изделия · <a href="'+url(item)+'">Каталог ↗</a> · '+viewLabel(item.id)+'</span></div>'+primary("Выбрать образ","choose")+'<div class="action-row"><button class="link" data-action="prev" '+(index===0?"disabled":"")+'>↑ Назад</button><button class="link" data-action="next" '+(index===a.length-1?"disabled":"")+'>↓ Другой образ</button></div></div>';
+  body='<div class="story">'+heading("02 / "+events[state.event],"Ваш образ?")+'<div class="media" id="look-photo" tabindex="0" aria-label="Фото; свайп вверх или вниз, либо клавиши стрелок"><img src="'+PHOTO+item.image+'" alt="'+item.item+'"><div class="image-fail" hidden>Фото недоступно</div><span class="number">'+(index+1)+' / '+a.length+'</span><div class="reactions"><button class="icon" data-like="'+item.id+'" aria-label="Нравится" aria-pressed="'+state.likes.includes(item.id)+'">'+icon("heart")+'</button><button class="icon" data-save="'+item.id+'" aria-label="В избранное" aria-pressed="'+state.saved.includes(item.id)+'">'+icon("save")+'</button><button class="icon" data-share="'+item.id+'" aria-label="Поделиться образом">'+icon("share")+'</button></div><div class="share-panel" id="share-panel" hidden><p id="share-status" role="status"></p><input id="share-link" aria-label="Ссылка на образ" readonly><button class="link" data-action="close-share">Закрыть</button></div></div><div class="copy"><h2>'+item.name+'</h2><p>'+item.item+' · '+price(item)+'</p><span class="tiny">Цена изделия · <a href="'+url(item)+'">Каталог ↗</a> · '+viewLabel(item.id)+'</span></div>'+primary("Выбрать образ","choose")+'<div class="action-row"><button class="link" data-action="prev" '+(index===0?"disabled":"")+'>↑ Назад</button><button class="link" data-action="next" '+(index===a.length-1?"disabled":"")+'>↓ Другой образ</button></div></div>';
  }else if(page==="date"){
   body='<div class="story center">'+heading("СРОК","Когда ваш<br><i>момент?</i>")+'<label class="field">Дата события<input id="date" type="date" min="'+today()+'" value="'+p.date+'"></label>'+primary("Готово","date")+secondary("Пока не знаю","unknown")+'<p class="notice" id="date-error" role="status"></p></div>';
  }else if(page==="wardrobe"){
@@ -127,14 +157,32 @@ function render(){
   photo.addEventListener("keydown",e=>{if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)){e.preventDefault();move(["ArrowUp","ArrowLeft"].includes(e.key)?-1:1);$("look-photo")?.focus()}});
  }
 }
-function move(n){let next=Math.max(0,Math.min(list().length-1,index+n));if(next!==index){index=next;render()}}
+function move(n){
+ const a=list(),next=Math.max(0,Math.min(a.length-1,index+n));
+ if(next===index)return;
+ if(next>frontier){
+  deck=[...a.slice(0,frontier+1),...rank(a.slice(frontier+1))];
+  frontier=next;
+ }
+ index=next;render();
+}
 function toggle(key,id){state[key]=state[key].includes(id)?state[key].filter(x=>x!==id):[...state[key],id];persist()}
 $("back").addEventListener("click",()=>{const back={event:"film",look:"event",result:"look",date:"result",wardrobe:"date",plan:returnPage,saved:"plan",summary:"plan",visit:"plan"};go(back[page]||"film")});
 $("plan").addEventListener("click",()=>{returnPage=page;go("plan")});
 screen.addEventListener("click",async e=>{
  const b=e.target.closest("button");if(!b||b.disabled)return;const d=b.dataset,p=plan(),a=d.action;
- if(d.event){state.event=d.event;index=0;persist();return go("look")}
+ if(d.event){state.event=d.event;rebuildDeck();persist();return go("look")}
  if(d.like||d.save){const key=d.like?"likes":"saved",id=d.like||d.save;toggle(key,id);b.setAttribute("aria-pressed",String(state[key].includes(id)));return}
+ if(d.share){
+  const item=product(d.share),link=shareURL(item);
+  if(navigator.share){try{await navigator.share({title:"ATELIER 23 · "+item.name,url:link});return}catch(err){if(err.name==="AbortError")return}}
+  const panel=$("share-panel"),input=$("share-link"),status=$("share-status");
+  if(!panel||!input||!status)return;
+  panel.hidden=false;input.value=link;
+  try{await navigator.clipboard.writeText(link);status.textContent="Ссылка скопирована."}catch{status.textContent="Скопируйте ссылку.";input.focus();input.select()}
+  return;
+ }
+ if(a==="close-share"){$("share-panel").hidden=true;return}
  if(d.remove){toggle("saved",d.remove);return render()}
  if(d.jump)return go(d.jump);
  if(a==="start"||a==="resume")return go(nextStep());
@@ -155,4 +203,9 @@ screen.addEventListener("change",e=>{
  if(id&&Object.hasOwn(parts,id)){p.owned=el.checked?[...new Set([...p.owned,id])]:p.owned.filter(x=>x!==id);p.wardrobe=false;invalidate(p);persist()}
  if(el.id==="visit"&&p.summary){p.visited=el.checked;persist()}
 });
-go("film");
+const incoming=new URLSearchParams(location.search);
+const incomingEvent=incoming.get("event"),incomingLook=product(incoming.get("look"));
+if(Object.hasOwn(events,incomingEvent)&&incomingLook?.events.includes(incomingEvent)){
+ state.event=incomingEvent;rebuildDeck();deck=[incomingLook,...deck.filter(p=>p.id!==incomingLook.id)];index=0;frontier=0;
+ persist();go("look");
+}else go("film");

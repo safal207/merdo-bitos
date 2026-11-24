@@ -16,6 +16,7 @@ try{
  const step=async(n)=>assert.equal(await page.locator(".progress").getAttribute("aria-valuenow"),String(n));
  const viewport=async()=>{assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1&&document.documentElement.scrollHeight<=innerHeight+1),"Document overflow");const c=page.locator("#screen .primary");if(await c.count()){const b=await c.boundingBox();assert.ok(b&&b.y>=0&&b.y+b.height<=844,"CTA outside viewport")}};
  await page.goto(url);await page.locator("#film").waitFor();await viewport();
+ assert.equal(await page.locator(".atelier-mark").count(),1);assert.equal(await page.locator(".mark-overlay").evaluate(el=>getComputedStyle(el).pointerEvents),"none");
  assert.ok(await page.locator("#film").evaluate(v=>v.paused&&v.muted&&v.playsInline));
  assert.equal(await page.locator("#film source").getAttribute("src"),"../assets/atelier23-film.mp4");
  assert.match(await page.locator("[data-view-count=film]").textContent(),/^0 просм\./);
@@ -39,6 +40,43 @@ try{
  await page.getByRole("button",{name:"Мой план",exact:true}).click();assert.equal(await page.locator(".plan-list .done").count(),4);
  await page.getByRole("button",{name:"Избранное · 1"}).click();assert.equal(await page.locator(".saved-item").count(),1);
  await page.reload();assert.ok(await page.evaluate(()=>JSON.parse(localStorage.getItem("bitos.atelier23.fashionStories.v1")).views.navy>=1));await page.getByRole("button",{name:"Продолжить",exact:true}).click();await step(4);await viewport();
- assert.deepEqual(errors,[]);console.log("PASS "+width+"px: portrait CTA, swipe, direct booking path, optional plan, persistence");await context.close();
+ // Independent profile: a save outweighs a like and only future cards move.
+ await page.evaluate(()=>localStorage.removeItem("bitos.atelier23.fashionStories.v1"));
+ await page.reload();await page.getByRole("button",{name:"Найти свой образ"}).click();
+ await page.getByRole("button",{name:"Деловая встреча"}).click();
+ const title=()=>page.locator("#screen h2").textContent();
+ const forward=()=>page.getByRole("button",{name:"↓ Другой образ"}).click();
+ const backward=()=>page.getByRole("button",{name:"↑ Назад",exact:true}).click();
+ const like=()=>page.getByRole("button",{name:"Нравится",exact:true}).click();
+ const save=()=>page.getByRole("button",{name:"В избранное",exact:true}).click();
+ assert.equal(await title(),"Уверенная классика");await like();await forward();
+ assert.equal(await title(),"Современный характер");await forward();
+ assert.equal(await title(),"Свободная элегантность");await save();await step(1);
+ await page.locator("#back").click();await page.locator('[data-event="wardrobe"]').click();
+ assert.equal(await title(),"Свободная элегантность"); // save beats the earlier navy like
+ await save(); // remove the preference while staying on the same card
+ assert.equal(await title(),"Свободная элегантность");await forward();
+ assert.equal(await title(),"Уверенная классика");
+ await backward();assert.equal(await title(),"Свободная элегантность");await save();
+ await forward();assert.equal(await title(),"Уверенная классика"); // visited prefix stable
+ await forward();assert.equal(await title(),"Лаконичный гардероб"); // unseen tail responds
+ const seen=new Set(["Свободная элегантность","Уверенная классика","Лаконичный гардероб"]);
+ while(await page.getByRole("button",{name:"↓ Другой образ"}).isEnabled()){
+  await forward();const t=await title();assert.ok(!seen.has(t),"Duplicate recommendation");seen.add(t);
+ }
+ assert.equal(seen.size,5);await step(1);await viewport();
+ await page.locator("#back").click();await page.locator('[data-event="evening"]').click();
+ assert.equal(await title(),"Вечерняя классика");await forward();assert.equal(await title(),"Светлый акцент");assert.ok(await page.getByRole("button",{name:"↓ Другой образ"}).isDisabled());
+ await page.reload();await page.getByRole("button",{name:"Продолжить",exact:true}).click();await page.locator("#back").click();await page.locator('[data-event="wardrobe"]').click();assert.equal(await title(),"Свободная элегантность");
+ // Shared card entry must preserve the exact product, never choose it automatically.
+ await page.goto(url+"?event=wedding&look=ivory");await page.locator("#look-photo").waitFor();
+ assert.equal(await title(),"Светлый акцент");await step(1);await viewport();
+ await page.evaluate(()=>{Object.defineProperty(navigator,"share",{configurable:true,value:undefined})});
+ await page.getByRole("button",{name:"Поделиться образом"}).click();
+ await page.locator("#share-link").waitFor();
+ const shared=new URL(await page.locator("#share-link").inputValue());assert.equal(shared.searchParams.get("event"),"wedding");assert.equal(shared.searchParams.get("look"),"ivory");
+ await page.getByRole("button",{name:"Закрыть",exact:true}).click();
+ await page.goto(url+"?event=business&look=ivory");await page.locator("#film").waitFor();
+ assert.deepEqual(errors,[]);console.log("PASS "+width+"px: portrait CTA, swipe, direct booking path, optional plan, persistence, preference ranking and event isolation");await context.close();
  }
 }finally{await browser.close();server.close()}
