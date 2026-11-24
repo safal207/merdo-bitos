@@ -98,6 +98,44 @@ try{
  await seek(2.8);await page.locator("#cue-cta").focus();await seek(8.8);assert.equal(await page.locator("#cue-cta").getAttribute("data-intent"),"business");await page.locator("#cue-cta").blur();await page.waitForFunction(()=>document.querySelector("#cue-cta").dataset.intent==="tailoring");
  await seek(15);await page.locator("#cue-other").click();await page.locator('[data-event="wedding"]').waitFor();await page.locator("#back").click();assert.equal(await page.locator("#cue-cta").getAttribute("data-intent"),"booking");
  await seek(2.8);await page.locator("#cue-cta").click();assert.equal(await page.locator(".app").getAttribute("data-mode"),"look");assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem("bitos.atelier23.fashionOverlay.v1")).event),"business");
+ // Isolated analytics, real interaction events and controlled playback-clock simulation.
+ const analyticsKey="bitos.atelier23.fashionAnalytics.v1";
+ await page.evaluate(key=>localStorage.removeItem(key),analyticsKey);
+ await page.goto(url);
+ await page.locator("#cue-cta").waitFor();
+ const rows=()=>page.evaluate(key=>JSON.parse(localStorage.getItem(key)||'{"rows":[]}').rows,analyticsKey);
+ assert.equal((await rows()).length,0);
+ await page.getByRole("button",{name:"Нравится фильм"}).click();
+ const wasLiked=await page.getByRole("button",{name:"Нравится фильм"}).getAttribute("aria-pressed");
+ await page.getByRole("button",{name:"Нравится фильм"}).click();
+ assert.deepEqual((await rows()).filter(r=>r.type==="reaction").map(r=>r.intent),wasLiked==="true"?["like_on","like_off"]:["like_off","like_on"]);
+ await page.evaluate(()=>{const v=document.querySelector("#film");Object.defineProperty(v,"paused",{configurable:true,value:true});Object.defineProperty(v,"seeking",{configurable:true,value:false})});
+ await seek(8.8);assert.equal((await rows()).filter(r=>r.type==="scene_view").length,0);
+ // The simulated media clock exercises accounting, not physical video decoding.
+ await page.evaluate(()=>{const v=document.querySelector("#film");Object.defineProperty(v,"paused",{configurable:true,value:false});v.dispatchEvent(new Event("seeking"))});
+ for(const t of [0,.5,1,1.5,2,2.5,2.8,3.3,3.8,4.3,4.8])await page.evaluate(t=>{const v=document.querySelector("#film");Object.defineProperty(v,"currentTime",{configurable:true,value:t});v.dispatchEvent(new Event("timeupdate"))},t);
+ const playback=await rows();assert.equal(playback.filter(r=>r.type==="film_view").length,1);
+ assert.deepEqual(playback.filter(r=>r.type==="scene_view").map(r=>r.cue),["emotion","business"]);
+ await page.evaluate(()=>{const v=document.querySelector("#film");v.dispatchEvent(new Event("seeking"));Object.defineProperty(v,"paused",{configurable:true,value:true})});
+ await seek(15);assert.equal((await rows()).filter(r=>r.type==="scene_view"&&r.cue==="fitting").length,0);
+ await context.route("https://atelier-23.ru/sign-up-for-a-fitting-room/",route=>route.fulfill({status:200,contentType:"text/html",body:"<h1>Mock booking destination</h1>"}));
+ await Promise.all([page.waitForURL("https://atelier-23.ru/sign-up-for-a-fitting-room/"),page.locator("#cue-cta").click()]);
+ await page.goto(url+"?event=wedding&look=ivory");
+ await page.getByRole("button",{name:"Хочу этот образ",exact:true}).click();
+ await Promise.all([page.waitForURL("https://atelier-23.ru/sign-up-for-a-fitting-room/"),page.locator("#book").click()]);
+ await page.goto(url+"analytics/");await page.locator('[data-metric="booking"]').waitFor();
+ assert.equal(await page.locator('[data-metric="booking"] b').textContent(),"2");
+ assert.equal(await page.locator('[data-metric="filmViews"] b').textContent(),"1");
+ assert.equal(await page.locator('[data-scene="fitting"] [data-count="clicks"]').textContent(),"1");
+ assert.equal(await page.locator('[data-scene="fitting"] [data-count="views"]').textContent(),"0");
+ assert.match(await page.locator("#sales").textContent(),/данных нет/);
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+ const recorded=await rows();assert.equal(recorded.filter(r=>r.type==="booking_click").length,2);assert.ok(recorded.every(r=>!["sale","purchase","booking_confirmed"].includes(r.type)));
+ // Empty and corrupt storage must never present fabricated sales/engagement.
+ await page.evaluate(key=>localStorage.removeItem(key),analyticsKey);await page.locator("#refresh").click();
+ assert.match(await page.locator("#status").textContent(),/Пока нет/);assert.equal(await page.locator('[data-metric="booking"] b').textContent(),"0");
+ await page.evaluate(key=>localStorage.setItem(key,"{broken"),analyticsKey);await page.locator("#refresh").click();
+ assert.match(await page.locator("#status").textContent(),/недоступно или повреждено/);assert.equal(await page.locator('[data-metric="booking"] b').textContent(),"—");
  assert.deepEqual(errors,[]);console.log("PASS "+width+"px: full-bleed video, overlay actions, same-player transition, swipe, direct booking, plan and personalization");await context.close();
  }
 }finally{await browser.close();server.close()}
