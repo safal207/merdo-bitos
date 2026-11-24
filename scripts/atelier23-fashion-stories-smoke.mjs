@@ -51,7 +51,7 @@ try{
  assert.equal(await title(),"Уверенная классика");await like();await forward();
  assert.equal(await title(),"Современный характер");await forward();
  assert.equal(await title(),"Свободная элегантность");await save();await step(1);
- await page.locator("#back").click();await page.getByRole("button",{name:"Гардероб",exact:true}).click();
+ await page.locator("#back").click();await page.locator('[data-event="wardrobe"]').click();
  assert.equal(await title(),"Свободная элегантность"); // save beats the earlier navy like
  await save(); // remove the preference while staying on the same card
  assert.equal(await title(),"Свободная элегантность");await forward();
@@ -64,9 +64,9 @@ try{
   await forward();const t=await title();assert.ok(!seen.has(t),"Duplicate recommendation");seen.add(t);
  }
  assert.equal(seen.size,5);await step(1);await viewport();
- await page.locator("#back").click();await page.getByRole("button",{name:"Торжество",exact:true}).click();
+ await page.locator("#back").click();await page.locator('[data-event="evening"]').click();
  assert.equal(await title(),"Вечерняя классика");await forward();assert.equal(await title(),"Светлый акцент");assert.ok(await page.getByRole("button",{name:"↓ Другой образ"}).isDisabled());
- await page.reload();await page.getByRole("button",{name:"Продолжить",exact:true}).click();await page.locator("#back").click();await page.getByRole("button",{name:"Гардероб",exact:true}).click();assert.equal(await title(),"Свободная элегантность");
+ await page.reload();await page.getByRole("button",{name:"Продолжить",exact:true}).click();await page.locator("#back").click();await page.locator('[data-event="wardrobe"]').click();assert.equal(await title(),"Свободная элегантность");
  assert.deepEqual(errors,[]);console.log("PASS "+width+"px: portrait CTA, swipe, direct booking path, optional plan, persistence, preference ranking and event isolation");await context.close();
  }
 }finally{await browser.close();server.close()}
