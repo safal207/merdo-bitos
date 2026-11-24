@@ -12,7 +12,10 @@ export const SIGNATURE_EXTRAS=[["trousers","Вторая пара брюк"],["s
 const signatureTypes=new Set(["signature_open","signature_chapter","signature_choice","signature_extra","signature_brief","signature_handoff","signature_reset","signature_replay"]);
 const chapterIds=new Set(SIGNATURE_CHAPTERS.map(([id])=>id));
 const extraIds=new Set(SIGNATURE_EXTRAS.map(([id])=>id));
-const types=new Set([...signatureTypes,"film_view","look_view","scene_view","reaction","share_click","share_resolved","share_cancelled","link_copied","cta_click","occasion_selected","look_selected","booking_click","tailoring_click"]);
+const socialTypes=new Set(["social_landing","social_select","social_handoff"]);
+const socialSources=new Set(["instagram","tiktok","facebook","direct"]);
+const socialTopics=new Set(["craft","wedding","gift","wardrobe"]);
+const types=new Set([...socialTypes,...signatureTypes,"film_view","look_view","scene_view","reaction","share_click","share_resolved","share_cancelled","link_copied","cta_click","occasion_selected","look_selected","booking_click","tailoring_click"]);
 const targets=new Set(["film","navy","grey","black","ivory","travel-navy","travel-black"]);
 const cues=new Set(SCENES.map(s=>s[0]));
 const occasions=new Set(["business","wedding","evening","travel","wardrobe"]);
@@ -22,6 +25,15 @@ const validId=x=>typeof x==="string"&&/^[a-zA-Z0-9-]{1,80}$/.test(x);
 function clean(row){
  if(!row||!types.has(row.type)||!validId(row.visit)||!Number.isFinite(row.ts)||row.ts<0)return null;
  const a={type:row.type,visit:row.visit,ts:row.ts};
+ if(socialTypes.has(row.type)){
+  if(!socialSources.has(row.source)||!socialTopics.has(row.topic))return null;
+  a.source=row.source;a.topic=row.topic;
+  if(row.type==="social_handoff"){
+   if(!["site","whatsapp"].includes(row.destination))return null;
+   a.destination=row.destination;
+  }
+  return a;
+ }
  if(signatureTypes.has(row.type)){
   if(row.type==="signature_chapter"||row.type==="signature_replay"){
    if(!chapterIds.has(row.chapter))return null;a.chapter=row.chapter;
@@ -65,7 +77,7 @@ export function makeTracker(storage,visit){
  };
 }
 export function summarize(rows){
- rows=rows.filter(r=>!signatureTypes.has(r.type));
+ rows=rows.filter(r=>!signatureTypes.has(r.type)&&!socialTypes.has(r.type));
  const count=(type,predicate=()=>true)=>rows.filter(r=>r.type===type&&predicate(r)).length;
  return {visits:new Set(rows.map(r=>r.visit)).size,filmViews:count("film_view"),lookViews:count("look_view"),likes:count("reaction",r=>r.intent==="like_on"),unlikes:count("reaction",r=>r.intent==="like_off"),saves:count("reaction",r=>r.intent==="save_on"),unsaves:count("reaction",r=>r.intent==="save_off"),shares:count("share_click"),copied:count("link_copied"),shareResolved:count("share_resolved"),occasions:count("occasion_selected"),looks:count("look_selected"),booking:count("booking_click"),tailoring:count("tailoring_click"),scenes:SCENES.map(([id,range,label])=>({id,range,label,views:count("scene_view",r=>r.cue===id),clicks:count("cta_click",r=>r.cue===id)}))};
 }
@@ -102,4 +114,26 @@ export function summarize(rows){
    for(const item of out.extras)if(interest.has(item.id))item.interestedVisits++;
   }
   return out;
+ }
+
+ // One landing cohort per page visit. A handoff is a click, never a confirmed appointment.
+ export function summarizeSocial(rows){
+ const groups=new Map(),visits=new Map();
+ for(const raw of rows){const row=clean(raw);if(!row||!socialTypes.has(row.type))continue;
+ if(!visits.has(row.visit))visits.set(row.visit,[]);visits.get(row.visit).push(row)}
+ for(const events of visits.values()){
+  let entry=null,topic=null;const selected=new Set(),handoffs=new Set();
+  for(const row of [...events].sort((a,b)=>a.ts-b.ts)){
+   if(row.type==="social_landing"&&!entry){entry=row;topic=row.topic;continue}
+   if(!entry||row.source!==entry.source)continue;
+   if(row.type==="social_select"){topic=row.topic;selected.add(topic)}
+   if(row.type==="social_handoff"&&row.topic===topic)handoffs.add(row.destination);
+  }
+  if(!entry)continue;
+  const key=entry.source+":"+entry.topic;
+  if(!groups.has(key))groups.set(key,{source:entry.source,topic:entry.topic,visits:0,engaged:0,handoffs:0,site:0,whatsapp:0});
+  const g=groups.get(key);g.visits++;if(selected.size)g.engaged++;if(handoffs.size)g.handoffs++;
+  if(handoffs.has("site"))g.site++;if(handoffs.has("whatsapp"))g.whatsapp++;
+ }
+ return [...groups.values()];
  }
