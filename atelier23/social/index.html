@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="pt-PT"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>ATELIER 23 Lisboa × BitOS — Social Commerce</title><link rel="stylesheet" href="../styles.css"><style>
+.social{width:min(900px,calc(100% - 32px));margin:auto;padding:28px 0 48px;color:#f2ebdc}.social header{border-bottom:1px solid #667467;padding-bottom:18px}.social header p{font-size:12px;color:#d4bb94}.social h1{font:normal clamp(38px,7vw,70px)/1.05 Georgia,serif;margin:26px 0 18px;overflow-wrap:anywhere}.social p{line-height:1.6;color:#c4cbbf}.social .topics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:24px 0}.social button,.social a.btn{min-height:48px;white-space:normal;text-align:center;justify-content:center;overflow-wrap:anywhere}.social .topics button{background:#203329;border:1px solid #7b897a;color:#e9e3d5;padding:8px}.social .topics button[aria-pressed=true]{border-color:#d4bb94;color:#171f19;background:#d4bb94}.social .hero{padding:clamp(20px,5vw,52px);background:linear-gradient(125deg,#293d31,#17251d);border:1px solid #68776a}.social .actions{display:flex;flex-wrap:wrap;gap:12px;margin:22px 0}.social .notice{font-size:12px}.social :focus-visible{outline:2px solid #d4bb94;outline-offset:4px}@media(max-width:620px){.social .topics{grid-template-columns:repeat(2,minmax(0,1fr))}.social .actions a{flex:1 1 100%}}
+</style><script type="importmap">{"imports":{"react":"https://esm.sh/react@19.0.0","react-dom/client":"https://esm.sh/react-dom@19.0.0/client?external=react"}}</script></head>
+<body><div id="root"><main class="social"><h1>ATELIER 23 Lisboa</h1><p>Conceito de demonstração BitOS.</p><a href="https://atelier23.store/pt">Visitar o site oficial</a></main></div>
+<script type="module">
+import React,{useState,useLayoutEffect,useRef} from "react";
+import {createRoot} from "react-dom/client";
+import {makeTracker} from "../fashion-overlay/analytics.js";
+import {campaign,topics,destination} from "./campaign.js";
+const h=React.createElement;
+function App(){
+ const [entry]=useState(()=>campaign(location.search)),[topic,setTopic]=useState(entry.topic);
+ const [track]=useState(()=>{try{return makeTracker(localStorage,"social-"+crypto.randomUUID())}catch{return ()=>false}});
+ const logged=useRef(false);
+ useLayoutEffect(()=>{if(!logged.current){logged.current=true;track("social_landing",entry)}},[entry,track]);
+ const change=id=>{if(id===topic)return;track("social_select",{source:entry.source,topic:id});setTopic(id)};
+ const click=kind=>track("social_handoff",{source:entry.source,topic,destination:kind});
+ const item=topics[topic];
+ return h("main",{className:"social","data-renderer":"react"},
+ h("header",null,h("strong",null,"ATELIER 23 LISBOA"),h("p",null,"BITOS / CONCEITO DE DEMONSTRAÇÃO · PORTUGAL")),
+ h("nav",{className:"topics","aria-label":"Escolha uma experiência"},Object.entries(topics).map(([id,t])=>h("button",{key:id,type:"button","data-topic":id,"aria-pressed":id===topic,onClick:()=>change(id)},t.label))),
+ h("section",{className:"hero","aria-labelledby":"offer-title"},
+ h("span",{className:"eyebrow"},item.label),
+ h("h1",{id:"offer-title","aria-live":"polite"},item.title),h("p",null,item.copy),
+ h("div",{className:"actions"},h("a",{id:"social-whatsapp",className:"btn btn-primary",href:destination(topic,"whatsapp"),onClick:()=>click("whatsapp")},"Conversar no WhatsApp"),h("a",{id:"social-site",className:"btn btn-ghost",href:destination(topic,"site"),onClick:()=>click("site")},"Visitar o site oficial")),
+ h("p",{className:"notice"},"A conversa abre no WhatsApp; nenhuma mensagem é enviada automaticamente. Disponibilidade, condições e preços a confirmar com o atelier.")),
+ h("footer",null,h("p",{className:"notice"},"Demonstração independente, não uma loja ou reserva. Apenas eventos técnicos neste navegador, sem transmissão de dados para um servidor. Nenhuma compra ou marcação é confirmada.")));
+}
+createRoot(document.getElementById("root")).render(h(App));
+</script></body></html>
