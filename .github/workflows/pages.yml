@@ -2,9 +2,9 @@ name: Merdo BitOS — browser QA and Pages
 
 on:
   push:
-    branches: [main, feat/grok-design-v2]
+    branches: [main, feat/grok-design-v2, feat/atelier23-instagram-commerce]
   pull_request:
-    branches: [main]
+    branches: [main, feat/atelier23-signature-experience]
   workflow_dispatch:
 
 permissions:

@@ -79,3 +79,88 @@ assert.equal(JSON.stringify(sigLog).includes("private@example.com"),false);
 assert.equal(summarizeSignature([]).starts,0);
 assert.equal(makeTracker(blocked,"sig-blocked")("signature_open"),false);
 console.log("PASS Signature allowlist, privacy, ordered visit cohort, repeated actions and legacy isolation");
+
+import {campaign,destination,topics} from "../atelier23/social/campaign.js";
+import {summarizeSocial} from "../atelier23/fashion-overlay/analytics.js";
+assert.deepEqual(campaign("?utm_source=instagram&utm_content=gift"),{source:"instagram",topic:"gift"});
+assert.deepEqual(campaign("?utm_source=private@example.com&utm_content=__proto__"),{source:"direct",topic:"craft"});
+for(const topic of Object.keys(topics)){
+ assert.equal(destination(topic,"site"),"https://atelier23.store/pt");
+ assert.equal(new URL(destination(topic,"whatsapp")).hostname,"wa.me");
+ assert.ok(new URL(destination(topic,"whatsapp")).searchParams.get("text"));
+}
+assert.equal(destination("constructor","whatsapp"),null);
+assert.equal(destination("gift","evil"),null);
+const socData=new Map(),socStore={getItem:k=>socData.get(k)??null,setItem:(k,v)=>socData.set(k,v)};
+const soc=makeTracker(socStore,"social-a");
+assert.equal(soc("social_landing",{source:"private@example.com",topic:"gift"}),false);
+soc("social_landing",{source:"instagram",topic:"gift",email:"private@example.com"});
+soc("social_handoff",{source:"instagram",topic:"wedding",destination:"whatsapp"}); // wrong topic
+soc("social_select",{source:"instagram",topic:"wedding"});
+soc("social_handoff",{source:"instagram",topic:"wedding",destination:"whatsapp"});
+soc("social_handoff",{source:"instagram",topic:"wedding",destination:"whatsapp"});
+soc("social_handoff",{source:"instagram",topic:"wedding",destination:"site"});
+makeTracker(socStore,"social-b")("social_landing",{source:"instagram",topic:"gift"});
+makeTracker(socStore,"orphan")("social_handoff",{source:"instagram",topic:"gift",destination:"site"});
+const socialRows=readLog(socStore).rows;
+assert.deepEqual(summarizeSocial(socialRows),[{source:"instagram",topic:"gift",visits:2,engaged:1,handoffs:1,site:1,whatsapp:1}]);
+assert.equal(summarize(socialRows).visits,0);
+assert.equal(summarizeSignature(socialRows).starts,0);
+assert.equal(JSON.stringify(socialRows).includes("private@example.com"),false);
+console.log("PASS Lisbon campaign attribution, allowlists, valid destinations, deduplication and isolation");
+
+import {GIFT_GUIDE,giftValues,giftFormats,giftDeadline,giftContact,lisbonDate} from "../atelier23/social/campaign.js";
+assert.deepEqual(giftValues,[350,1000,1500,2000]);
+assert.equal(GIFT_GUIDE,"https://atelier23.store/pt/pages/christmas-gift-guide");
+assert.equal(giftDeadline("printed","2026-12-18"),"within");
+assert.equal(giftDeadline("printed","2026-12-19"),"past");
+assert.equal(giftDeadline("digital","2026-12-24"),"within");
+assert.equal(giftDeadline("digital","2026-12-25"),"outside");
+assert.equal(giftDeadline("printed","2027-12-18"),"outside");
+assert.equal(giftDeadline("printed","2026-02-30"),null);
+assert.equal(giftDeadline("unknown","2026-12-18"),null);
+assert.equal(giftContact(100,"digital"),null);
+assert.equal(giftContact(350,"unknown"),null);
+assert.match(lisbonDate(),/^\d{4}-\d{2}-\d{2}$/);
+for(const value of giftValues)for(const format of giftFormats){
+ const u=new URL(giftContact(value,format));assert.equal(u.origin,"https://wa.me");assert.equal(u.pathname,"/351912204778");
+ assert.ok(u.searchParams.get("text").includes(String(value)+" €"));
+}
+console.log("PASS Christmas gift denomination, format, Lisbon date boundaries and safe handoff");
+
+import {WEDDING_PAGE,validWeddingDate,weddingContact,weddingStyles} from "../atelier23/social/campaign.js";
+assert.equal(WEDDING_PAGE,"https://atelier23.store/pages/wedding-suits");
+assert.equal(validWeddingDate("2026-11-24","2026-11-25"),false);
+assert.equal(validWeddingDate("2026-11-25","2026-11-25"),true);
+assert.equal(validWeddingDate("2027-02-29","2026-11-25"),false);
+assert.equal(validWeddingDate("2028-02-29","2026-11-25"),true);
+assert.equal(validWeddingDate("2027-12-31","bad"),false);
+assert.equal(weddingContact({style:"constructor"}),null);
+assert.equal(weddingContact({style:"day",date:"2026-11-24"},"2026-11-25"),null);
+assert.equal(weddingContact({style:"day",guests:["unknown"]}),null);
+for(const style of Object.keys(weddingStyles)){
+ const u=new URL(weddingContact({style,date:"2027-05-20",guests:["father","father","groomsmen"]},"2026-11-25"));
+ assert.equal(u.origin,"https://wa.me");assert.equal(u.pathname,"/351912204778");
+ const msg=u.searchParams.get("text");assert.ok(msg.includes(weddingStyles[style]));assert.ok(msg.includes("2027-05-20"));assert.equal(msg.split("Pai do noivo").length,2);
+}
+assert.ok(new URL(weddingContact({style:"unsure"})).searchParams.get("text").includes("Data a confirmar."));
+console.log("PASS wedding optional date, leap year, style allowlist, family preferences and Lisbon handoff");
+
+import {WARDROBE_KEY,emptyWardrobe,normalizeWardrobe,wardrobeContact,loadWardrobe,saveWardrobe,clearWardrobe} from "../atelier23/social/campaign.js";
+const wdata=new Map(),wstore={getItem:k=>wdata.get(k)??null,setItem:(k,v)=>wdata.set(k,v),removeItem:k=>wdata.delete(k)};
+assert.deepEqual(loadWardrobe(wstore),emptyWardrobe());
+assert.equal(wardrobeContact(emptyWardrobe()),null);
+const plan={stage:"returning",goal:"business",owned:["suit","shirt","shirt","unknown"],wanted:["shirt","coat"],horizon:"season",email:"private@example.com"};
+const cleanPlan=normalizeWardrobe(plan);
+assert.deepEqual(cleanPlan,{stage:"returning",goal:"business",owned:["suit","shirt"],wanted:["shirt","coat"],horizon:"season"});
+assert.deepEqual(normalizeWardrobe({stage:"__proto__",goal:"constructor",owned:"suit",wanted:[null,12],horizon:"bad"}),emptyWardrobe());
+assert.equal(saveWardrobe(wstore,plan),true);assert.deepEqual(loadWardrobe(wstore),cleanPlan);
+assert.equal(wdata.get(WARDROBE_KEY).includes("private@example.com"),false);
+const wl=new URL(wardrobeContact(plan));assert.equal(wl.origin,"https://wa.me");assert.equal(wl.pathname,"/351912204778");
+const wm=wl.searchParams.get("text");assert.ok(wm.includes("Já sou cliente"));assert.ok(wm.includes("Já tenho: Fato, Camisa"));assert.ok(wm.includes("Gostaria de explorar: Camisa, Sobretudo"));assert.ok(wm.includes("medidas anteriores"));
+assert.equal(wm.includes("private@example.com"),false);
+assert.equal(clearWardrobe(wstore),true);assert.deepEqual(loadWardrobe(wstore),emptyWardrobe());
+wdata.set(WARDROBE_KEY,"bad json");assert.deepEqual(loadWardrobe(wstore),emptyWardrobe());
+assert.deepEqual(loadWardrobe(blocked),emptyWardrobe());assert.equal(saveWardrobe(blocked,plan),false);
+assert.equal(clearWardrobe({removeItem(){throw Error("blocked")}}),false);
+console.log("PASS wardrobe consent-based persistence, allowlist, repeat purchase brief, reset and blocked storage");
