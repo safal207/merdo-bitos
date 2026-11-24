@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#17221d">
+<title>ATELIER 23 · Fashion Journey</title>
+<meta name="description" content="Персональный маршрут к важному событию: образы, гардероб, примерка. Независимый концепт BitOS.">
+<meta property="og:title" content="ATELIER 23 · Ваш момент"><meta property="og:description" content="Смотрите, выбирайте, готовьтесь к событию."><meta property="og:type" content="video.other"><meta property="og:image" content="https://atelier-23.ru/wp-content/uploads/2024/12/Atelier23_24_11_14_0844-600x800.jpg"><meta property="og:video" content="https://safal207.github.io/merdo-bitos/atelier23/assets/atelier23-film.mp4"><meta property="og:video:secure_url" content="https://safal207.github.io/merdo-bitos/atelier23/assets/atelier23-film.mp4"><meta property="og:video:type" content="video/mp4">
+<link rel="stylesheet" href="./journey.css"><script type="module" src="./journey.js"></script>
+</head>
+<body>
+<header><a class="brand" href="../">ATELIER <em>23</em><small>FASHION JOURNEY / BITOS</small></a><button class="icon-btn" type="button" data-nav="saved" aria-label="Избранное"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></svg><span id="saved-count">0</span></button></header>
+<main>
+<section id="home" data-page>
+<div class="film"><video id="film" controls playsinline muted preload="none" poster="https://atelier-23.ru/wp-content/uploads/2024/12/Atelier23_24_11_14_0844-600x800.jpg" aria-label="Рекламный фильм"><source src="../assets/atelier23-film.mp4" type="video/mp4"></video><a id="film-fallback" hidden href="../assets/atelier23-film.mp4">Открыть ролик отдельно ↗</a></div>
+<p class="tiny">Рекламный концепт, не документальная съёмка производства.</p>
+<div class="hero-copy"><p class="kicker">THE OCCASION SERIES / 01</p><h1>У каждого момента<br>свой <i>образ.</i></h1><p>Выберите событие. Листайте образы, отмечайте своё и готовьтесь шаг за шагом.</p></div>
+<h2>Как это работает</h2><p class="tiny">Три карточки — пример, не ваш реальный прогресс.</p>
+<div class="intro" aria-label="Как пользоваться сервисом">
+<article><span class="kicker">01 / ВЫБОР</span><div class="sample-symbol">♡　♧</div><h3>Листайте и сохраняйте</h3><p>Нравится — поставьте сердечко. Избранное оставит образ под рукой.</p></article>
+<article><span class="kicker">02 / ГАРДЕРОБ</span><p class="sample-check">✓ <s>Сорочка</s></p><p class="sample-check">✓ <s>Обувь</s></p><p>○ Костюм</p><h3>Не покупайте лишнего</h3><p>Отметьте то, что у вас уже есть.</p></article>
+<article><span class="kicker">03 / ГОТОВНОСТЬ</span><div class="sample-progress">75% <div><b></b></div></div><h3>Двигайтесь к событию</h3><p>Завершайте шаги. Примерку и заказ подтверждает ателье.</p></article>
+</div>
+<h2>К чему вы готовитесь?</h2><p class="tiny">Один повод — ваш личный маршрут.</p><div id="events" class="events"></div>
+<a class="quiet" href="https://atelier-23.ru/sign-up-for-a-fitting-room/">Уже знаете, что нужно? Записаться на встречу ↗</a>
+</section>
+<section id="feed" data-page hidden>
+<div class="section-title"><div><p class="kicker">YOUR EDIT / 02</p><h1 id="feed-title">Ваши образы</h1></div><button type="button" class="text-btn" data-nav="home">Сменить повод</button></div>
+<div class="progress-mini"><span id="feed-progress-label"></span><div class="track"><b id="feed-progress"></b></div></div>
+<div id="feed-body"></div>
+<p class="tiny">Фотографии и товары — из публичного каталога ATELIER 23. Комбинации рекомендательные. Наличие и точную цену уточняет менеджер.</p>
+</section>
+<section id="plan" data-page hidden><p class="kicker">PERSONAL PLAN / 03</p><h1>Мой <i>план.</i></h1><div id="plan-body"></div></section>
+<section id="saved" data-page hidden><p class="kicker">PRIVATE EDIT / 04</p><h1>Избранное.</h1><div id="saved-body"></div></section>
+<footer>Независимый концепт BitOS. Не принимает заказы, не собирает контакты. <a href="https://atelier-23.ru/">Официальный сайт ↗</a></footer>
+</main>
+<nav class="bottom" aria-label="Основное меню">
+<button data-nav="home"><svg viewBox="0 0 24 24"><path d="M3 10 12 3l9 7v11h-6v-7H9v7H3z"/></svg>Главная</button>
+<button data-nav="feed"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="m10 8 6 4-6 4z"/></svg>Образы</button>
+<button data-nav="plan"><svg viewBox="0 0 24 24"><path d="m3 6 2 2 4-4M11 6h10M3 13l2 2 4-4m2 2h10M3 20l2 2 4-4m2 2h10"/></svg>Мой план</button>
+<button data-nav="saved"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></svg>Избранное</button>
+</nav>
+<noscript>Для персонального плана включите JavaScript. <a href="https://atelier-23.ru/">Открыть официальный сайт</a></noscript>
+</body></html>
