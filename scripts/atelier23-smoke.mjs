@@ -258,6 +258,28 @@ try {
     if(!weddingRows.some(r=>r.type==="social_handoff"&&r.topic==="wedding"&&r.destination==="whatsapp")||JSON.stringify(weddingRows).includes(future))failures.push(width+" Wedding analytics privacy or handoff");
     if(await social.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))failures.push(width+" Wedding overflow");
     await social.screenshot({path:join(root,"artifacts","atelier23-signature",width+"-wedding.png"),fullPage:true,animations:"disabled"});
+    await social.locator('[data-topic="wardrobe"]').click();
+    if(await social.locator("#wardrobe-contact").count()!==0||await social.locator(".wardrobe-edit input:checked").count()!==0)failures.push(width+" Wardrobe defaults");
+    await social.locator('input[name="wardrobe-stage"][value="returning"]').check();
+    await social.locator('input[name="wardrobe-goal"][value="business"]').check();
+    await social.locator('input[name="wardrobe-owned"][value="suit"]').check();
+    await social.locator('input[name="wardrobe-wanted"][value="shirt"]').check();
+    await social.locator('input[name="wardrobe-horizon"][value="season"]').check();
+    if(await social.evaluate(()=>localStorage.getItem("bitos.atelier23.lisboa.wardrobe.v1"))!==null)failures.push(width+" Wardrobe implicit persistence");
+    const wardrobeLink=new URL(await social.locator("#wardrobe-contact").getAttribute("href"));
+    if(wardrobeLink.origin!=="https://wa.me"||wardrobeLink.pathname!=="/351912204778"||!wardrobeLink.searchParams.get("text").includes("Já sou cliente")||!wardrobeLink.searchParams.get("text").includes("Camisa"))failures.push(width+" Wardrobe consultation link");
+    await social.locator("#wardrobe-save").click();
+    await social.locator('[data-topic="craft"]').click();
+    await social.locator('[data-topic="wardrobe"]').click();
+    if(!await social.locator('input[name="wardrobe-wanted"][value="shirt"]').isChecked()||!await social.locator('input[name="wardrobe-stage"][value="returning"]').isChecked())failures.push(width+" Wardrobe saved plan restoration");
+    await social.evaluate(()=>document.addEventListener("click",e=>e.preventDefault(),{once:true}));
+    await social.locator("#wardrobe-contact").click();
+    const wardrobeRows=await social.evaluate(()=>JSON.parse(localStorage.getItem("bitos.atelier23.fashionAnalytics.v1")||'{"rows":[]}').rows);
+    if(!wardrobeRows.some(r=>r.type==="social_handoff"&&r.topic==="wardrobe"&&r.destination==="whatsapp")||JSON.stringify(wardrobeRows).includes("returning"))failures.push(width+" Wardrobe attribution or privacy");
+    if(await social.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))failures.push(width+" Wardrobe overflow");
+    await social.screenshot({path:join(root,"artifacts","atelier23-signature",width+"-wardrobe.png"),fullPage:true,animations:"disabled"});
+    await social.locator("#wardrobe-reset").click();
+    if(await social.locator(".wardrobe-edit input:checked").count()!==0||await social.locator("#wardrobe-contact").count()!==0||await social.evaluate(()=>localStorage.getItem("bitos.atelier23.lisboa.wardrobe.v1"))!==null)failures.push(width+" Wardrobe reset");
     await social.close();
     console.log("PASS "+width+"px: Lisbon social campaign routing, topic selection, local attribution and overflow");
 
