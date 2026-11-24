@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#141c18">
+<title>ATELIER 23 × BitOS — Signature Experience</title>
+<link rel="stylesheet" href="../styles.css">
+<style>
+.sig{width:min(1120px,calc(100% - 36px));margin:auto;padding:24px 0 50px}
+.sig header{display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid var(--line);padding:0 0 18px}
+.sig .edition{font-size:10px;letter-spacing:.16em;color:var(--gold);text-align:right}
+.sig .introcopy{max-width:740px;padding:36px 0 20px}
+.sig h1{font:normal clamp(42px,8vw,76px)/1.04 Georgia,serif;letter-spacing:-.04em;margin:12px 0 18px}
+.sig h1 em{color:var(--gold)}
+.sig p{line-height:1.65;color:#c4cbbf}
+.sig .rail{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin:12px 0 22px}
+.sig .rail button{min-width:0;min-height:48px;background:transparent;color:#c4cbbf;border:1px solid #5b675e;font-size:12px;padding:5px;overflow-wrap:anywhere}
+.sig .rail button[aria-current=step]{background:var(--gold);color:#18231c;border-color:var(--gold)}
+.sig .spread{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);border:1px solid var(--line);min-width:0}
+.sig .plate{min-width:0;margin:0;background:#20332e;display:flex;flex-direction:column;justify-content:center;padding:18px}
+.sig .plate svg{width:100%;height:auto;display:block}
+.sig .plate figcaption{font-size:11px;color:#e0e0cd;padding:10px 2px 0;line-height:1.5}
+.sig .copy{min-width:0;padding:clamp(20px,4vw,44px)}
+.sig h2{font:normal clamp(32px,5vw,48px)/1.05 Georgia,serif;letter-spacing:-.035em;margin:12px 0}
+.sig fieldset{margin:18px 0;border:1px solid #657365;padding:12px;min-width:0}
+.sig legend{font-size:13px;color:var(--gold);padding:0 6px}
+.sig label{display:flex;align-items:center;min-height:44px;gap:10px;line-height:1.4}
+.sig input{accent-color:#c5a678;width:19px;height:19px;flex:none}
+.sig .controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.sig .controls button,.sig .actions a,.sig #copy-brief,.sig #reset{white-space:normal;min-height:48px;justify-content:center;line-height:1.35;text-align:center;overflow-wrap:anywhere}
+.sig button:disabled{opacity:.45}
+.sig [hidden]{display:none!important}
+.sig .brief{margin-top:24px;border-top:1px solid var(--line);padding-top:24px}
+.sig .brief dl{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin:18px 0}
+.sig dt{color:#bbc5b8}.sig dd{margin:0;overflow-wrap:anywhere}
+.sig .actions{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0}
+.sig .notice{font-size:13px;color:#d0c5b0;max-width:780px}
+.sig textarea{font:inherit;width:100%;max-width:100%;min-height:130px;color:var(--ivory);background:#20332e;border:1px solid #657365;padding:10px}
+.sig footer{margin-top:28px;border-top:1px solid var(--line);padding-top:18px;font-size:12px}
+@media(max-width:720px){.sig .spread{grid-template-columns:minmax(0,1fr)}.sig .rail{grid-template-columns:repeat(3,minmax(0,1fr))}.sig .plate{padding:12px}.sig .controls button,.sig .actions a{flex:1 1 100%}.sig .introcopy{padding-top:25px}}
+</style>
+<script type="module" src="./signature.js"></script>
+</head>
+<body>
+<main class="sig">
+<header><a class="wordmark" href="../">ATELIER <b>23</b><small>× BITOS</small></a><span class="edition">SIGNATURE<br>EXPERIENCE / 01</span></header>
+<div class="introcopy"><span class="eyebrow">Искусство индивидуального пошива</span><h1>Костюм начинается<br>с <em>вас.</em></h1><p>Шесть глав — от замысла и ткани до финальной примерки. Соберите заметки для разговора с мастером, прежде чем выбирать образ.</p></div>
+<nav class="rail" id="chapters" aria-label="Главы индивидуального пошива"></nav>
+<p id="progress" role="status" aria-live="polite">Глава 1 из 6</p>
+<section class="spread" aria-labelledby="chapter-title">
+<figure class="plate"><div id="illustration"></div><figcaption>Авторская условная схема процесса, не технический чертёж и не документальная съёмка ATELIER 23.</figcaption></figure>
+<div class="copy"><span class="eyebrow" id="chapter-label"></span><h2 id="chapter-title" tabindex="-1"></h2><p id="chapter-copy"></p><fieldset id="choice" hidden><legend id="choice-label"></legend><div id="options"></div></fieldset>
+<div class="controls"><button type="button" class="btn btn-ghost" id="prev">Назад</button><button type="button" class="btn btn-primary" id="next">Далее</button></div></div>
+</section>
+<section class="brief" id="brief" aria-labelledby="brief-title" hidden>
+<span class="eyebrow">Ваши заметки</span><h2 id="brief-title" tabindex="-1">Разговор с мастером</h2><p>Это предварительные предпочтения, а не мерки, заказ или подтверждение стоимости.</p><dl id="brief-items"></dl>
+<button class="btn btn-ghost" type="button" id="copy-brief">Скопировать заметки</button><textarea id="copy-fallback" aria-label="Заметки для ручного копирования" readonly hidden></textarea><p id="copy-status" role="status"></p>
+<div class="actions"><a class="btn btn-primary" id="advisor" href="../#journey">Перейти к подбору образа</a><a class="btn btn-ghost" id="journey" href="../fashion-journey/">Исследовать образы</a></div>
+<p class="notice">Подбор события, бюджета, сроков и запись на примерку уже находятся в существующем сервисе. Заметки можно скопировать вручную; они не передаются автоматически. Дополнительные изделия и стоимость обсуждаются с мастером, без платежей в этой демонстрации.</p>
+<button class="btn btn-ghost" type="button" id="reset">Начать заново</button>
+</section>
+<noscript><p>Для просмотра глав нужен JavaScript. <a href="../#journey">Перейти к подбору образа</a>.</p></noscript>
+<footer><p>Независимый демонстрационный концепт BitOS. Никаких реальных заказов, платежей, записей, сбора контактов или передачи мерок. Процесс схематичен; детали производства и сроки уточняет ателье.</p></footer>
+</main>
+</body>
+</html>
