@@ -53,6 +53,16 @@ try {
    await page.waitForFunction(()=>document.getElementById("album-counter").textContent!=="1 / 6");
    await client.detach();
   }
+  await page.locator(".gentleman-portrait img").waitFor();
+  await page.waitForFunction(()=>document.querySelector(".gentleman-portrait img").naturalWidth>0);
+  assert.equal(await page.locator("#growth-copy").isDisabled(),true);
+  await page.locator('input[name="growth-market"][value="Лиссабон"]').check();
+  assert.equal(await page.locator("#growth-copy").isDisabled(),true);
+  await page.locator('input[name="growth-goal"][value="Индивидуальный пошив"]').check();
+  assert.equal(await page.locator("#growth-copy").isEnabled(),true);
+  assert.match(await page.locator("#growth-brief").inputValue(),/Лиссабон.*Индивидуальный пошив/);
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,"CTA page overflow at "+width);
+  await page.locator("#next-step").screenshot({path:"artifacts/audit-mobile/"+width+"-cta.png"});
   await page.evaluate(()=>window.scrollTo(0,0));
   await page.screenshot({path:"artifacts/audit-mobile/"+width+"-hero.png"});
   assert.deepEqual(errors,[]);
