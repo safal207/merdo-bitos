@@ -26,7 +26,7 @@ export const DEMO=Object.freeze({
 });
 // Funnel numbers are nested unique demo participants. Scene and product numbers
 // are events and need not equal the unique funnel stages. 60 product booking
-// clicks plus 12 directly attributed to film-only participants in this example;
+// clicks plus 12 film-origin booking clicks from participants who already chose a look;
 // scene CTA clicks are not the same grain as the unique funnel.
 export const CATALOG=[
  ["navy","Уверенная классика","Тёмно-синий костюм","2024/12/Atelier23_24_11_14_0844-600x800.jpg"],
