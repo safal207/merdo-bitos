@@ -15,3 +15,19 @@ data.set(KEY,"bad json");assert.equal(readLog(storage).available,false);assert.e
 const blocked={getItem(){throw Error("blocked")},setItem(){throw Error("blocked")}};
 assert.equal(makeTracker(blocked,"test")("film_view"),false);
 console.log("PASS analytics schema, bounded storage, no personal data/sale event, safe storage failure");
+
+import {DEMO,localFunnel,localProducts,rate} from "../atelier23/fashion-overlay/analytics/showcase.js";
+assert.equal(DEMO.funnel[0][1],DEMO.starts);
+assert.ok(DEMO.funnel.every((r,i)=>!i||r[1]<=DEMO.funnel[i-1][1]));
+assert.ok(DEMO.retention.every((r,i)=>!i||(r[0]>DEMO.retention[i-1][0]&&r[1]<=DEMO.retention[i-1][1])));
+assert.equal(DEMO.retention.at(-1)[0],17.64);
+assert.equal(DEMO.retention.find(r=>r[0]===3)[1],DEMO.filmViews);
+assert.equal(rate(DEMO.retention.at(-1)[1],DEMO.starts),35);
+assert.equal(rate(DEMO.sales,DEMO.starts),1.2);
+assert.equal(rate(1,0),null);
+assert.equal(DEMO.revenue,DEMO.sales*180000);
+for(const [key,total] of [["views",DEMO.lookViews],["likes",DEMO.likes],["saves",DEMO.saves],["selected",DEMO.looks],["booking",60]])assert.equal(DEMO.products.reduce((n,p)=>n+p[key],0),total);
+const events=[{visit:"a",ts:0,type:"film_view"},{visit:"a",ts:1,type:"occasion_selected"},{visit:"a",ts:2,type:"look_selected",target:"navy"},{visit:"a",ts:3,type:"booking_click",target:"navy"},{visit:"a",ts:4,type:"booking_click",target:"navy"},{visit:"b",ts:1,type:"booking_click",target:"grey"},{visit:"c",ts:1,type:"film_view"},{visit:"c",ts:2,type:"look_selected"},{visit:"c",ts:3,type:"occasion_selected"}];
+assert.deepEqual(localFunnel(events).map(r=>r[1]),[2,2,1,1]);
+assert.equal(localProducts(events).find(p=>p.id==="navy").booking,2);
+console.log("PASS synthetic funnel/retention/product reconciliation and ordered local cohorts");
