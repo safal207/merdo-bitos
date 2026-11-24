@@ -80,7 +80,8 @@ try {
     if(new URL(episode.url()).hash!=="#journey") failures.push(width+" episode destination not reached");
     await episode.close();
     await mkdir(join(root,"artifacts","atelier23-signature"),{recursive:true});
-    const signature=await browser.newPage({viewport:{width,height:850},reducedMotion:"reduce"});
+    const signatureContext=await browser.newContext({viewport:{width,height:850},reducedMotion:"reduce"});
+    const signature=await signatureContext.newPage();
     signature.on("pageerror",e=>failures.push(width+" Signature JS: "+e.message));
     const external=[];
     await signature.route("**/*",route=>{
@@ -198,7 +199,7 @@ try {
     await signature.reload({waitUntil:"domcontentloaded"});
     await signature.getByRole("heading",{name:"Сначала — характер."}).waitFor();
     if(external.length)failures.push(width+" Signature unexpected non-runtime network: "+external.join(", "));
-    const dashboard=await signature.context().newPage();
+    const dashboard=await signatureContext.newPage();
     dashboard.on("pageerror",e=>failures.push(width+" Signature dashboard JS: "+e.message));
     await dashboard.route("**/*",route=>new URL(route.request().url()).origin===new URL(base).origin?route.continue():route.abort());
     await dashboard.goto(base+"fashion-overlay/analytics/",{waitUntil:"domcontentloaded"});
@@ -210,7 +211,7 @@ try {
     await dashboard.locator("#local-mode").click();
     await dashboard.locator("#signature-section").screenshot({path:join(root,"artifacts","atelier23-signature",width+"-analytics.png"),animations:"disabled"});
     await dashboard.close();
-    await signature.close();
+    await signatureContext.close();
     const offline=await browser.newPage({viewport:{width,height:850}});
     await offline.route("https://esm.sh/**",route=>route.abort());
     await offline.goto(base+"signature/",{waitUntil:"load"});
