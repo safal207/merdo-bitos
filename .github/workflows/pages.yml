@@ -60,6 +60,11 @@ jobs:
           node --check atelier23/app.js
           node --check scripts/atelier23-smoke.mjs
           node scripts/atelier23-smoke.mjs
+      - name: Atelier 23 Fashion Journey acceptance
+        run: |
+          node --check atelier23/fashion-journey/journey.js
+          node --check scripts/atelier23-fashion-journey-smoke.mjs
+          node scripts/atelier23-fashion-journey-smoke.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
