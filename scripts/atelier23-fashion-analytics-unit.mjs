@@ -79,3 +79,32 @@ assert.equal(JSON.stringify(sigLog).includes("private@example.com"),false);
 assert.equal(summarizeSignature([]).starts,0);
 assert.equal(makeTracker(blocked,"sig-blocked")("signature_open"),false);
 console.log("PASS Signature allowlist, privacy, ordered visit cohort, repeated actions and legacy isolation");
+
+import {campaign,destination,topics} from "../atelier23/social/campaign.js";
+import {summarizeSocial} from "../atelier23/fashion-overlay/analytics.js";
+assert.deepEqual(campaign("?utm_source=instagram&utm_content=gift"),{source:"instagram",topic:"gift"});
+assert.deepEqual(campaign("?utm_source=private@example.com&utm_content=__proto__"),{source:"direct",topic:"craft"});
+for(const topic of Object.keys(topics)){
+ assert.equal(destination(topic,"site"),"https://atelier23.store/pt");
+ assert.equal(new URL(destination(topic,"whatsapp")).hostname,"wa.me");
+ assert.ok(new URL(destination(topic,"whatsapp")).searchParams.get("text"));
+}
+assert.equal(destination("constructor","whatsapp"),null);
+assert.equal(destination("gift","evil"),null);
+const socData=new Map(),socStore={getItem:k=>socData.get(k)??null,setItem:(k,v)=>socData.set(k,v)};
+const soc=makeTracker(socStore,"social-a");
+assert.equal(soc("social_landing",{source:"private@example.com",topic:"gift"}),false);
+soc("social_landing",{source:"instagram",topic:"gift",email:"private@example.com"});
+soc("social_handoff",{source:"instagram",topic:"wedding",destination:"whatsapp"}); // wrong topic
+soc("social_select",{source:"instagram",topic:"wedding"});
+soc("social_handoff",{source:"instagram",topic:"wedding",destination:"whatsapp"});
+soc("social_handoff",{source:"instagram",topic:"wedding",destination:"whatsapp"});
+soc("social_handoff",{source:"instagram",topic:"wedding",destination:"site"});
+makeTracker(socStore,"social-b")("social_landing",{source:"instagram",topic:"gift"});
+makeTracker(socStore,"orphan")("social_handoff",{source:"instagram",topic:"gift",destination:"site"});
+const socialRows=readLog(socStore).rows;
+assert.deepEqual(summarizeSocial(socialRows),[{source:"instagram",topic:"gift",visits:2,engaged:1,handoffs:1,site:1,whatsapp:1}]);
+assert.equal(summarize(socialRows).visits,0);
+assert.equal(summarizeSignature(socialRows).starts,0);
+assert.equal(JSON.stringify(socialRows).includes("private@example.com"),false);
+console.log("PASS Lisbon campaign attribution, allowlists, valid destinations, deduplication and isolation");
