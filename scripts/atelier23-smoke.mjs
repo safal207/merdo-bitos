@@ -83,13 +83,17 @@ try {
     signature.on("pageerror",e=>failures.push(width+" Signature JS: "+e.message));
     const external=[];
     await signature.route("**/*",route=>{
-      if(new URL(route.request().url()).origin!==new URL(base).origin){external.push(route.request().url());return route.abort()}
-      return route.continue();
+      const url=new URL(route.request().url());
+      if(url.origin===new URL(base).origin)return route.continue();
+      // Match the pinned React import map used by the existing Atelier app.
+      if(url.origin==="https://esm.sh"&&/^\/(?:react(?:-dom)?|scheduler)@/.test(url.pathname)&&route.request().resourceType()==="script")return route.continue();
+      external.push(url.href);return route.abort();
     });
     await signature.addInitScript(()=>{Object.defineProperty(navigator,"clipboard",{configurable:true,value:{writeText:async()=>{throw Error("test fallback")}}})});
     await signature.goto(base+"signature/",{waitUntil:"domcontentloaded"});
     const next=signature.locator("#next"),prev=signature.locator("#prev");
     await signature.getByRole("heading",{name:"Сначала — характер."}).waitFor();
+    if(await signature.locator('main[data-renderer="react"]').count()!==1||await signature.locator("#signature-fallback").count()!==0)failures.push(width+" Signature React root not mounted");
     if(!await prev.isDisabled())failures.push(width+" Signature back enabled on initial step");
     for(let i=0;i<6;i++){
       if(await signature.locator("#progress").textContent()!=="Глава "+(i+1)+" из 6")failures.push(width+" Signature wrong chapter "+i);
@@ -125,9 +129,14 @@ try {
     await signature.evaluate(()=>sessionStorage.setItem("bitos.atelier23.signature.v1","not json"));
     await signature.reload({waitUntil:"domcontentloaded"});
     await signature.getByRole("heading",{name:"Сначала — характер."}).waitFor();
-    if(external.length)failures.push(width+" Signature unexpected network: "+external.join(", "));
+    if(external.length)failures.push(width+" Signature unexpected non-runtime network: "+external.join(", "));
     await signature.close();
-    process.stdout.write("PASS "+width+"px: Signature chapters, touch targets, selections, notes, reload, reset, fallback and no external requests\n");
+    const offline=await browser.newPage({viewport:{width,height:850}});
+    await offline.route("https://esm.sh/**",route=>route.abort());
+    await offline.goto(base+"signature/",{waitUntil:"load"});
+    if(!await offline.locator("#signature-fallback").isVisible()||await offline.locator("#signature-fallback a.btn").getAttribute("href")!=="../#journey")failures.push(width+" Signature unavailable runtime fallback");
+    await offline.close();
+    process.stdout.write("PASS "+width+"px: Signature React mount, chapters, touch targets, selections, notes, reload, reset, runtime fallback and network guard\n");
     process.stdout.write("PASS "+width+"px: episode, video source, reduced motion, fallback, primary CTA route\n");
     process.stdout.write("PASS "+width+"px: wizard, guardrails, overflow, links\n");
   }
