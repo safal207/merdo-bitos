@@ -19,3 +19,4 @@ jobs:
       - run: node scripts/atelier23-trust-communication.mjs
       - run: node scripts/atelier23-opportunity-window.mjs
       - run: node scripts/atelier23-customer-lifecycle.mjs
+      - run: node scripts/atelier23-customer-universe.mjs
