@@ -1,7 +1,7 @@
 name: Atelier 23 audit mobile QA
 on:
   push:
-    branches: [audit/atelier23-client-review]
+    branches: [audit/atelier23-client-review, experiment/atelier23-emotional-audit]
 permissions:
   contents: read
 jobs:
