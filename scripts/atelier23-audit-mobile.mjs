@@ -23,113 +23,66 @@ for(const [engine,type] of Object.entries(engines)){
   try {
   await page.goto(pathToFileURL(resolve("atelier23/audit/index.html")).href);
   await page.locator(".album-photo img").first().waitFor({state:"attached"});
-  const guided=page.locator("#guided-audit");
-  assert.equal(await guided.getByRole("button",{name:"Москва",exact:true}).count(),1,"accessible market name");
-  for(const name of ["Москва","Лиссабон","Оба рынка"]){const b=await guided.getByRole("button",{name,exact:true}).boundingBox();assert.ok(b&&b.width>=44&&b.height>=44,"market touch target "+name)}
-  await guided.getByRole("button",{name:"Москва",exact:true}).click();
-  assert.equal(await guided.getByRole("button",{name:"Поиск и товары"}).count(),0);
-  await guided.getByRole("button",{name:"Скорость на телефоне"}).click();
-  assert.match(await guided.locator(".guided-number").innerText(),/6,35/);
-  await guided.getByRole("button",{name:"Посмотреть другое направление"}).click();
-  await guided.locator("#guided-back").click();
-  await guided.getByRole("button",{name:"Лиссабон",exact:true}).click();
-  await guided.getByRole("button",{name:"Скорость на телефоне"}).click();
-  assert.match(await guided.locator(".guided-number").innerText(),/5,34/);
-  await guided.getByRole("button",{name:"Посмотреть другое направление"}).click();
-  await guided.getByRole("button",{name:"Поиск и товары"}).click();
-  assert.match(await guided.locator(".guided-number").innerText(),/21 результат.*0 карточек/);
-  assert.equal(await guided.locator('a[href="#tc-01"]').count(),1);
-  assert.equal(await guided.locator('a[href="#tc-02"]').count(),1);
-  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,"guided overflow");
-  await guided.getByRole("button",{name:"Обсудить этот приоритет"}).click();
-  assert.equal(await page.locator('input[name="growth-market"][value="Лиссабон"]').isChecked(),true);
-  assert.equal(await page.locator("#growth-copy").isDisabled(),true);
-  await guided.locator("#guided-reset").click();
-  assert.equal(await guided.locator("#guided-progress").innerText(),"Шаг 1 из 3");
-  await guided.getByRole("button",{name:"Оба рынка",exact:true}).click();
-  await guided.getByRole("button",{name:"Ссылки в соцсетях"}).click();
-  assert.equal(await guided.locator(".guided-number").innerText(),"5 из 10");
-  await guided.locator("#guided-reset").click();
-
-  // State Integrity 7.1: all 11 valid guided paths, repeated handoff and full reset.
-  const markets = {"Москва":["Скорость на телефоне","Ссылки в соцсетях","Заявки и продажи"],"Лиссабон":["Поиск и товары","Скорость на телефоне","Ссылки в соцсетях","Заявки и продажи"],"Оба рынка":["Поиск и товары","Скорость на телефоне","Ссылки в соцсетях","Заявки и продажи"]};
-  const goal=page.locator('input[name="growth-goal"][value="Свадебные заказы"]');
-  const copy=page.locator("#growth-copy"),brief=page.locator("#growth-brief");
+  const guided=page.locator("#guided-audit"),brief=page.locator("#growth-brief"),copy=page.locator("#growth-copy");
   const choose=label=>guided.getByRole("button",{name:label,exact:true}).click();
-  const handoff=()=>choose("Обсудить этот приоритет");
-  const reset=()=>guided.locator("#guided-reset").click();
-  async function emptyPilot(expectedMarket=null){
-   const actual=await page.locator('input[name="growth-market"]:checked').evaluateAll(els=>els.map(e=>e.value));
-   assert.deepEqual(actual,expectedMarket?[expectedMarket]:[]);
-   assert.equal(await page.locator('input[name="growth-goal"]:checked').count(),0);
-   assert.equal(await copy.isDisabled(),true);
-   assert.equal(await brief.inputValue(),"Выберите рынок и направление.");
-   assert.equal(await page.locator("#growth-status").innerText(),"");
-  }
-  for(const [market,topics] of Object.entries(markets)){
-   for(const topic of topics){
-    await reset();await emptyPilot();
-    await choose(market);await choose(topic);await handoff();
-    await emptyPilot(market);
-    await goal.check();assert.equal(await copy.isEnabled(),true);
-    await handoff();await emptyPilot(market); // Same market and same topic must require reconfirmation.
-    await goal.check();
-    await choose("Посмотреть другое направление");await emptyPilot();
-    await choose(topic);await handoff();await emptyPilot(market);
-    await goal.check();await guided.locator("#guided-back").click();await emptyPilot();
-    await guided.locator("#guided-back").click();await emptyPilot();
-    assert.equal(await guided.locator("#guided-progress").innerText(),"Шаг 1 из 3");
+  const reset=()=>guided.locator("#guided-reset").click(),back=()=>guided.locator("#guided-back").click();
+  const step=async n=>assert.equal(await guided.locator("#guided-progress").innerText(),"Шаг "+n+" из 7");
+  const emptyPilot=async()=>{assert.equal(await page.locator('input[name="growth-market"]:checked,input[name="growth-goal"]:checked').count(),0);assert.equal(await copy.isDisabled(),true);assert.equal(await brief.inputValue(),"Выберите рынок и направление.")};
+  const needs=[
+   ["Клиенты регулярно обращаются за пошивом и примерками","Больше подтверждённых записей"],
+   ["Поступают запросы на одежду для особых событий","Больше целевых обращений"],
+   ["Покупатели снова ищут подходящие товары","Помочь покупателю найти товар"],
+   ["Существующие клиенты возвращаются за новыми заказами","Больше повторных заказов"],
+   ["Клиенты регулярно узнают о нас через ссылки и рекомендации","Больше целевых переходов"],
+   ["Пока хочу понять, какие потребности важны","Сначала разобраться без конкретной цели"]
+  ];
+  const markets=["Москва","Лиссабон","Оба рынка"];
+  for(const market of markets){
+   for(const [need,goal] of needs){
+    await reset();await step(1);await emptyPilot();
+    await choose(market);await step(2);
+    await choose(need);await step(3);
+    await choose(goal);await step(4);
+    assert.equal(await guided.locator("h3").evaluate(e=>e===document.activeElement),true);
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,"guided overflow");
+    if(need===needs[2][0])assert.equal(await guided.locator('a[href="#tc-01"]').count(),market==="Москва"?0:1);
+    await choose("Как это относится к вашей задаче?");await step(5);
+    await choose("Сейчас это не приоритет");await step(6);
+    assert.equal(await guided.getByRole("button",{name:"Обсудить небольшой пилот",exact:true}).count(),0);
+    await choose("Пока остановиться");await step(7);
+    const summary=await guided.locator("#guided-summary").innerText();
+    for(const value of [market,need,goal,"Пока остановиться"])assert.ok(summary.includes(value),"summary "+value);
+    assert.equal(await guided.getByRole("button",{name:"Открыть отдельную форму пилота",exact:true}).count(),0);
+    await back();await step(6);assert.equal(await guided.locator("#guided-summary").count(),0);
    }
   }
-  await choose("Москва");await choose("Заявки и продажи");await handoff();await goal.check();
-  await reset();await emptyPilot();await reset();await emptyPilot();
-  await choose("Лиссабон");await choose("Поиск и товары");await handoff();await emptyPilot("Лиссабон");
-  await goal.check();
-  await page.locator('input[name="growth-market"][value="Москва"]').check();
-  await emptyPilot("Москва");
-  await reset();await emptyPilot();
-  await page.locator("#tc-01").evaluate(e=>e.open=true);
-  await page.locator('[data-tc="TC-01"]').selectOption("pass");
-  await reset();assert.equal(await page.locator('[data-tc="TC-01"]').inputValue(),"pass");
-  await page.locator('[data-tc="TC-01"]').selectOption("");
-  console.log("PASS State Integrity 7.1 "+engine+" "+width+" px: 11 paths, repeated pilot, full reset, manual market change, independent retests");
-
-  // Browser Acceptance 7.2: browser history is section navigation, not a persistent wizard.
-  await page.evaluate(()=>{location.hash="guided-audit"});
-  await page.waitForURL(u=>u.hash==="#guided-audit");
-  await choose("Лиссабон");
-  assert.equal(await guided.locator("h3").evaluate(e=>e===document.activeElement),true,"focus after market");
-  await choose("Поиск и товары");
-  assert.equal(await guided.locator("h3").evaluate(e=>e===document.activeElement),true,"focus after topic");
-  const topicResult=await guided.locator(".guided-number").innerText();
-  for(const target of ["Посмотреть другое направление","Обсудить этот приоритет"]){
-   const b=await guided.getByRole("button",{name:target,exact:true}).boundingBox();
-   assert.ok(b&&b.height>=44&&b.width>=44,"result touch target "+target);
-  }
-  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,"guided result overflow");
+  async function toAssessment(market,need,goal){await reset();await choose(market);await choose(need);await choose(goal);await choose("Как это относится к вашей задаче?")}
+  await toAssessment("Лиссабон",...needs[2]);await choose("Хочу проверить самостоятельно");
+  assert.equal(await guided.getByRole("button",{name:"Обсудить небольшой пилот",exact:true}).count(),0);
+  await choose("Посмотреть доказательства и повторить тест");await step(7);
+  await guided.locator('#guided-content a[href="#tc-01"]').click();
+  await page.waitForURL(u=>u.hash==="#tc-01");await page.waitForFunction(()=>document.getElementById("tc-01").open);
+  await page.goBack();assert.ok((await guided.locator("#guided-summary").innerText()).includes("Лиссабон"));
+  await toAssessment("Москва",...needs[5]);await choose("Это актуально для нашего бизнеса");
+  assert.equal(await guided.getByRole("button",{name:"Обсудить небольшой пилот",exact:true}).count(),0);
+  await choose("Оценить коммерческий эффект по данным");await step(7);
+  await toAssessment("Москва",...needs[0]);await choose("Нужны дополнительные данные");
+  assert.equal(await guided.getByRole("button",{name:"Обсудить небольшой пилот",exact:true}).count(),0);
+  await choose("Оценить коммерческий эффект по данным");await step(7);
+  await toAssessment("Москва",...needs[0]);await choose("Это актуально для нашего бизнеса");await choose("Обсудить небольшой пилот");await step(7);
   await guided.screenshot({path:"artifacts/audit-mobile/"+engine+"-"+label+"-guided.png"});
-  for(const id of ["tc-01","tc-02"]){
-   await guided.locator('a[href="#'+id+'"]').click();
-   await page.waitForURL(u=>u.hash==="#"+id);
-   await page.waitForFunction(id=>document.getElementById(id).open,id);
-   await page.goBack();await page.waitForURL(u=>u.hash==="#guided-audit");
-   assert.equal(await guided.locator(".guided-number").innerText(),topicResult,"result survives evidence return");
-   await page.goForward();await page.waitForURL(u=>u.hash==="#"+id);
-   await page.goBack();await page.waitForURL(u=>u.hash==="#guided-audit");
-  }
-  await handoff();await page.waitForURL(u=>u.hash==="#next-step");await emptyPilot("Лиссабон");
-  assert.equal(await brief.evaluate(e=>e===document.activeElement),true,"pilot focus");
-  await goal.check();assert.equal(await copy.isEnabled(),true);
+  await choose("Открыть отдельную форму пилота");await page.waitForURL(u=>u.hash==="#next-step");
+  assert.equal(await page.locator('input[name="growth-market"][value="Москва"]').isChecked(),true);
+  assert.equal(await copy.isDisabled(),true);
+  await page.locator('input[name="growth-goal"][value="Свадебные заказы"]').check();
   await page.goBack();await page.waitForURL(u=>u.hash==="#guided-audit");
-  await page.waitForFunction(()=>document.getElementById("growth-copy").disabled);
-  await emptyPilot();assert.equal(await guided.locator(".guided-number").innerText(),topicResult);
+  await page.waitForFunction(()=>document.getElementById("growth-copy").disabled);await emptyPilot();
   await page.goForward();await page.waitForURL(u=>u.hash==="#next-step");await emptyPilot();
-  await handoff();await emptyPilot("Лиссабон");await goal.check();
-  await page.reload();await guided.getByRole("button",{name:"Москва",exact:true}).waitFor();
-  await emptyPilot();assert.equal(await guided.locator("#guided-progress").innerText(),"Шаг 1 из 3");
-  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,"reload overflow");
-  console.log("PASS Browser Acceptance 7.2 "+engine+" "+width+" px: accessible names, focus, evidence history, pilot back/forward, reload, touch targets, no overflow");
-
+  await reset();await emptyPilot();await step(1);
+  await choose("Лиссабон");await choose(needs[2][0]);await back();await choose(needs[3][0]);await choose(needs[3][1]);await choose("Как это относится к вашей задаче?");await choose("Это актуально для нашего бизнеса");await choose("Обсудить небольшой пилот");
+  assert.ok(!(await guided.locator("#guided-summary").innerText()).includes(needs[2][0]));
+  await page.reload();await step(1);await emptyPilot();assert.equal(await guided.locator("#guided-summary").count(),0);
+  console.log("PASS Guided Discovery 8.1 "+engine+" "+label+": 18 market/need paths, consent guards, summary, back/forward, reload");
   assert.equal(await page.locator(".album-photo img").count(),6);
   assert.equal(await page.locator("[data-tc]").count(),11);
   assert.equal(await page.locator('meta[property="og:image"]').count(),1);
