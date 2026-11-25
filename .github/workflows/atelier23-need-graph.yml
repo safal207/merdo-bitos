@@ -15,3 +15,4 @@ jobs:
       - run: node scripts/atelier23-need-graph.mjs
       - run: node scripts/atelier23-discovery-state.mjs
       - run: node scripts/atelier23-need-activation.mjs
+      - run: node scripts/atelier23-learning-engine.mjs
