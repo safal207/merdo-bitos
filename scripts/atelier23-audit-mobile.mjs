@@ -23,6 +23,59 @@ for(const [engine,type] of Object.entries(engines)){
   try {
   await page.goto(pathToFileURL(resolve("atelier23/audit/index.html")).href);
   await page.locator(".album-photo img").first().waitFor({state:"attached"});
+
+  // Emotional journey: all market paths, choice gating, proof anchors, back/reset.
+  const ea=page.locator("#emotional-audit"), eaNext=ea.locator("#ea-next"), eaResult=ea.locator("#ea-result"), eaOptions=ea.locator("#ea-options button");
+  const eaSelect=label=>eaOptions.filter({hasText:label}).click();
+  const eaAdvance=()=>eaNext.click();
+  const eaProgress=ea.locator("#ea-progress");
+  assert.equal(await page.locator('.hero a.btn').getAttribute("href"),"#emotional-audit");
+  for(const [market,social,search,speed] of [
+   ["Москва","Нет og:image","Не проверено","6,35 с"],
+   ["Лиссабон","100 × 100 px","21 результат · 0 карточек","5,34 с"],
+   ["Оба рынка","5 из 10","21 результат · 0 карточек","6,35 с / 5,34 с"]
+  ]){
+   await ea.locator("#ea-reset").click();
+   assert.equal(await eaProgress.innerText(),"Глава 1 из 8");
+   assert.equal(await eaNext.isDisabled(),true);
+   await eaSelect(market);assert.equal(await eaResult.locator("strong").innerText(),market);
+   await eaAdvance();
+   const expected=[social,search,speed,"Ценность до цены","Важный момент","24/24 · 8/8"];
+   for(let i=0;i<expected.length;i++){
+    assert.equal(await eaProgress.innerText(),"Глава "+(i+2)+" из 8");
+    assert.equal(await eaNext.isDisabled(),true);
+    assert.equal(await eaResult.isHidden(),true);
+    for(const b of await eaOptions.all()){const box=await b.boundingBox();assert.ok(box&&box.height>=44&&box.width>=44,"emotional choice touch target")}
+    await eaOptions.first().click();
+    assert.equal(await eaResult.locator("strong").innerText(),expected[i]);
+    assert.equal(await eaOptions.first().getAttribute("aria-pressed"),"true");
+    for(const a of await eaResult.locator("a").all()){
+     const href=await a.getAttribute("href");
+     assert.ok(href.startsWith("#")&&await page.locator(href).count()===1,"valid evidence target "+href);
+    }
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,"emotional route overflow");
+    if(i===1&&market==="Лиссабон"){
+     await ea.screenshot({path:"artifacts/audit-mobile/"+engine+"-"+label+"-emotional-search.png"});
+    }
+    await eaAdvance();
+   }
+   assert.equal(await eaProgress.innerText(),"Глава 8 из 8");
+   assert.equal(await eaOptions.filter({hasText:"Исправить поиск"}).count(),market==="Москва"?0:1);
+   await eaOptions.first().click();assert.equal(await eaResult.locator("a[href='#next-step']").count(),1);
+   assert.equal(await page.locator("#growth-copy").isDisabled(),true,"no automatic pilot submission");
+   await ea.locator("#ea-back").click();assert.equal(await eaProgress.innerText(),"Глава 7 из 8");
+   assert.equal(await eaResult.isHidden(),true);assert.equal(await eaNext.isDisabled(),true);
+   await eaOptions.first().click();await eaAdvance();
+   assert.equal(await eaResult.isHidden(),true,"stale final choice cleared");
+   await eaOptions.first().click();await eaAdvance();
+   assert.equal(await eaProgress.innerText(),"Глава 1 из 8");
+   assert.equal(await eaNext.isDisabled(),true);
+  }
+  await eaSelect("Лиссабон");await eaAdvance();await ea.locator("#ea-back").click();
+  assert.equal(await eaNext.isDisabled(),true);await eaSelect("Москва");await eaAdvance();
+  await eaOptions.first().click();assert.equal(await eaResult.locator("strong").innerText(),"Нет og:image");
+  await page.reload();assert.equal(await eaProgress.innerText(),"Глава 1 из 8");assert.equal(await eaNext.isDisabled(),true);
+  console.log("PASS Emotional journey "+engine+" "+label+": 3 markets, 8 chapters, gated choices, evidence, back/reset/reload");
   const guided=page.locator("#guided-audit");
   assert.equal(await guided.getByRole("button",{name:"Москва",exact:true}).count(),1,"accessible market name");
   for(const name of ["Москва","Лиссабон","Оба рынка"]){const b=await guided.getByRole("button",{name,exact:true}).boundingBox();assert.ok(b&&b.width>=44&&b.height>=44,"market touch target "+name)}
