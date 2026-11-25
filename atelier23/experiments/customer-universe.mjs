@@ -58,7 +58,7 @@ export function simulateUniverse({seed=20261125,population=1000,capacity=12,seas
    else{s=F({...s,activation:applyEvent(graph,s.activation,{id:id(),type:"tick",day:d})});s=comm(s,"restart",{topic:"style"})}
    s=comm(s,"consent",{accepted:true});s=comm(s,"state_need",{need:routine.need});s=comm(s,"reflect",{need:routine.need});s=comm(s,"confirm");
    s=act(s,"activate",d,{...context,occurrence:f.id,strength:90});
-   if(f.learn){s=learn(s,"orient");s=learn(s,"start_task",{task:"fabric_check"});s=learn(s,"answer",{attemptId:s.learning.attempt.id,answer:"match_context"})}
+   if(f.learn){if(s.learningRevision!==s.communication.revision)s=learn(s,"restart");s=learn(s,"orient");s=learn(s,"start_task",{task:"fabric_check"});s=learn(s,"answer",{attemptId:s.learning.attempt.id,answer:"match_context"})}
    s=comm(s,"choose",{value:f.decision});
    const key=month(d)+":"+f.offer,used=inventory.get(key)||0;
    const due=routine.id==="aftercare"?d+15:f.anchor;
