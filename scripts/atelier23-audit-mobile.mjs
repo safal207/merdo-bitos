@@ -26,7 +26,7 @@ for(const [engine,type] of Object.entries(engines)){
   const guided=page.locator("#guided-audit"),brief=page.locator("#growth-brief"),copy=page.locator("#growth-copy");
   const choose=label=>guided.getByRole("button",{name:label,exact:true}).click();
   const reset=()=>guided.locator("#guided-reset").click(),back=()=>guided.locator("#guided-back").click();
-  const step=async n=>assert.equal(await guided.locator("#guided-progress").innerText(),"Шаг "+n+" из 7");
+  const step=async n=>assert.equal(await guided.locator("#guided-progress").innerText(),"Шаг "+n+" из 9");
   const emptyPilot=async()=>{assert.equal(await page.locator('input[name="growth-market"]:checked,input[name="growth-goal"]:checked').count(),0);assert.equal(await copy.isDisabled(),true);assert.equal(await brief.inputValue(),"Выберите рынок и направление.")};
   const needs=[
    ["Клиенты регулярно обращаются за пошивом и примерками","Больше подтверждённых записей"],
@@ -41,35 +41,35 @@ for(const [engine,type] of Object.entries(engines)){
    for(const [need,goal] of needs){
     await reset();await step(1);await emptyPilot();
     await choose(market);await step(2);
-    await choose(need);await step(3);
-    await choose(goal);await step(4);
+    await choose(need);await step(3);await choose("Оба варианта");await step(4);await choose("По событию или нерегулярно");await step(5);
+    await choose(goal);await step(6);
     assert.equal(await guided.locator("h3").evaluate(e=>e===document.activeElement),true);
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,"guided overflow");
     if(need===needs[2][0])assert.equal(await guided.locator('a[href="#tc-01"]').count(),market==="Москва"?0:1);
-    await choose("Как это относится к вашей задаче?");await step(5);
-    await choose("Сейчас это не приоритет");await step(6);
+    await choose("Как это относится к вашей задаче?");await step(7);
+    await choose("Сейчас это не приоритет");await step(8);
     assert.equal(await guided.getByRole("button",{name:"Обсудить небольшой пилот",exact:true}).count(),0);
-    await choose("Пока остановиться");await step(7);
+    await choose("Пока остановиться");await step(9);
     const summary=await guided.locator("#guided-summary").innerText();
     for(const value of [market,need,goal,"Пока остановиться"])assert.ok(summary.includes(value),"summary "+value);
     assert.equal(await guided.getByRole("button",{name:"Открыть отдельную форму пилота",exact:true}).count(),0);
-    await back();await step(6);assert.equal(await guided.locator("#guided-summary").count(),0);
+    await back();await step(8);assert.equal(await guided.locator("#guided-summary").count(),0);
    }
   }
-  async function toAssessment(market,need,goal){await reset();await choose(market);await choose(need);await choose(goal);await choose("Как это относится к вашей задаче?")}
+  async function toAssessment(market,need,goal){await reset();await choose(market);await choose(need);await choose("Оба варианта");await choose("По событию или нерегулярно");await choose(goal);await choose("Как это относится к вашей задаче?")}
   await toAssessment("Лиссабон",...needs[2]);await choose("Хочу проверить самостоятельно");
   assert.equal(await guided.getByRole("button",{name:"Обсудить небольшой пилот",exact:true}).count(),0);
-  await choose("Посмотреть доказательства и повторить тест");await step(7);
+  await choose("Посмотреть доказательства и повторить тест");await step(9);
   await guided.locator('#guided-content a[href="#tc-01"]').click();
   await page.waitForURL(u=>u.hash==="#tc-01");await page.waitForFunction(()=>document.getElementById("tc-01").open);
   await page.goBack();assert.ok((await guided.locator("#guided-summary").innerText()).includes("Лиссабон"));
   await toAssessment("Москва",...needs[5]);await choose("Это актуально для нашего бизнеса");
   assert.equal(await guided.getByRole("button",{name:"Обсудить небольшой пилот",exact:true}).count(),0);
-  await choose("Оценить коммерческий эффект по данным");await step(7);
+  await choose("Оценить коммерческий эффект по данным");await step(9);
   await toAssessment("Москва",...needs[0]);await choose("Нужны дополнительные данные");
   assert.equal(await guided.getByRole("button",{name:"Обсудить небольшой пилот",exact:true}).count(),0);
-  await choose("Оценить коммерческий эффект по данным");await step(7);
-  await toAssessment("Москва",...needs[0]);await choose("Это актуально для нашего бизнеса");await choose("Обсудить небольшой пилот");await step(7);
+  await choose("Оценить коммерческий эффект по данным");await step(9);
+  await toAssessment("Москва",...needs[0]);await choose("Это актуально для нашего бизнеса");await choose("Обсудить небольшой пилот");await step(9);
   await guided.screenshot({path:"artifacts/audit-mobile/"+engine+"-"+label+"-guided.png"});
   await choose("Открыть отдельную форму пилота");await page.waitForURL(u=>u.hash==="#next-step");
   assert.equal(await page.locator('input[name="growth-market"][value="Москва"]').isChecked(),true);
@@ -79,10 +79,16 @@ for(const [engine,type] of Object.entries(engines)){
   await page.waitForFunction(()=>document.getElementById("growth-copy").disabled);await emptyPilot();
   await page.goForward();await page.waitForURL(u=>u.hash==="#next-step");await emptyPilot();
   await reset();await emptyPilot();await step(1);
-  await choose("Лиссабон");await choose(needs[2][0]);await back();await choose(needs[3][0]);await choose(needs[3][1]);await choose("Как это относится к вашей задаче?");await choose("Это актуально для нашего бизнеса");await choose("Обсудить небольшой пилот");
+  await choose("Лиссабон");await choose(needs[2][0]);await back();await choose(needs[3][0]);await choose("Возвращаются те же клиенты");await choose("От квартала до года");await choose(needs[3][1]);await choose("Как это относится к вашей задаче?");await choose("Это актуально для нашего бизнеса");await choose("Обсудить небольшой пилот");
   assert.ok(!(await guided.locator("#guided-summary").innerText()).includes(needs[2][0]));
+  assert.ok((await guided.locator("#guided-summary").innerText()).includes("От квартала до года"));
+  await guided.locator("#guided-economics summary").click();assert.equal(await guided.locator("#guided-economics").evaluate(e=>e.open),true);
+  assert.ok((await guided.locator("#guided-economics").innerText()).includes("не пожизненный LTV"));
+  await reset();await choose("Москва");await choose(needs[0][0]);await choose("Пока не знаем");await choose("Периодичность неизвестна");await choose(needs[0][1]);await choose("Как это относится к вашей задаче?");await choose("Это актуально для нашего бизнеса");
+  assert.equal(await guided.getByRole("button",{name:"Обсудить небольшой пилот",exact:true}).count(),0);
+  await choose("Оценить коммерческий эффект по данным");await step(9);
   await page.reload();await step(1);await emptyPilot();assert.equal(await guided.locator("#guided-summary").count(),0);
-  console.log("PASS Guided Discovery 8.1 "+engine+" "+label+": 18 market/need paths, consent guards, summary, back/forward, reload");
+  console.log("PASS Customer Need Loop 8.2 "+engine+" "+label+": 18 market/need paths, consent guards, summary, back/forward, reload");
   assert.equal(await page.locator(".album-photo img").count(),6);
   assert.equal(await page.locator("[data-tc]").count(),11);
   assert.equal(await page.locator('meta[property="og:image"]').count(),1);

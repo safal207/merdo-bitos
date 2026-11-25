@@ -3,35 +3,26 @@ import vm from "node:vm";
 const html=readFileSync("atelier23/audit/index.html","utf8");
 const match=html.match(/\/\* DISCOVERY_CORE_START \*\/([\s\S]*?)\/\* DISCOVERY_CORE_END \*\//);
 if(!match)throw Error("production state core missing");
-const api=vm.runInNewContext(match[1]+"\n;({markets,needs,assessments,actions,initial,evidence,allowedActions,transition,summary})");
+const api=vm.runInNewContext(match[1]+"\n;({markets,needs,loops,frequencies,periods,assessments,actions,initial,evidence,allowedActions,transition,summary,cohortMetrics})");
 
-const {markets,needs,assessments,actions,initial,evidence,allowedActions,transition,summary}=api;
+const {markets,needs,loops,frequencies,periods,assessments,actions,initial,evidence,allowedActions,transition,summary,cohortMetrics}=api;
 let passed=0,paths=0;function check(ok,label){if(!ok)throw Error(label);passed++}
 const choose=(s,value)=>transition(s,{type:"choose",value});const next=s=>transition(s,{type:"continue"});const back=s=>transition(s,{type:"back"});const reset=s=>transition(s,{type:"reset"});
-for(const m of Object.keys(markets))for(const n of Object.keys(needs))for(const g of Object.keys(needs[n].goals)){
- const s0=initial(),s1=choose(s0,m),s2=choose(s1,n),s3=choose(s2,g),s4=next(s3);
- check(s1.step===1&&s2.step===2&&s3.step===3&&s4.step===4,"ordered states");
- check(evidence(s3)!=="search"||m!=="moscow","no unsupported Moscow search claim");
- check(choose(s3,"pilot")===s3,"no out-of-order action");
- for(const a of Object.keys(assessments)){
-  const s5=choose(s4,a),allowed=allowedActions(s5);
-  check(s5.step===5,"assessment transition");
-  check((a==="relevant"&&g!=="unknown")===allowed.includes("pilot"),"pilot consent guard");
-  for(const action of Object.keys(actions)){
-   const s6=choose(s5,action);
-   if(!allowed.includes(action)){check(s6===s5,"reject disallowed action");continue}
-   paths++;
-   check(s6.step===6&&summary(s6).includes(needs[n].label)&&summary(s6).includes(needs[n].goals[g])&&summary(s6).includes(actions[action]),"personal summary");
-   check(summary(back(s6))===""&&back(s6).action==="","back invalidates summary");
-   let b=s6;for(let i=6;i>0;i--){b=back(b);check(b.step===i-1,"reverse transition")}
-   check(JSON.stringify(b)===JSON.stringify(initial()),"back to initial");
-   check(JSON.stringify(reset(s6))===JSON.stringify(initial()),"full reset");
-   check(JSON.stringify(reset(reset(s6)))===JSON.stringify(initial()),"idempotent reset");
-  }
+for(const m of Object.keys(markets))for(const n of Object.keys(needs))for(const f of Object.keys(frequencies))for(const p of Object.keys(periods))for(const g of Object.keys(needs[n].goals)){
+ let s=initial();for(const v of [m,n,f,p,g])s=choose(s,v);
+ check(s.step===5,"ordered states");check(evidence(s)!=="search"||m!=="moscow","market guard");check(choose(s,"pilot")===s,"invalid event");
+ const astate=next(s);for(const a of Object.keys(assessments)){const q=choose(astate,a);const allowed=allowedActions(q);
+ check(allowed.includes("pilot")===(a==="relevant"&&g!=="unknown"&&f!=="unknown"&&p!=="unknown"),"pilot guard");
+ for(const action of Object.keys(actions)){const z=choose(q,action);if(!allowed.includes(action)){check(z===q,"reject");continue}paths++;
+ const str=summary(z);check(z.step===8&&str.includes(frequencies[f])&&str.includes(periods[p])&&str.includes(loops[n][2])&&str.includes(actions[action]),"summary");
+ check(summary(back(z))===""&&back(z).action==="","invalidate summary");let b=z;for(let i=8;i>0;i--){b=back(b);check(b.step===i-1,"back")}
+ check(JSON.stringify(b)===JSON.stringify(initial()),"all fields cleared");check(JSON.stringify(reset(z))===JSON.stringify(initial()),"reset");
  }
- check(back(s3).goal===""&&back(s3).need===n,"goal invalidation");
- check(back(s2).need===""&&back(s2).market===m,"need invalidation");
- check(back(s1).market==="","market invalidation");
+ }
+ const b=back(back(s));check(b.step===3&&b.period===""&&b.goal===""&&b.frequency===f,"period reset");
 }
+const sample={customers:10,repeatCustomers:3,orders:15,netRevenue:1000,variableCosts:400,acquisitionCosts:100};const r=cohortMetrics(sample);check(r.repeatRate===.3&&r.ordersPerCustomer===1.5&&r.revenuePerCustomer===100&&r.contributionPerCustomer===50,"known control");
+for(const bad of [null,{}, {...sample,customers:0},{...sample,repeatCustomers:11},{...sample,orders:12},{...sample,orders:1.5},{...sample,netRevenue:NaN},{...sample,netRevenue:-1},{...sample,acquisitionCosts:"100"},{...sample,repeatCustomers:0}])check(cohortMetrics(bad)===null,"invalid financial inputs");
+check(cohortMetrics({...sample,variableCosts:1500}).contributionPerCustomer===-60,"negative contribution preserved");
 
-console.log("PASS Guided Discovery: "+passed+" assertions, "+paths+" valid terminal paths");
+console.log("PASS Customer Need Loop: "+passed+" assertions, "+paths+" valid terminal paths");
