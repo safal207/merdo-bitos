@@ -22,7 +22,16 @@ for(const m of Object.keys(markets))for(const n of Object.keys(needs))for(const 
  const b=back(back(s));check(b.step===3&&b.period===""&&b.goal===""&&b.frequency===f,"period reset");
 }
 const sample={customers:10,repeatCustomers:3,orders:15,netRevenue:1000,variableCosts:400,acquisitionCosts:100};const r=cohortMetrics(sample);check(r.repeatRate===.3&&r.ordersPerCustomer===1.5&&r.revenuePerCustomer===100&&r.contributionPerCustomer===50,"known control");
-for(const bad of [null,{}, {...sample,customers:0},{...sample,repeatCustomers:11},{...sample,orders:12},{...sample,orders:1.5},{...sample,netRevenue:NaN},{...sample,netRevenue:-1},{...sample,acquisitionCosts:"100"},{...sample,repeatCustomers:0}])check(cohortMetrics(bad)===null,"invalid financial inputs");
+for(const bad of [null,{}, {...sample,customers:0},{...sample,repeatCustomers:11},{...sample,orders:12},{...sample,orders:1.5},{...sample,netRevenue:NaN},{...sample,acquisitionCosts:"100"},{...sample,repeatCustomers:0}])check(cohortMetrics(bad)===null,"invalid financial inputs");
 check(cohortMetrics({...sample,variableCosts:1500}).contributionPerCustomer===-60,"negative contribution preserved");
+check(cohortMetrics({...sample,netRevenue:-100}).revenuePerCustomer===-10,"net refunds allowed");
+check(cohortMetrics({...sample,netRevenue:-100}).contributionPerCustomer===-60,"refund loss preserved");
+for(const bad of [{...sample,customers:1e20,orders:1e20},{...sample,orders:Number.MAX_SAFE_INTEGER+1},{...sample,variableCosts:Number.MAX_VALUE,acquisitionCosts:Number.MAX_VALUE},{...sample,netRevenue:-Number.MAX_VALUE,variableCosts:Number.MAX_VALUE},{...sample,variableCosts:-1},{...sample,acquisitionCosts:-1}])check(cohortMetrics(bad)===null,"reject unsafe numbers or nonfinite results");
+// Compare count constraints to a small exhaustive independent enumeration.
+for(let c=1;c<=12;c++)for(let r=0;r<=c+1;r++)for(let o=0;o<=36;o++){
+ const valid=r<=c&&o>=c+r&&(r>0||o===c);
+ check((cohortMetrics({...sample,customers:c,repeatCustomers:r,orders:o})!==null)===valid,"cohort counts");
+}
+
 
 console.log("PASS Customer Need Loop: "+passed+" assertions, "+paths+" valid terminal paths");
