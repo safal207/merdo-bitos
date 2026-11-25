@@ -203,6 +203,18 @@ for(const [engine,type] of Object.entries(engines)){
   }
   await page.locator(".gentleman-portrait img").waitFor();
   await page.waitForFunction(()=>document.querySelector(".gentleman-portrait img").naturalWidth>0);
+  // Explicit radio boundaries: native Linux WebKit previously rendered unchecked controls near-black.
+  const pilotRadios=page.locator('#next-step input[type="radio"]');
+  assert.equal(await pilotRadios.count(),8);
+  for(const radio of await pilotRadios.all()){
+   const visual=await radio.evaluate(e=>{const s=getComputedStyle(e),b=e.getBoundingClientRect(),label=e.closest("label").getBoundingClientRect();return {appearance:s.appearance,border:s.borderTopColor,borderWidth:parseFloat(s.borderTopWidth),width:b.width,height:b.height,labelHeight:label.height}});
+   assert.equal(visual.appearance,"none");assert.equal(visual.border,"rgb(232, 182, 109)");
+   assert.ok(visual.borderWidth>=2&&visual.width>=20&&visual.height>=20&&visual.labelHeight>=48,"visible radio boundary and full-size label");
+  }
+  await page.locator('#next-step label').filter({has:page.locator('input[name="growth-market"][value="Москва"]')}).click();
+  assert.equal(await page.locator('input[name="growth-market"][value="Москва"]').isChecked(),true,"label remains clickable");
+  assert.ok((await page.locator('input[name="growth-market"][value="Москва"]').evaluate(e=>getComputedStyle(e).backgroundImage)).includes("radial-gradient"),"selected indicator");
+  console.log("PASS pilot radio visual contract "+engine+" "+label);
   assert.equal(await page.locator("#growth-copy").isDisabled(),true);
   await page.locator('input[name="growth-market"][value="Лиссабон"]').check();
   assert.equal(await page.locator("#growth-copy").isDisabled(),true);
