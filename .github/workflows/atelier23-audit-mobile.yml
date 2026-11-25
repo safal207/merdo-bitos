@@ -6,6 +6,11 @@ permissions:
   contents: read
 jobs:
   mobile-qa:
+    name: Linux / ${{ matrix.browser }}
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.55.0-noble
@@ -18,9 +23,32 @@ jobs:
           node-version: "22"
       - run: npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.55.0
       - run: node scripts/atelier23-audit-mobile.mjs
+        env:
+          HOME: /root
+          AUDIT_BROWSER: ${{ matrix.browser }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: atelier23-audit-mobile
+          name: atelier23-audit-linux-${{ matrix.browser }}
+          path: artifacts/audit-mobile/
+          if-no-files-found: ignore
+  apple-qa:
+    name: macOS / WebKit desktop and iPhone emulation
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.55.0
+      - run: npx playwright install webkit
+      - run: node scripts/atelier23-audit-mobile.mjs
+        env:
+          AUDIT_APPLE: "1"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atelier23-audit-macos-webkit-iphone
           path: artifacts/audit-mobile/
           if-no-files-found: ignore

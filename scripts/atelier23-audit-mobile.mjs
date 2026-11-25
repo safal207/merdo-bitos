@@ -1,15 +1,23 @@
 import assert from "node:assert/strict";
-import {chromium,firefox,webkit} from "playwright";
+import {chromium,firefox,webkit,devices} from "playwright";
 import {pathToFileURL} from "node:url";
 import {resolve} from "node:path";
 import {mkdir,writeFile} from "node:fs/promises";
-const engines={chromium,firefox,webkit};
+const allEngines={chromium,firefox,webkit};
+const apple=process.env.AUDIT_APPLE==="1";
+const selected=apple?"webkit":process.env.AUDIT_BROWSER;
+if(selected&&!allEngines[selected])throw Error("Unknown browser: "+selected);
+const engines=selected?{[selected]:allEngines[selected]}:allEngines;
+const appleProfiles=[["Mac-1280","Desktop Safari",{width:1280,height:800}],["Mac-1440","Desktop Safari",{width:1440,height:900}],["iPhone-SE","iPhone SE"],["iPhone-13","iPhone 13"],["iPhone-14-Pro-Max","iPhone 14 Pro Max"]];
 await mkdir("artifacts/audit-mobile",{recursive:true});
 for(const [engine,type] of Object.entries(engines)){
  const browser=await type.launch({headless:true,...(engine==="chromium"?{args:["--no-sandbox"]}:{})});
  try {
- for (const width of [320,360,390,430,1440]) {
-  const context=await browser.newContext({viewport:{width,height:850},hasTouch:width<700,...(engine==="firefox"?{}:{isMobile:width<700}),reducedMotion:"reduce"});
+ const profiles=apple?appleProfiles.map(([label,device,viewport])=>{if(!devices[device])throw Error("Unknown device: "+device);const {defaultBrowserType,...profile}=devices[device];return {label,opts:{...profile,...(viewport?{viewport}:{})}}}):[320,360,390,430,1440].map(width=>({label:String(width),opts:{viewport:{width,height:850},hasTouch:width<700,...(engine==="firefox"?{}:{isMobile:width<700})}}));
+ for (const {label,opts} of profiles) {
+  const width=opts.viewport.width;
+  console.log("START "+engine+" "+label+" "+width+" px on "+process.platform);
+  const context=await browser.newContext({...opts,reducedMotion:"reduce"});
   const page=await context.newPage(),errors=[];
   page.on("pageerror",e=>errors.push(e.message));
   try {
@@ -99,7 +107,7 @@ for(const [engine,type] of Object.entries(engines)){
    assert.ok(b&&b.height>=44&&b.width>=44,"result touch target "+target);
   }
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,"guided result overflow");
-  await guided.screenshot({path:"artifacts/audit-mobile/"+engine+"-"+width+"-guided.png"});
+  await guided.screenshot({path:"artifacts/audit-mobile/"+engine+"-"+label+"-guided.png"});
   for(const id of ["tc-01","tc-02"]){
    await guided.locator('a[href="#'+id+'"]').click();
    await page.waitForURL(u=>u.hash==="#"+id);
@@ -175,7 +183,7 @@ for(const [engine,type] of Object.entries(engines)){
    await page.waitForFunction(()=>parseInt(document.getElementById("proof-scale").textContent)>100);
    await client.detach();
   }
-  await page.screenshot({path:"artifacts/audit-mobile/"+engine+"-"+width+"-proof.png"});
+  await page.screenshot({path:"artifacts/audit-mobile/"+engine+"-"+label+"-proof.png"});
   await page.locator("#proof-close").click();
   assert.equal(await page.locator("#proof-view").evaluate(e=>e.open),false);
   await page.locator("#album-track").focus();
@@ -201,6 +209,11 @@ for(const [engine,type] of Object.entries(engines)){
   await page.locator('input[name="growth-goal"][value="Индивидуальный пошив"]').check();
   assert.equal(await page.locator("#growth-copy").isEnabled(),true);
   assert.match(await page.locator("#growth-brief").inputValue(),/Лиссабон.*Индивидуальный пошив/);
+  assert.equal(await brief.evaluate(e=>e.scrollHeight<=e.clientHeight+1),true,"full commercial draft visible");
+  for(const field of await page.locator('input[name="growth-goal"]').all()){
+   await field.check();assert.equal(await brief.evaluate(e=>e.scrollHeight<=e.clientHeight+1),true,"no hidden draft text for "+await field.getAttribute("value"));
+  }
+  await page.locator('input[name="growth-goal"][value="Индивидуальный пошив"]').check();
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,"CTA page overflow at "+width);
   const cover=await page.locator('meta[property="og:image"]').getAttribute("content");
   assert.equal(cover,"https://raw.githubusercontent.com/safal207/merdo-bitos/41f353c3efb9a13d876c48d6a1887ac96e6e91ae/atelier23/audit/gentleman-share.jpg");
@@ -211,13 +224,13 @@ for(const [engine,type] of Object.entries(engines)){
   assert.equal(await page.locator(".trust-faq details").nth(1).evaluate(e=>e.open),true);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,"FAQ overflow at "+width);
   await page.locator(".trust-faq summary").nth(1).click();
-  await page.locator("#next-step").screenshot({path:"artifacts/audit-mobile/"+engine+"-"+width+"-cta.png"});
+  await page.locator("#next-step").screenshot({path:"artifacts/audit-mobile/"+engine+"-"+label+"-cta.png"});
   await page.evaluate(()=>window.scrollTo(0,0));
-  await page.screenshot({path:"artifacts/audit-mobile/"+engine+"-"+width+"-hero.png"});
+  await page.screenshot({path:"artifacts/audit-mobile/"+engine+"-"+label+"-hero.png"});
   assert.deepEqual(errors,[]);
   console.log("PASS "+engine+" "+width+" px: album, original proof, 400% zoom, metadata, no overflow");
   } catch(error){
-   const prefix="artifacts/audit-mobile/"+engine+"-"+width+"-failure";
+   const prefix="artifacts/audit-mobile/"+engine+"-"+label+"-failure";
    await page.screenshot({path:prefix+".png"}).catch(()=>{});
    await writeFile(prefix+".json",JSON.stringify({url:page.url(),errors,message:String(error)},null,2));
    throw error;
