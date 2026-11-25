@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import {chromium,firefox,webkit} from "playwright";
 import {pathToFileURL} from "node:url";
 import {resolve} from "node:path";
-import {mkdir} from "node:fs/promises";
+import {mkdir,writeFile} from "node:fs/promises";
 const engines={chromium,firefox,webkit};
 await mkdir("artifacts/audit-mobile",{recursive:true});
 for(const [engine,type] of Object.entries(engines)){
@@ -12,9 +12,12 @@ for(const [engine,type] of Object.entries(engines)){
   const context=await browser.newContext({viewport:{width,height:850},hasTouch:width<700,...(engine==="firefox"?{}:{isMobile:width<700}),reducedMotion:"reduce"});
   const page=await context.newPage(),errors=[];
   page.on("pageerror",e=>errors.push(e.message));
+  try {
   await page.goto(pathToFileURL(resolve("atelier23/audit/index.html")).href);
   await page.locator(".album-photo img").first().waitFor({state:"attached"});
   const guided=page.locator("#guided-audit");
+  assert.equal(await guided.getByRole("button",{name:"Москва",exact:true}).count(),1,"accessible market name");
+  for(const name of ["Москва","Лиссабон","Оба рынка"]){const b=await guided.getByRole("button",{name,exact:true}).boundingBox();assert.ok(b&&b.width>=44&&b.height>=44,"market touch target "+name)}
   await guided.getByRole("button",{name:"Москва",exact:true}).click();
   assert.equal(await guided.getByRole("button",{name:"Поиск и товары"}).count(),0);
   await guided.getByRole("button",{name:"Скорость на телефоне"}).click();
@@ -82,6 +85,42 @@ for(const [engine,type] of Object.entries(engines)){
   await reset();assert.equal(await page.locator('[data-tc="TC-01"]').inputValue(),"pass");
   await page.locator('[data-tc="TC-01"]').selectOption("");
   console.log("PASS State Integrity 7.1 "+engine+" "+width+" px: 11 paths, repeated pilot, full reset, manual market change, independent retests");
+
+  // Browser Acceptance 7.2: browser history is section navigation, not a persistent wizard.
+  await page.evaluate(()=>{location.hash="guided-audit"});
+  await page.waitForURL(u=>u.hash==="#guided-audit");
+  await choose("Лиссабон");
+  assert.equal(await guided.locator("h3").evaluate(e=>e===document.activeElement),true,"focus after market");
+  await choose("Поиск и товары");
+  assert.equal(await guided.locator("h3").evaluate(e=>e===document.activeElement),true,"focus after topic");
+  const topicResult=await guided.locator(".guided-number").innerText();
+  for(const target of ["Посмотреть другое направление","Обсудить этот приоритет"]){
+   const b=await guided.getByRole("button",{name:target,exact:true}).boundingBox();
+   assert.ok(b&&b.height>=44&&b.width>=44,"result touch target "+target);
+  }
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,"guided result overflow");
+  await guided.screenshot({path:"artifacts/audit-mobile/"+engine+"-"+width+"-guided.png"});
+  for(const id of ["tc-01","tc-02"]){
+   await guided.locator('a[href="#'+id+'"]').click();
+   await page.waitForURL(u=>u.hash==="#"+id);
+   await page.waitForFunction(id=>document.getElementById(id).open,id);
+   await page.goBack();await page.waitForURL(u=>u.hash==="#guided-audit");
+   assert.equal(await guided.locator(".guided-number").innerText(),topicResult,"result survives evidence return");
+   await page.goForward();await page.waitForURL(u=>u.hash==="#"+id);
+   await page.goBack();await page.waitForURL(u=>u.hash==="#guided-audit");
+  }
+  await handoff();await page.waitForURL(u=>u.hash==="#next-step");await emptyPilot("Лиссабон");
+  assert.equal(await brief.evaluate(e=>e===document.activeElement),true,"pilot focus");
+  await goal.check();assert.equal(await copy.isEnabled(),true);
+  await page.goBack();await page.waitForURL(u=>u.hash==="#guided-audit");
+  await page.waitForFunction(()=>document.getElementById("growth-copy").disabled);
+  await emptyPilot();assert.equal(await guided.locator(".guided-number").innerText(),topicResult);
+  await page.goForward();await page.waitForURL(u=>u.hash==="#next-step");await emptyPilot();
+  await handoff();await emptyPilot("Лиссабон");await goal.check();
+  await page.reload();await guided.getByRole("button",{name:"Москва",exact:true}).waitFor();
+  await emptyPilot();assert.equal(await guided.locator("#guided-progress").innerText(),"Шаг 1 из 3");
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,"reload overflow");
+  console.log("PASS Browser Acceptance 7.2 "+engine+" "+width+" px: accessible names, focus, evidence history, pilot back/forward, reload, touch targets, no overflow");
 
   assert.equal(await page.locator(".album-photo img").count(),6);
   assert.equal(await page.locator("[data-tc]").count(),11);
@@ -176,7 +215,13 @@ for(const [engine,type] of Object.entries(engines)){
   await page.evaluate(()=>window.scrollTo(0,0));
   await page.screenshot({path:"artifacts/audit-mobile/"+engine+"-"+width+"-hero.png"});
   assert.deepEqual(errors,[]);
-  await context.close();console.log("PASS "+engine+" "+width+" px: album, original proof, 400% zoom, metadata, no overflow");
+  console.log("PASS "+engine+" "+width+" px: album, original proof, 400% zoom, metadata, no overflow");
+  } catch(error){
+   const prefix="artifacts/audit-mobile/"+engine+"-"+width+"-failure";
+   await page.screenshot({path:prefix+".png"}).catch(()=>{});
+   await writeFile(prefix+".json",JSON.stringify({url:page.url(),errors,message:String(error)},null,2));
+   throw error;
+  } finally {await context.close()}
  }
 } finally {await browser.close()}
 }
