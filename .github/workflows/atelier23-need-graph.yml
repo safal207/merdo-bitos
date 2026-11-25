@@ -14,3 +14,4 @@ jobs:
           node-version: "22"
       - run: node scripts/atelier23-need-graph.mjs
       - run: node scripts/atelier23-discovery-state.mjs
+      - run: node scripts/atelier23-need-activation.mjs
