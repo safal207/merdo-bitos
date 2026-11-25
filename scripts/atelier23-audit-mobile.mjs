@@ -1,13 +1,15 @@
 import assert from "node:assert/strict";
-import {chromium} from "playwright";
+import {chromium,firefox,webkit} from "playwright";
 import {pathToFileURL} from "node:url";
 import {resolve} from "node:path";
 import {mkdir} from "node:fs/promises";
-const browser=await chromium.launch({headless:true,args:["--no-sandbox"]});
+const engines={chromium,firefox,webkit};
 await mkdir("artifacts/audit-mobile",{recursive:true});
-try {
- for (const width of [320,390,430,1440]) {
-  const context=await browser.newContext({viewport:{width,height:850},hasTouch:width<700,isMobile:width<700,reducedMotion:"reduce"});
+for(const [engine,type] of Object.entries(engines)){
+ const browser=await type.launch({headless:true,...(engine==="chromium"?{args:["--no-sandbox"]}:{})});
+ try {
+ for (const width of [320,360,390,430,1440]) {
+  const context=await browser.newContext({viewport:{width,height:850},hasTouch:width<700,...(engine==="firefox"?{}:{isMobile:width<700}),reducedMotion:"reduce"});
   const page=await context.newPage(),errors=[];
   page.on("pageerror",e=>errors.push(e.message));
   await page.goto(pathToFileURL(resolve("atelier23/audit/index.html")).href);
@@ -35,16 +37,37 @@ try {
   await page.waitForFunction(()=>document.getElementById("album-counter").textContent==="1 / 6");
   await page.locator(".album-photo").first().getByRole("button",{name:"Увеличить доказательство"}).click();
   await page.locator("#proof-view").waitFor();
-  assert.equal(await page.locator("#proof-original").getAttribute("aria-pressed"),"true");
+    assert.equal(await page.locator("#proof-original").getAttribute("aria-pressed"),"true");
+  assert.equal(await page.locator("#proof-scale").innerText(),width<700?"200%":"100%");
+  assert.equal(await page.locator(".proof-crop").count(),6);
+  if(width<700){
+   const bounds=await page.locator("#proof-view").boundingBox();assert.ok(bounds.width>=width-2,"mobile fullscreen");
+   assert.equal(await page.locator(".proof-crop img").first().evaluate(e=>getComputedStyle(e).objectFit),"cover");
+   assert.equal(await page.locator("#proof-viewport").evaluate(e=>e.scrollWidth>e.clientWidth),true);
+   for(const name of ["proof-original","proof-enhance","proof-fit","proof-minus","proof-plus","proof-close"]){const b=await page.locator("#"+name).boundingBox();assert.ok(b.width>=43&&b.height>=43,"touch target "+name);}
+  }
   assert.equal(await page.evaluate(()=>document.querySelector("#proof-viewport img").src===document.querySelectorAll("#search img")[2].src),true);
   await page.locator("#proof-enhance").click();
   assert.equal(await page.locator("#proof-viewport img").evaluate(e=>e.classList.contains("enhanced")),true);
-  for(let i=0;i<3;i++)await page.locator("#proof-plus").click();
-  assert.equal(await page.locator("#proof-scale").innerText(),"300%");
+  for(let i=0;i<6&&await page.locator("#proof-plus").isEnabled();i++)await page.locator("#proof-plus").click();
+  assert.equal(await page.locator("#proof-scale").innerText(),"400%");
   assert.equal(await page.locator("#proof-plus").isDisabled(),true);
   assert.equal(await page.locator("#proof-viewport").evaluate(e=>e.scrollWidth>e.clientWidth),true);
   await page.locator("#proof-original").click();
   assert.equal(await page.locator("#proof-viewport img").evaluate(e=>e.classList.contains("enhanced")),false);
+  await page.locator("#proof-fit").click();
+  assert.equal(await page.locator("#proof-scale").innerText(),"100%");
+  assert.equal(await page.locator("#proof-viewport").evaluate(e=>e.scrollWidth<=e.clientWidth+1),true);
+  assert.equal(await page.locator("#proof-viewport img").evaluate(e=>getComputedStyle(e).objectFit),"contain");
+  if(width===390&&engine==="chromium"){
+   const v=page.locator("#proof-viewport");const box=await v.boundingBox();const client=await context.newCDPSession(page);const x=box.x+box.width/2,y=box.y+Math.min(120,box.height/2);
+   await client.send("Input.dispatchTouchEvent",{type:"touchStart",touchPoints:[{x:x-35,y,id:1},{x:x+35,y,id:2}]});
+   for(let i=1;i<=8;i++){const d=35+7*i;await client.send("Input.dispatchTouchEvent",{type:"touchMove",touchPoints:[{x:x-d,y,id:1},{x:x+d,y,id:2}]});}
+   await client.send("Input.dispatchTouchEvent",{type:"touchEnd",touchPoints:[]});
+   await page.waitForFunction(()=>parseInt(document.getElementById("proof-scale").textContent)>100);
+   await client.detach();
+  }
+  await page.screenshot({path:"artifacts/audit-mobile/"+engine+"-"+width+"-proof.png"});
   await page.locator("#proof-close").click();
   assert.equal(await page.locator("#proof-view").evaluate(e=>e.open),false);
   await page.locator("#album-track").focus();
@@ -52,7 +75,7 @@ try {
   await page.waitForFunction(()=>document.getElementById("album-counter").textContent==="2 / 6");
   await page.locator('[data-album-index="0"]').click();
   await page.waitForFunction(()=>document.getElementById("album-counter").textContent==="1 / 6");
-  if(width===390){
+  if(width===390&&engine==="chromium"){
    const track=page.locator("#album-track");await track.scrollIntoViewIfNeeded();
    const box=await track.boundingBox(),client=await context.newCDPSession(page);
    const x=box.x+box.width*.8,y=Math.max(80,Math.min(500,box.y+100));
@@ -80,10 +103,11 @@ try {
   assert.equal(await page.locator(".trust-faq details").nth(1).evaluate(e=>e.open),true);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,"FAQ overflow at "+width);
   await page.locator(".trust-faq summary").nth(1).click();
-  await page.locator("#next-step").screenshot({path:"artifacts/audit-mobile/"+width+"-cta.png"});
+  await page.locator("#next-step").screenshot({path:"artifacts/audit-mobile/"+engine+"-"+width+"-cta.png"});
   await page.evaluate(()=>window.scrollTo(0,0));
-  await page.screenshot({path:"artifacts/audit-mobile/"+width+"-hero.png"});
+  await page.screenshot({path:"artifacts/audit-mobile/"+engine+"-"+width+"-hero.png"});
   assert.deepEqual(errors,[]);
-  await context.close();console.log("PASS "+width+" px: album, original proof, 300% zoom, metadata, no overflow");
+  await context.close();console.log("PASS "+engine+" "+width+" px: album, original proof, 400% zoom, metadata, no overflow");
  }
 } finally {await browser.close()}
+}
