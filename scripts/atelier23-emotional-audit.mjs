@@ -7,7 +7,7 @@ await mkdir("artifacts/audit-mobile",{recursive:true});
 const engine=process.env.AUDIT_BROWSER||"chromium";
 const browser=await ({chromium,firefox,webkit}[engine]).launch({headless:true});
 try{
-for(const width of [320,360,390,430,768,1280]){
+for(const width of [320,360,390,430,768,851,1024,1280,1440]){
 const page=await browser.newPage({viewport:{width,height:900},hasTouch:width<=430});
 const errors=[];page.on("pageerror",e=>errors.push(e.message));
 await page.goto(pathToFileURL(resolve("atelier23/audit/index.html")).href);
@@ -26,6 +26,9 @@ for(const photo of await photos.all()){
 }
 assert.deepEqual(sources,["chapter-01-desire.webp","chapter-02-search.webp","chapter-03-fitting.webp"]);
 assert.equal(await page.locator(".hero .btn").getAttribute("href"),"#emotional-audit");
+const alignment=async()=>root.evaluate(el=>{const boxes=[...el.querySelectorAll(".ea-card")].map(card=>{const r=card.getBoundingClientRect(),s=card.querySelector("summary").getBoundingClientRect();return {top:r.top,bottom:r.bottom,button:s.top,buttonBottom:s.bottom}});const spread=k=>Math.max(...boxes.map(b=>b[k]))-Math.min(...boxes.map(b=>b[k]));return {top:spread("top"),bottom:spread("bottom"),button:spread("button"),buttonBottom:spread("buttonBottom"),mobile:boxes.every((b,i)=>i===0||b.top>=boxes[i-1].bottom),positions:boxes.map(b=>b.button)}});
+if(width>=851){await page.waitForFunction(()=>{const items=[...document.querySelectorAll("#emotional-audit .ea-card summary")].map(x=>x.getBoundingClientRect().top);return Math.max(...items)-Math.min(...items)<=1});const a=await alignment();assert.ok(a.top<=1&&a.bottom<=1&&a.button<=1&&a.buttonBottom<=1,"desktop card and button alignment "+JSON.stringify(a));}else{assert.ok((await alignment()).mobile,"mobile stack");}
+
 if(width===390||width===1280)await root.screenshot({path:`artifacts/audit-mobile/${engine}-${width}-emotional-closed.png`});
 
 assert.equal(await root.locator("#ea-progress").innerText(),"Открыто доказательств: 0 из 3");
@@ -37,6 +40,7 @@ await summary.click();
 await page.waitForFunction(n=>document.getElementById("ea-progress").textContent==="Открыто доказательств: "+n+" из 3",i+1);
 assert.ok(await card.locator(".ea-metric").isVisible());
 assert.ok(await summary.locator(".ea-open").isVisible());
+if(width>=851){const a=await alignment();assert.ok(a.button<=1&&a.buttonBottom<=1,"buttons remain aligned when evidence opens "+JSON.stringify(a));}
 assert.equal(await summary.locator(".ea-closed").isVisible(),false);
 for(const a of await card.locator("a").all()){const href=await a.getAttribute("href");assert.equal(await page.locator(href).count(),1);}
 }
@@ -69,5 +73,5 @@ assert.deepEqual(errors,[]);
 console.log(`PASS Director Cut ${engine} ${width}px: photo load, labels, proof dialog, focus, reset, no overflow`);
 await page.close();
 }
-console.log("Emotional audit: "+engine+" 320/360/390/430/768/1280 PASS");
+console.log("Emotional audit: "+engine+" 320/360/390/430/768/851/1024/1280/1440 PASS");
 }finally{await browser.close();}
