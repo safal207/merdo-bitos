@@ -17,6 +17,15 @@ try {
   assert.equal(await page.locator('meta[property="og:image"]').count(),1);
   assert.equal(await page.locator('meta[property="og:title"]').count(),1);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,"page overflow at "+width);
+  for (let i=0;i<6;i++){
+   await page.locator('[data-album-index="'+i+'"]').click();
+   await page.waitForFunction(n=>{
+    const t=document.getElementById("album-track"),s=t.querySelectorAll(".album-slide")[n],d=document.querySelector(".album-dots");
+    return document.getElementById("album-counter").textContent===(n+1)+" / 6"&&Math.abs(t.getBoundingClientRect().height-s.getBoundingClientRect().height)<=2&&d.getBoundingClientRect().top-s.getBoundingClientRect().bottom<=32;
+   },i);
+  }
+  await page.locator('[data-album-index="0"]').click();
+  await page.waitForFunction(()=>document.getElementById("album-counter").textContent==="1 / 6");
   await page.locator("#album-next").click();
   await page.waitForFunction(()=>document.getElementById("album-counter").textContent==="2 / 6");
   await page.locator('[data-album-index="5"]').click();
