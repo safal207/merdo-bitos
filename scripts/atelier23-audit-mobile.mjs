@@ -40,6 +40,49 @@ for(const [engine,type] of Object.entries(engines)){
   assert.equal(await guided.locator(".guided-number").innerText(),"5 из 10");
   await guided.locator("#guided-reset").click();
 
+  // State Integrity 7.1: all 11 valid guided paths, repeated handoff and full reset.
+  const markets = {"Москва":["Скорость на телефоне","Ссылки в соцсетях","Заявки и продажи"],"Лиссабон":["Поиск и товары","Скорость на телефоне","Ссылки в соцсетях","Заявки и продажи"],"Оба рынка":["Поиск и товары","Скорость на телефоне","Ссылки в соцсетях","Заявки и продажи"]};
+  const goal=page.locator('input[name="growth-goal"][value="Свадебные заказы"]');
+  const copy=page.locator("#growth-copy"),brief=page.locator("#growth-brief");
+  const choose=label=>guided.getByRole("button",{name:label,exact:true}).click();
+  const handoff=()=>choose("Обсудить этот приоритет");
+  const reset=()=>guided.locator("#guided-reset").click();
+  async function emptyPilot(expectedMarket=null){
+   const actual=await page.locator('input[name="growth-market"]:checked').evaluateAll(els=>els.map(e=>e.value));
+   assert.deepEqual(actual,expectedMarket?[expectedMarket]:[]);
+   assert.equal(await page.locator('input[name="growth-goal"]:checked').count(),0);
+   assert.equal(await copy.isDisabled(),true);
+   assert.equal(await brief.inputValue(),"Выберите рынок и направление.");
+   assert.equal(await page.locator("#growth-status").innerText(),"");
+  }
+  for(const [market,topics] of Object.entries(markets)){
+   for(const topic of topics){
+    await reset();await emptyPilot();
+    await choose(market);await choose(topic);await handoff();
+    await emptyPilot(market);
+    await goal.check();assert.equal(await copy.isEnabled(),true);
+    await handoff();await emptyPilot(market); // Same market and same topic must require reconfirmation.
+    await goal.check();
+    await choose("Посмотреть другое направление");await emptyPilot();
+    await choose(topic);await handoff();await emptyPilot(market);
+    await goal.check();await guided.locator("#guided-back").click();await emptyPilot();
+    await guided.locator("#guided-back").click();await emptyPilot();
+    assert.equal(await guided.locator("#guided-progress").innerText(),"Шаг 1 из 3");
+   }
+  }
+  await choose("Москва");await choose("Заявки и продажи");await handoff();await goal.check();
+  await reset();await emptyPilot();await reset();await emptyPilot();
+  await choose("Лиссабон");await choose("Поиск и товары");await handoff();await emptyPilot("Лиссабон");
+  await goal.check();
+  await page.locator('input[name="growth-market"][value="Москва"]').check();
+  await emptyPilot("Москва");
+  await reset();await emptyPilot();
+  await page.locator("#tc-01").evaluate(e=>e.open=true);
+  await page.locator('[data-tc="TC-01"]').selectOption("pass");
+  await reset();assert.equal(await page.locator('[data-tc="TC-01"]').inputValue(),"pass");
+  await page.locator('[data-tc="TC-01"]').selectOption("");
+  console.log("PASS State Integrity 7.1 "+engine+" "+width+" px: 11 paths, repeated pilot, full reset, manual market change, independent retests");
+
   assert.equal(await page.locator(".album-photo img").count(),6);
   assert.equal(await page.locator("[data-tc]").count(),11);
   assert.equal(await page.locator('meta[property="og:image"]').count(),1);
