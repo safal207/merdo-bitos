@@ -1,7 +1,7 @@
 name: Atelier 23 audit mobile QA
 on:
   push:
-    branches: [audit/atelier23-guided-discovery-81]
+    branches: [audit/atelier23-need-loop-82]
 permissions:
   contents: read
 jobs:
