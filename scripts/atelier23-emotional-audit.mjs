@@ -10,6 +10,18 @@ const page=await browser.newPage({viewport:{width,height:900}});
 await page.goto(pathToFileURL(resolve("atelier23/audit/index.html")).href);
 const root=page.locator("#emotional-audit"),cards=root.locator("details[data-ea]");
 assert.equal(await cards.count(),3);
+const photos=root.locator(".ea-visual img");
+assert.equal(await photos.count(),3);
+const sources=[];
+for(const photo of await photos.all()){
+ await photo.scrollIntoViewIfNeeded();
+ await photo.evaluate(img=>img.decode());
+ const info=await photo.evaluate(img=>({src:img.getAttribute("src"),w:img.naturalWidth,h:img.naturalHeight,fit:getComputedStyle(img).objectFit}));
+ assert.ok(info.w===1199&&info.h===675,"scene image dimensions");
+ assert.equal(info.fit,"cover");sources.push(info.src);
+}
+assert.deepEqual(sources,["chapter-01-desire.webp","chapter-02-search.webp","chapter-03-fitting.webp"]);
+
 assert.equal(await root.locator("#ea-progress").innerText(),"Открыто доказательств: 0 из 3");
 for(let i=0;i<3;i++){
 const card=cards.nth(i),summary=card.locator("summary");
