@@ -1,0 +1,16 @@
+name: Atelier 23 Need Graph experiment
+on:
+  push:
+    branches: [experiment/atelier23-need-graph-84]
+permissions:
+  contents: read
+jobs:
+  graph-qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: node scripts/atelier23-need-graph.mjs
+      - run: node scripts/atelier23-discovery-state.mjs
