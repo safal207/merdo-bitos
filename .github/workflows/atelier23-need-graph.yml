@@ -16,3 +16,4 @@ jobs:
       - run: node scripts/atelier23-discovery-state.mjs
       - run: node scripts/atelier23-need-activation.mjs
       - run: node scripts/atelier23-learning-engine.mjs
+      - run: node scripts/atelier23-trust-communication.mjs
