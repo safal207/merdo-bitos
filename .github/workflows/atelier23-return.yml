@@ -1,0 +1,17 @@
+name: Atelier 23 Return Engine QA
+on:
+  push:
+    branches: [experiment/atelier23-return-001]
+permissions:
+  contents: read
+jobs:
+  return-qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: node scripts/atelier23-customer-lifecycle.mjs
+      - run: node scripts/atelier23-customer-universe.mjs
+      - run: node scripts/atelier23-return-engine.mjs
