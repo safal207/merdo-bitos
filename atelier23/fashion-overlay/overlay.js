@@ -1,4 +1,6 @@
 import {makeTracker} from "./analytics.js";
+import {translate,localizeTree} from "./locale.js";
+import {xIntentURL,X_TEXT,X_TAGS} from "./social.js";
 const ROOT="https://atelier-23.ru/";
 const PHOTO=ROOT+"wp-content/uploads/";
 const BOOK=ROOT+"sign-up-for-a-fitting-room/";
@@ -71,10 +73,36 @@ const icons={heart:'<path d="M20.8 8.6c0 5-8.8 10.7-8.8 10.7S3.2 13.6 3.2 8.6a4.
 const icon=name=>'<svg aria-hidden="true" viewBox="0 0 24 24">'+icons[name]+'</svg>';
 const price=p=>p.price?fmt(p.price):"Уточнить цену";
 const url=p=>ROOT+"shop/"+p.link+"/";
-const shareURL=item=>{const u=new URL(location.href);u.search="";u.hash="";u.searchParams.set("event",state.event);u.searchParams.set("look",item.id);return u.href};
+const shareURL=item=>{const u=new URL(location.href);u.search="";u.hash="";u.searchParams.set("event",state.event);u.searchParams.set("look",item.id);u.searchParams.set("lang",locale);return u.href};
 const atelierMark='<svg aria-hidden="true" class="atelier-mark" viewBox="0 0 90 65" fill="none" stroke="currentColor" stroke-width=".9" stroke-linejoin="round" stroke-linecap="round"><path class="pattern" d="M31 9 39 5Q45 15 51 5L59 9 69 19 64 32 58 27 60 58 45 60 30 58 32 27 26 32 21 19Z M39 5 45 24 51 5 M45 24 42 59"/><path d="M10 48Q23 33 41 49T78 42" stroke-width="6" opacity=".20"/><path d="M10 48Q23 33 41 49T78 42 M15 43l3 4m5-7 1 5m7-4-1 5m8 0-2 5m9-1-1 5m8-1v5m7-5 2 4m4-8 3 4m3-9 4 3"/><path d="M68 5 84 23 65 9Q64 3 68 5Z" fill="currentColor"/><path d="M67 8Q85-3 86 16T81 39" stroke-dasharray="2 2"/></svg>';
 
 const screen=$("screen"),film=$("film"),app=document.querySelector(".app");
+const LOCALE_KEY="bitos.atelier23.fashionOverlay.locale.v1";
+let savedLocale="";
+try{savedLocale=localStorage.getItem(LOCALE_KEY)||""}catch{}
+const requestedLocale=new URLSearchParams(location.search).get("lang");
+let locale=["ru","en"].includes(requestedLocale)?requestedLocale:savedLocale==="en"?"en":"ru";
+const t=raw=>translate(raw,locale);
+const localize=(root=app)=>localizeTree(root,locale);
+const metaOriginals=[...document.querySelectorAll('meta[name="description"]')].map(el=>[el,el.content]);
+function applyLocale(){
+ document.documentElement.lang=locale;
+ localize();
+ for(const [el,raw] of metaOriginals)el.content=t(raw);
+ $("share-x").href=xIntentURL(location.href);
+ const toggle=$("locale-toggle");
+ toggle.textContent=locale==="en"?"RU":"EN";
+ toggle.lang=locale==="en"?"ru":"en";
+ toggle.setAttribute("aria-label",locale==="en"?"Switch to Russian":"Switch to English");
+}
+$("locale-toggle").addEventListener("click",()=>{
+ locale=locale==="en"?"ru":"en";
+ try{localStorage.setItem(LOCALE_KEY,locale)}catch{}
+ const next=new URL(location.href);next.searchParams.set("lang",locale);
+ try{history.replaceState(history.state,"",next.href)}catch{}
+ applyLocale();
+});
+
 let track=()=>false;
 try{track=makeTracker(localStorage,globalThis.crypto?.randomUUID?.()||("visit-"+Date.now()+"-"+Math.random().toString(36).slice(2)))}catch{}
 function log(type,details={}){
@@ -108,14 +136,14 @@ function syncTimeline(force=false){
  title.textContent=cue.line1;sub.textContent=cue.line2;
  button.textContent=cue.id==="emotion"&&state.event?"Продолжить":cue.cta;
  button.dataset.cue=cue.id;button.dataset.intent=cue.action;
- other.hidden=cue.action==="event";
+ other.hidden=cue.action==="event";localize(screen);
 }
 for(const event of ["timeupdate","seeked","loadedmetadata","ended","play"])film.addEventListener(event,()=>syncTimeline());
 screen.addEventListener("pointerdown",e=>{const b=e.target.closest("#cue-cta");if(b)b.dataset.pressing="true"});
 for(const event of ["pointerup","pointercancel"])screen.addEventListener(event,e=>{const b=$("cue-cta");if(b)delete b.dataset.pressing});
 screen.addEventListener("focusout",e=>{if(e.target.id==="cue-cta")queueMicrotask(()=>syncTimeline())});
 let filmCleanup=()=>{},filmActive=false,filmWanted=!motion.matches;
-const filmURL=()=>{const u=new URL(location.href);u.search="";u.hash="";return u.href};
+const filmURL=()=>{const u=new URL(location.href);u.search="";u.hash="";u.searchParams.set("lang",locale);return u.href};
 const sharePanel=()=>'<div class="share-panel" id="share-panel" hidden><p id="share-status" role="status"></p><input id="share-link" aria-label="Ссылка для отправки" readonly><button class="link" data-action="close-share">Закрыть</button></div>';
 const eye='<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
 let viewCleanup=()=>{};
@@ -125,7 +153,7 @@ function recordView(id){
  log(id==="film"?"film_view":"look_view",{target:id});
  state.views[id]=Math.min(Number.MAX_SAFE_INTEGER,(state.views[id]||0)+1);persist();
  const el=screen.querySelector('[data-view-count="'+id+'"]');
- if(el){el.textContent=viewText(id);el.setAttribute("aria-label","Просмотры на этом устройстве: "+state.views[id])}
+ if(el){el.textContent=viewText(id);el.setAttribute("aria-label","Просмотры на этом устройстве: "+state.views[id]);localizeTree(el,locale)}
 }
 function watchPhoto(photo,id){
  const img=photo.querySelector("img");let timer=null,visible=false,counted=false,observer=null;
@@ -204,7 +232,7 @@ function render(){
  }else if(page==="saved"){
   body='<div class="story">'+heading("ВАША КОЛЛЕКЦИЯ","Избранное.")+'<div>'+state.saved.map(id=>{if(id==="film")return '<div class="saved-item"><span>ATELIER 23 · Фильм 01</span><button data-action="open-film">Открыть</button><button data-remove="film">Удалить</button></div>';const item=product(id);return '<div class="saved-item"><img src="'+PHOTO+item.image+'" alt=""><span>'+item.name+'</span><button data-remove="'+id+'">Удалить</button></div>'}).join("")+'</div>'+(state.saved.length?"":"<p>Пока нет сохранённых образов.</p>")+primary("К образам","resume")+'</div>';
  }
- screen.innerHTML=body;
+ screen.innerHTML=body;localize(screen);
  screen.querySelectorAll(".media img").forEach(img=>{const fail=()=>{img.hidden=true;img.parentElement.querySelector(".image-fail").hidden=false};img.addEventListener("error",fail);if(img.complete&&!img.naturalWidth)fail()});
  if(page==="film"){syncTimeline(true);updateFilmControls();if(film.error||film.querySelector("source").dataset.failed)$("film-fallback").hidden=false;}
  if(page==="look"){
@@ -217,7 +245,7 @@ function render(){
 function updateFilmControls(){
  const play=screen.querySelector('[data-action="play"]'),sound=screen.querySelector('[data-action="sound"]');
  if(play){play.textContent=film.paused?"▶":"Ⅱ";play.setAttribute("aria-label",film.paused?"Воспроизвести фильм":"Приостановить фильм")}
- if(sound){sound.textContent=film.muted?"♫":"♪";sound.setAttribute("aria-label",film.muted?"Включить звук":"Выключить звук");sound.setAttribute("aria-pressed",String(!film.muted))}
+ if(sound){sound.textContent=film.muted?"♫":"♪";sound.setAttribute("aria-label",film.muted?"Включить звук":"Выключить звук");sound.setAttribute("aria-pressed",String(!film.muted))}localize(screen);
 }
 film.addEventListener("play",updateFilmControls);film.addEventListener("pause",updateFilmControls);film.addEventListener("volumechange",updateFilmControls);
 const failFilm=()=>{film.querySelector("source").dataset.failed="1";const link=$("film-fallback");if(link)link.hidden=false};
@@ -246,11 +274,11 @@ screen.addEventListener("click",async e=>{
   const item=product(d.share),link=item?shareURL(item):filmURL();
   const shareContext={target:d.share,page,occasion:state.event,...(page==="film"?{cue:$("cue-cta")?.dataset.cue,second:film.currentTime}:{})};
   track("share_click",shareContext);
-  if(navigator.share){try{await navigator.share({title:"ATELIER 23 · "+(item?.name||"Ваш момент"),url:link});track("share_resolved",shareContext);return}catch(err){if(err.name==="AbortError"){track("share_cancelled",shareContext);return}}}
+  if(navigator.share){try{await navigator.share({title:"ATELIER 23 · "+t(item?.name||"Ваш момент"),text:X_TEXT+" "+X_TAGS.split(",").map(tag=>"#"+tag).join(" "),url:link});track("share_resolved",shareContext);return}catch(err){if(err.name==="AbortError"){track("share_cancelled",shareContext);return}}}
   const panel=$("share-panel"),input=$("share-link"),status=$("share-status");
   if(!panel||!input||!status)return;
   panel.hidden=false;input.value=link;
-  try{await navigator.clipboard.writeText(link);track("link_copied",shareContext);status.textContent="Ссылка скопирована."}catch{status.textContent="Скопируйте ссылку.";input.focus();input.select()}
+  try{await navigator.clipboard.writeText(link);track("link_copied",shareContext);status.textContent="Ссылка скопирована.";localize(screen)}catch{status.textContent="Скопируйте ссылку.";localize(screen);input.focus();input.select()}
   return;
  }
  if(a==="close-share"){$("share-panel").hidden=true;return}
@@ -270,11 +298,11 @@ screen.addEventListener("click",async e=>{
  if(a==="details")return go("date");
  if(a==="date"||a==="unknown"){
   const d=a==="date"?$("date").value:"";
-  if(a==="date"&&!validDate(d)){$("date-error").textContent="Выберите сегодняшнюю или будущую дату.";return}
+  if(a==="date"&&!validDate(d)){$("date-error").textContent="Выберите сегодняшнюю или будущую дату.";localize(screen);return}
   if(p.date!==d||!p.dateSet)invalidate(p);p.date=d;p.dateSet=true;persist();return go("wardrobe")
  }
  if(a==="wardrobe"){p.wardrobe=true;persist();return go("result")}
- if(a==="copy"){const item=product(p.chosen);try{await navigator.clipboard.writeText("ATELIER 23\n"+events[state.event]+"\n"+item.name+"\n"+(p.date||"Дата уточняется")+"\n"+url(item));p.summary=true;persist();$("copy-status").textContent="Запрос скопирован."}catch{$("copy-status").textContent="Копирование недоступно."}return}
+ if(a==="copy"){const item=product(p.chosen);try{await navigator.clipboard.writeText("ATELIER 23\n"+t(events[state.event])+"\n"+t(item.name)+"\n"+t(p.date||"Дата уточняется")+"\n"+url(item));p.summary=true;persist();$("copy-status").textContent="Запрос скопирован.";localize(screen)}catch{$("copy-status").textContent="Копирование недоступно.";localize(screen)}return}
  if(a==="saved"||a==="plan")return go(a)
 });
 function logBookingLink(e){
@@ -295,3 +323,4 @@ if(Object.hasOwn(events,incomingEvent)&&incomingLook?.events.includes(incomingEv
  state.event=incomingEvent;rebuildDeck();deck=[incomingLook,...deck.filter(p=>p.id!==incomingLook.id)];index=0;frontier=0;
  persist();go("look");
 }else go("film");
+applyLocale();
