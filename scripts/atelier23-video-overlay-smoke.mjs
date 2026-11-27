@@ -30,7 +30,7 @@ try{
  await page.getByRole("button",{name:"Нравится фильм"}).click();assert.equal(await page.getByRole("button",{name:"Нравится фильм"}).getAttribute("aria-pressed"),"true");await step(0);
  await page.getByRole("button",{name:"Сохранить фильм"}).click();assert.equal(await page.getByRole("button",{name:"Сохранить фильм"}).getAttribute("aria-pressed"),"true");await page.getByRole("button",{name:"Сохранить фильм"}).click();
  await page.evaluate(()=>{Object.defineProperty(navigator,"share",{configurable:true,value:undefined});document.querySelector("#film").dataset.sentinel="same"});
- await page.getByRole("button",{name:"Поделиться фильмом"}).click();await page.locator("#share-link").waitFor();assert.equal(new URL(await page.locator("#share-link").inputValue()).search,"?lang=ru");await page.getByRole("button",{name:"Закрыть",exact:true}).click();
+ await page.getByRole("button",{name:"Поделиться фильмом"}).click();await page.locator("#share-link").waitFor();const dialog=page.getByRole("dialog",{name:"Поделиться",exact:true});assert.ok(await dialog.isVisible());for(const [id,origin] of [["x","https://twitter.com"],["telegram","https://t.me"],["whatsapp","https://wa.me"]]){const link=dialog.locator("#share-target-"+id),box=await link.boundingBox();assert.ok(box&&box.height>=44&&box.x>=0&&box.y>=0&&box.x+box.width<=width&&box.y+box.height<=844);assert.equal(new URL(await link.getAttribute("href")).origin,origin)}assert.ok(await dialog.getByRole("button",{name:"Другие приложения"}).isHidden());assert.equal(new URL(await page.locator("#share-link").inputValue()).search,"?lang=ru");await page.getByRole("button",{name:"Закрыть",exact:true}).click();
  await page.getByRole("button",{name:"Включить звук"}).click();assert.equal(await film.evaluate(v=>v.muted),false);await page.getByRole("button",{name:"Выключить звук"}).click();
  await page.getByRole("button",{name:"Выбрать повод"}).click();
  assert.equal(await film.getAttribute("data-sentinel"),"same");await within(page.locator('[data-event="business"]'));
@@ -87,7 +87,7 @@ try{
  await page.evaluate(()=>{Object.defineProperty(navigator,"share",{configurable:true,value:undefined})});
  await page.getByRole("button",{name:"Поделиться образом"}).click();
  await page.locator("#share-link").waitFor();
- const shared=new URL(await page.locator("#share-link").inputValue());assert.equal(shared.searchParams.get("event"),"wedding");assert.equal(shared.searchParams.get("look"),"ivory");
+ const shared=new URL(await page.locator("#share-link").inputValue());assert.equal(shared.searchParams.get("event"),"wedding");assert.equal(shared.searchParams.get("look"),"ivory");const xShared=new URL(await page.locator("#share-target-x").getAttribute("href"));const xLook=new URL(xShared.searchParams.get("url"));assert.equal(xLook.searchParams.get("look"),"ivory");assert.equal(xLook.searchParams.get("lang"),"en");assert.equal(xShared.searchParams.get("hashtags"),"BuildInPublic,AIEngineering,FashionTech,Menswear,BitOS");
  await page.getByRole("button",{name:"Закрыть",exact:true}).click();
  await page.goto(url+"?event=business&look=ivory");await page.locator(".app[data-mode=film]").waitFor();
  // Exercise scene boundaries deterministically, independent of browser codec support.
@@ -225,6 +225,7 @@ try{
  await page.goto(url);assert.equal(await page.locator("html").getAttribute("lang"),"en");
  await page.goto(url+"?event=wedding&look=ivory&lang=en");await page.locator("#look-photo").waitFor();
  assert.equal(await page.locator("#screen h2").textContent(),"A lighter accent");await checkX();
+ await page.getByRole("button",{name:"Share look"}).click();await page.getByRole("dialog",{name:"Share",exact:true}).waitFor();assert.ok(await page.getByRole("button",{name:"Copy link",exact:true}).isVisible());await page.screenshot({path:"artifacts/atelier23-share-"+width+".png"});await page.keyboard.press("Escape");assert.ok(await page.locator("#share-panel").isHidden());
  await page.screenshot({path:"artifacts/atelier23-international-"+width+".png"});
  console.log("PASS "+width+"px international and X share");
  assert.deepEqual(errors,[]);console.log("PASS "+width+"px: full-bleed video, overlay actions, same-player transition, swipe, direct booking, plan and personalization");await context.close();
