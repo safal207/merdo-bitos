@@ -28,7 +28,7 @@ try{
  await page.getByRole("button",{name:"Нравится фильм"}).click();assert.equal(await page.getByRole("button",{name:"Нравится фильм"}).getAttribute("aria-pressed"),"true");await step(0);
  await page.getByRole("button",{name:"Сохранить фильм"}).click();assert.equal(await page.getByRole("button",{name:"Сохранить фильм"}).getAttribute("aria-pressed"),"true");await page.getByRole("button",{name:"Сохранить фильм"}).click();
  await page.evaluate(()=>{Object.defineProperty(navigator,"share",{configurable:true,value:undefined});document.querySelector("#film").dataset.sentinel="same"});
- await page.getByRole("button",{name:"Поделиться фильмом"}).click();await page.locator("#share-link").waitFor();assert.equal(new URL(await page.locator("#share-link").inputValue()).search,"");await page.getByRole("button",{name:"Закрыть",exact:true}).click();
+ await page.getByRole("button",{name:"Поделиться фильмом"}).click();await page.locator("#share-link").waitFor();assert.equal(new URL(await page.locator("#share-link").inputValue()).search,"?lang=ru");await page.getByRole("button",{name:"Закрыть",exact:true}).click();
  await page.getByRole("button",{name:"Включить звук"}).click();assert.equal(await film.evaluate(v=>v.muted),false);await page.getByRole("button",{name:"Выключить звук"}).click();
  await page.getByRole("button",{name:"Выбрать повод"}).click();
  assert.equal(await film.getAttribute("data-sentinel"),"same");await within(page.locator('[data-event="business"]'));
@@ -184,6 +184,46 @@ try{
  assert.match(await page.locator("#status").textContent(),/Пока нет/);assert.equal(await page.locator('[data-metric="booking"] b').textContent(),"0");
  await page.evaluate(key=>localStorage.setItem(key,"{broken"),analyticsKey);await page.locator("#refresh").click();
  assert.match(await page.locator("#status").textContent(),/недоступно или повреждено/);assert.equal(await page.locator('[data-metric="booking"] b').textContent(),"—");
+ 
+ // International entry, live language changes, retained state, and social card.
+ await page.evaluate(()=>{localStorage.removeItem("bitos.atelier23.fashionOverlay.v1");localStorage.removeItem("bitos.atelier23.fashionOverlay.locale.v1")});
+ await page.goto(url+"?lang=en");await page.getByRole("button",{name:"Choose an occasion",exact:true}).filter({visible:true}).waitFor();
+ assert.equal(await page.locator("html").getAttribute("lang"),"en");
+ assert.equal(await page.locator('meta[name="twitter:card"]').getAttribute("content"),"summary_large_image");
+ assert.equal(await page.locator('meta[property="og:locale"]').getAttribute("content"),"en_US");
+ assert.equal(await page.locator('meta[name="twitter:title"]').getAttribute("content"),"ATELIER 23 | Interactive Fashion Experience");
+ const checkX=async()=>{
+  const a=page.getByRole("link",{name:"Share on X"}),b=await a.boundingBox();
+  assert.ok(b&&b.height>=44&&b.x>=0&&b.x+b.width<=width&&b.y>=0&&b.y+b.height<=844,"X share outside viewport");
+  const x=new URL(await a.getAttribute("href")),dest=new URL(x.searchParams.get("url"));
+  assert.equal(x.origin,"https://twitter.com");assert.equal(dest.search,"?lang=en");assert.equal(dest.hash,"");
+  assert.equal(x.searchParams.get("hashtags"),"BuildInPublic,AIEngineering,FashionTech,Menswear,BitOS");
+ };
+ await checkX();await viewport();
+ await page.locator("#cue-cta").click();await page.getByRole("button",{name:"Business meeting"}).click();
+ assert.equal(await page.locator("#screen h2").textContent(),"Confident classics");
+ await page.getByRole("button",{name:"Save to favourites"}).click();
+ assert.equal(await page.getByRole("button",{name:"Save to favourites"}).getAttribute("aria-pressed"),"true");
+ const beforeLocale=await page.evaluate(()=>localStorage.getItem("bitos.atelier23.fashionOverlay.v1"));
+ await page.locator("#locale-toggle").click();assert.equal(await page.locator("html").getAttribute("lang"),"ru");
+ assert.equal(await page.locator("#screen h2").textContent(),"Уверенная классика");
+ assert.equal(await page.getByRole("button",{name:"В избранное"}).getAttribute("aria-pressed"),"true");
+ assert.equal(await page.evaluate(()=>localStorage.getItem("bitos.atelier23.fashionOverlay.v1")),beforeLocale);
+ await checkX();await page.locator("#locale-toggle").click();
+ assert.equal(await page.locator("#screen h2").textContent(),"Confident classics");await viewport();
+ await page.getByRole("button",{name:"Choose this look"}).click();await step(2);await viewport();
+ await page.getByRole("button",{name:"Confirm date and wardrobe"}).click();
+ await page.locator("#date").fill("2000-01-01");await page.getByRole("button",{name:"Done",exact:true}).click();
+ assert.equal(await page.locator("#date-error").textContent(),"Choose today or a future date.");
+ await page.getByRole("button",{name:"Not sure yet"}).click();await page.locator('[data-own="shirt"]').check();
+ await page.getByRole("button",{name:"Done",exact:true}).click();await step(4);await viewport();
+ await page.locator("#plan").click();assert.equal(await page.locator(".plan-list .done").count(),4);
+ await page.getByRole("button",{name:"Favourites · 1"}).click();assert.equal(await page.locator(".saved-item").count(),1);
+ await page.goto(url);assert.equal(await page.locator("html").getAttribute("lang"),"en");
+ await page.goto(url+"?event=wedding&look=ivory&lang=en");await page.locator("#look-photo").waitFor();
+ assert.equal(await page.locator("#screen h2").textContent(),"A lighter accent");await checkX();
+ await page.screenshot({path:"artifacts/atelier23-international-"+width+".png"});
+ console.log("PASS "+width+"px international and X share");
  assert.deepEqual(errors,[]);console.log("PASS "+width+"px: full-bleed video, overlay actions, same-player transition, swipe, direct booking, plan and personalization");await context.close();
  }
 }finally{await browser.close();server.close()}
