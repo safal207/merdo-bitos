@@ -1,5 +1,10 @@
 // Locale layer: raw RU remains canonical; no business identifiers or state are translated.
 export const translations = {
+"Поделиться": "Share",
+"Куда отправить?": "Where to share?",
+"Другие приложения": "More apps",
+"Копировать ссылку": "Copy link",
+"Выберите приложение или скопируйте ссылку.": "Choose an app or copy the link.",
   "Один образ, один шаг. Независимый концепт персонального подбора BitOS.": "One look, one step. An independent personal styling concept by BitOS.",
   "Смотрите. Выбирайте. Готовьтесь.": "Watch. Choose. Get ready.",
   "Деловая встреча": "Business meeting",
