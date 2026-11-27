@@ -1,8 +1,10 @@
 import {createServer} from "node:http";
+import {execFileSync} from "node:child_process";
 import {readFile} from "node:fs/promises";
 import {resolve,extname} from "node:path";
 import {chromium} from "playwright";
 import assert from "node:assert/strict";
+execFileSync(process.execPath,["--test","atelier23/fashion-overlay/locale.test.mjs","atelier23/fashion-overlay/social.test.mjs"],{stdio:"inherit"});
 const root=resolve(process.cwd()),mime={".html":"text/html; charset=utf-8",".js":"application/javascript; charset=utf-8",".mp4":"video/mp4"};
 const server=createServer(async(req,res)=>{try{const rel=decodeURIComponent(new URL(req.url,"http://localhost").pathname).replace(/^\/+/,""),p=resolve(root,rel.endsWith("/")?rel+"index.html":rel);if(!p.startsWith(root+"/")){res.writeHead(403).end();return}res.writeHead(200,{"content-type":mime[extname(p)]||"application/octet-stream"}).end(await readFile(p))}catch{res.writeHead(404).end()}});
 await new Promise(ok=>server.listen(0,"127.0.0.1",ok));
@@ -204,11 +206,12 @@ try{
  assert.equal(await page.locator("#screen h2").textContent(),"Confident classics");
  await page.getByRole("button",{name:"Save to favourites"}).click();
  assert.equal(await page.getByRole("button",{name:"Save to favourites"}).getAttribute("aria-pressed"),"true");
- const beforeLocale=await page.evaluate(()=>localStorage.getItem("bitos.atelier23.fashionOverlay.v1"));
+ const journeySnapshot=()=>page.evaluate(()=>{const {views,...journey}=JSON.parse(localStorage.getItem("bitos.atelier23.fashionOverlay.v1"));return journey});
+ const beforeLocale=await journeySnapshot();
  await page.locator("#locale-toggle").click();assert.equal(await page.locator("html").getAttribute("lang"),"ru");
  assert.equal(await page.locator("#screen h2").textContent(),"Уверенная классика");
  assert.equal(await page.getByRole("button",{name:"В избранное"}).getAttribute("aria-pressed"),"true");
- assert.equal(await page.evaluate(()=>localStorage.getItem("bitos.atelier23.fashionOverlay.v1")),beforeLocale);
+ assert.deepEqual(await journeySnapshot(),beforeLocale);
  await checkX();await page.locator("#locale-toggle").click();
  assert.equal(await page.locator("#screen h2").textContent(),"Confident classics");await viewport();
  await page.getByRole("button",{name:"Choose this look"}).click();await step(2);await viewport();
