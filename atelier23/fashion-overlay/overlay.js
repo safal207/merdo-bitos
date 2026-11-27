@@ -1,5 +1,6 @@
 import {makeTracker} from "./analytics.js";
 import {translate,localizeTree} from "./locale.js";
+import {xIntentURL,X_TEXT,X_TAGS} from "./social.js";
 const ROOT="https://atelier-23.ru/";
 const PHOTO=ROOT+"wp-content/uploads/";
 const BOOK=ROOT+"sign-up-for-a-fitting-room/";
@@ -83,11 +84,12 @@ const requestedLocale=new URLSearchParams(location.search).get("lang");
 let locale=["ru","en"].includes(requestedLocale)?requestedLocale:savedLocale==="en"?"en":"ru";
 const t=raw=>translate(raw,locale);
 const localize=(root=app)=>localizeTree(root,locale);
-const metaOriginals=[...document.querySelectorAll('meta[name="description"],meta[property="og:title"],meta[property="og:description"]')].map(el=>[el,el.content]);
+const metaOriginals=[...document.querySelectorAll('meta[name="description"]')].map(el=>[el,el.content]);
 function applyLocale(){
  document.documentElement.lang=locale;
  localize();
  for(const [el,raw] of metaOriginals)el.content=t(raw);
+ $("share-x").href=xIntentURL(location.href);
  const toggle=$("locale-toggle");
  toggle.textContent=locale==="en"?"RU":"EN";
  toggle.lang=locale==="en"?"ru":"en";
@@ -272,7 +274,7 @@ screen.addEventListener("click",async e=>{
   const item=product(d.share),link=item?shareURL(item):filmURL();
   const shareContext={target:d.share,page,occasion:state.event,...(page==="film"?{cue:$("cue-cta")?.dataset.cue,second:film.currentTime}:{})};
   track("share_click",shareContext);
-  if(navigator.share){try{await navigator.share({title:"ATELIER 23 · "+t(item?.name||"Ваш момент"),url:link});track("share_resolved",shareContext);return}catch(err){if(err.name==="AbortError"){track("share_cancelled",shareContext);return}}}
+  if(navigator.share){try{await navigator.share({title:"ATELIER 23 · "+t(item?.name||"Ваш момент"),text:X_TEXT+" "+X_TAGS.split(",").map(tag=>"#"+tag).join(" "),url:link});track("share_resolved",shareContext);return}catch(err){if(err.name==="AbortError"){track("share_cancelled",shareContext);return}}}
   const panel=$("share-panel"),input=$("share-link"),status=$("share-status");
   if(!panel||!input||!status)return;
   panel.hidden=false;input.value=link;
