@@ -227,6 +227,28 @@ try{
  assert.equal(await page.locator("#screen h2").textContent(),"A lighter accent");await checkX();
  await page.getByRole("button",{name:"Share look"}).click();await page.getByRole("dialog",{name:"Share",exact:true}).waitFor();assert.ok(await page.getByRole("button",{name:"Copy link",exact:true}).isVisible());await page.screenshot({path:"artifacts/atelier23-share-"+width+".png"});await page.keyboard.press("Escape");assert.ok(await page.locator("#share-panel").isHidden());
  await page.screenshot({path:"artifacts/atelier23-international-"+width+".png"});
+ // Image reliability: actual decode of mock responses, not a live origin claim.
+ const imageHost="https://atelier-23.ru/wp-content/**";
+ const seenPhotos=[];
+ await context.route(imageHost,route=>{
+  const u=route.request().url();seenPhotos.push(u);
+  if(u.includes("-300x400.jpg"))return route.fulfill({status:404,body:"not found"});
+  return route.fulfill({status:200,contentType:"image/svg+xml",body:'<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800"><rect width="600" height="800"/></svg>'});
+ });
+ await page.goto(url+"?event=wedding&look=ivory&lang=en");
+ await page.waitForFunction(()=>{const img=document.querySelector("#look-photo img");return img?.naturalWidth>0&&img.src.includes("webp-express")});
+ assert.ok(seenPhotos.some(s=>s.includes("-300x400.jpg")));
+ assert.equal(await page.locator("#look-photo img").getAttribute("referrerpolicy"),"no-referrer");
+ assert.ok(await page.locator("#look-photo .image-fail").isHidden());
+ await context.route(imageHost,route=>route.fulfill({status:404,body:"not found"}));
+ await page.reload();await page.locator("#look-photo .image-fail").waitFor();
+ assert.equal(await page.locator("#look-photo .image-fail").textContent(),"Photo unavailable");
+ assert.ok(await page.getByRole("button",{name:"Choose this look"}).isVisible());
+ await page.getByRole("button",{name:"Choose this look"}).click();
+ await page.locator("#screen .image-fail").waitFor();
+ assert.ok(await page.locator("#book").isVisible());
+ console.log("PASS "+width+"px image fallback and complete outage");
+ 
  console.log("PASS "+width+"px international and X share");
  assert.deepEqual(errors,[]);console.log("PASS "+width+"px: full-bleed video, overlay actions, same-player transition, swipe, direct booking, plan and personalization");await context.close();
  }
