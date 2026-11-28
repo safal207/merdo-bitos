@@ -1,8 +1,9 @@
 // Disabled until an HTTPS backend is deliberately configured.
 export const SOCIAL_API="";
-export function createSocialClient({endpoint=SOCIAL_API,fetcher=globalThis.fetch,storage=globalThis.localStorage,uuid=()=>crypto.randomUUID(),onUpdate=()=>{},onStatus=()=>{}}={}){
+export function createSocialClient({endpoint=SOCIAL_API,fetcher=globalThis.fetch,storage,uuid=()=>crypto.randomUUID(),onUpdate=()=>{},onStatus=()=>{}}={}){
  const ids=["film","navy","grey","black","ivory","travel-navy","travel-black"];
  const enabled=typeof endpoint==="string"&&/^https:\/\/[^/]+(?:\/[^?#]*)?$/.test(endpoint);
+ if(storage===undefined){try{storage=globalThis.localStorage}catch{storage=null}}
  const key="bitos.atelier23.social.session.v1";let token="",snapshot=null,queue=Promise.resolve(),pending=0;
  try{token=storage.getItem(key)||""}catch{}
  const clear=()=>{token="";try{storage.removeItem(key)}catch{}};
@@ -26,7 +27,7 @@ export function createSocialClient({endpoint=SOCIAL_API,fetcher=globalThis.fetch
   const eventId=uuid();pending++;onStatus("pending");
   queue=queue.then(async()=>{
    try{await session();let result;try{result=await request("/v1/likes",{target,eventId},true)}catch(e){if(e.status===401){clear();throw e}if(e.status)throw e;result=await request("/v1/likes",{target,eventId},true)}
-    if(result.accepted!==true)throw Error("Unconfirmed");accept(result);onStatus("ready");
+    if(result.accepted!==true)throw Error("Unconfirmed");accept(result);onStatus(pending>1?"pending":"ready");
    }catch(e){if(e.status===401)clear();onStatus(e.status===429?"limited":"offline")}finally{pending--}
   });
   return queue;
