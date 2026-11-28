@@ -93,7 +93,7 @@ function render(){
  $("export").disabled=!demo&&(!log.available||!log.rows.length);
  $("metrics").replaceChildren(
  metric("Просмотры ролика","filmViews",value("filmViews"),"≥ 3 секунд",true),metric("Выбрали образ","looks",value("looks"),demo?"Участники когорты":"Нажатия CTA"),metric("Переходы к примерке","booking",value("booking"),"Не подтверждённые записи",true),metric("Покупки","sales",demo?DEMO.sales:null,demo?"Условные покупки":"Нет данных"),
- metric("Просмотры образов","lookViews",value("lookViews"),"События"),metric("Лайки","likes",value("likes"),"Добавления"),metric("Сохранения","saves",value("saves"),"Добавления"),metric("Выручка","revenue",demo?DEMO.revenue:null,demo?"Условная · 12 × 180 000 ₽":"Нет данных",true,rub));
+ metric("Просмотры образов","lookViews",value("lookViews"),"События"),metric("Лайки","likes",value("likes"),"Нажатия, не уникальные люди"),metric("Сохранения","saves",value("saves"),"Добавления"),metric("Выручка","revenue",demo?DEMO.revenue:null,demo?"Условная · 12 × 180 000 ₽":"Нет данных",true,rub));
  const funnel=demo?DEMO.funnel:localFunnel(log.rows);
  $("funnel-note").textContent=demo?"Условная когорта: уникальные участники, прошедшие предыдущие этапы.":"Последовательные этапы по ID визита в сохранённом журнале. Прямые переходы и новые загрузки могут не войти.";
  const base=funnel[0][1],last=funnel.at(-1)[1],available=demo||log.available;
