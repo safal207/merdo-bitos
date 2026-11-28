@@ -1,5 +1,6 @@
 // Locale layer: raw RU remains canonical; no business identifiers or state are translated.
 export const translations = {
+  "Лайки на этом устройстве:": "Likes on this device:",
 "Поделиться": "Share",
 "Куда отправить?": "Where to share?",
 "Другие приложения": "More apps",

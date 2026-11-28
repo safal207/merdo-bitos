@@ -17,6 +17,21 @@ assert.equal(makeTracker(blocked,"test")("film_view"),false);
 console.log("PASS analytics schema, bounded storage, no personal data/sale event, safe storage failure");
 
 import {DEMO,localFunnel,localProducts,rate} from "../atelier23/fashion-overlay/analytics/showcase.js";
+const repeatData=new Map(),repeatStore={getItem:k=>repeatData.get(k)??null,setItem:(k,v)=>repeatData.set(k,v)};
+const repeat=makeTracker(repeatStore,"same-visitor");
+assert.equal(repeat("reaction",{intent:"like_on",target:"navy"}),true);
+for(let i=0;i<4;i++)assert.equal(repeat("reaction",{intent:"like_repeat",target:"navy"}),true);
+repeat("reaction",{intent:"like_on",target:"film"});
+repeat("reaction",{intent:"like_repeat",target:"film"});
+repeat("reaction",{intent:"like_off",target:"grey"});
+const repeatRows=readLog(repeatStore).rows,repeatSummary=summarize(repeatRows);
+assert.equal(repeatSummary.likes,7);
+assert.equal(repeatSummary.visits,1);
+assert.equal(repeatSummary.unlikes,1);
+assert.equal(localProducts(repeatRows).find(p=>p.id==="navy").likes,5);
+assert.equal(localProducts(repeatRows).find(p=>p.id==="grey").likes,0);
+console.log("PASS repeated likes counted per tap, not per unique visitor");
+
 assert.equal(DEMO.funnel[0][1],DEMO.starts);
 assert.ok(DEMO.funnel.every((r,i)=>!i||r[1]<=DEMO.funnel[i-1][1]));
 assert.ok(DEMO.retention.every((r,i)=>!i||(r[0]>DEMO.retention[i-1][0]&&r[1]<=DEMO.retention[i-1][1])));

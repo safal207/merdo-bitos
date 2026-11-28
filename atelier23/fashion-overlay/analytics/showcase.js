@@ -36,7 +36,7 @@ export const CATALOG=[
  ["travel-navy","Свободная элегантность","Синие брюки","2025/10/Atelier_25_10_21_0453-600x800.jpg"],
  ["travel-black","Лаконичный гардероб","Чёрные брюки","2025/10/Atelier_25_10_21_0251-600x800.jpg"]
 ];
-export function localProducts(rows){return CATALOG.map(([id])=>{const count=(type,intent)=>rows.filter(r=>r.target===id&&r.type===type&&(!intent||r.intent===intent)).length;return {id,views:count("look_view"),likes:count("reaction","like_on"),saves:count("reaction","save_on"),selected:count("look_selected"),booking:count("booking_click")}})}
+export function localProducts(rows){return CATALOG.map(([id])=>{const count=(type,intent)=>rows.filter(r=>r.target===id&&r.type===type&&(!intent||r.intent===intent)).length;return {id,views:count("look_view"),likes:count("reaction","like_on")+count("reaction","like_repeat"),saves:count("reaction","save_on"),selected:count("look_selected"),booking:count("booking_click")}})}
 export const rate=(a,b)=>b>0?a/b*100:null;
 // Ordered local cohort: one visit ID, chronological event sequence. A page
 // reload starts a new visit; the 2000-row cap means only retained history.
