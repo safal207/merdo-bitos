@@ -1,5 +1,11 @@
 // Locale layer: raw RU remains canonical; no business identifiers or state are translated.
 export const translations = {
+ "Обновление общего счётчика":"Updating global count",
+ "Общий счётчик недоступен":"Global count unavailable",
+ "Общий счётчик":"Global count",
+ "Лимит общих реакций":"Global reaction limit",
+ "Популярные образы":"Popular looks",
+ "Подтверждённые нажатия, не уникальные люди.":"Confirmed taps, not unique people.",
   "Лайки на этом устройстве:": "Likes on this device:",
 "Поделиться": "Share",
 "Куда отправить?": "Where to share?",
