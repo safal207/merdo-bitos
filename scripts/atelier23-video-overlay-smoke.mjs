@@ -27,7 +27,7 @@ try{
  assert.ok(stage&&app&&Math.abs(stage.height-app.height)<1&&Math.abs(stage.width-app.width)<1);
  const within=async loc=>{const b=await loc.boundingBox();assert.ok(b&&b.x>=stage.x-1&&b.y>=stage.y-1&&b.x+b.width<=stage.x+stage.width+1&&b.y+b.height<=stage.y+stage.height+1,"Not on video")};
  await within(page.getByRole("button",{name:"Выбрать повод"}));await within(page.getByRole("button",{name:"Нравится фильм"}));
- await page.getByRole("button",{name:"Нравится фильм"}).click();assert.equal(await page.getByRole("button",{name:"Нравится фильм"}).getAttribute("aria-pressed"),"true");await step(0);
+ const filmLike=page.getByRole("button",{name:"Нравится фильм"});await filmLike.click();await filmLike.click();await filmLike.click();assert.equal(await filmLike.getAttribute("data-liked"),"true");assert.equal(await filmLike.locator("[data-like-count]").textContent(),"3");await step(0);await viewport();
  await page.getByRole("button",{name:"Сохранить фильм"}).click();assert.equal(await page.getByRole("button",{name:"Сохранить фильм"}).getAttribute("aria-pressed"),"true");await page.getByRole("button",{name:"Сохранить фильм"}).click();
  await page.evaluate(()=>{Object.defineProperty(navigator,"share",{configurable:true,value:undefined});document.querySelector("#film").dataset.sentinel="same"});
  await page.getByRole("button",{name:"Поделиться фильмом"}).click();await page.locator("#share-link").waitFor();const dialog=page.getByRole("dialog",{name:"Поделиться",exact:true});assert.ok(await dialog.isVisible());for(const [id,origin] of [["x","https://twitter.com"],["telegram","https://t.me"],["whatsapp","https://wa.me"]]){const link=dialog.locator("#share-target-"+id),box=await link.boundingBox();assert.ok(box&&box.height>=44&&box.x>=0&&box.y>=0&&box.x+box.width<=width&&box.y+box.height<=844);assert.equal(new URL(await link.getAttribute("href")).origin,origin)}assert.ok(await dialog.getByRole("button",{name:"Другие приложения"}).isHidden());assert.equal(new URL(await page.locator("#share-link").inputValue()).search,"?lang=ru");await page.getByRole("button",{name:"Закрыть",exact:true}).click();
@@ -36,7 +36,7 @@ try{
  assert.equal(await film.getAttribute("data-sentinel"),"same");await within(page.locator('[data-event="business"]'));
  await page.getByRole("button",{name:"Деловая встреча"}).click();assert.equal(await film.evaluate(v=>v.paused),true);await step(1);await viewport();
  await page.waitForFunction(()=>document.querySelector("[data-view-count=navy]")?.textContent.startsWith("1 просм."));await step(1);
- await page.getByRole("button",{name:"Нравится"}).click();await step(1);
+ const lookLike=page.getByRole("button",{name:"Нравится",exact:true});await lookLike.click();await lookLike.click();assert.equal(await lookLike.locator("[data-like-count]").textContent(),"2");await step(1);
  assert.match(await page.locator("[data-view-count=navy]").textContent(),/^1 просм\./);
  await page.getByRole("button",{name:"В избранное"}).click();
  assert.equal(await page.getByRole("button",{name:"В избранное"}).getAttribute("aria-pressed"),"true");
@@ -107,10 +107,11 @@ try{
  await page.locator("#cue-cta").waitFor();
  const rows=()=>page.evaluate(key=>JSON.parse(localStorage.getItem(key)||'{"rows":[]}').rows,analyticsKey);
  assert.equal((await rows()).length,0);
+ const countBefore=Number(await page.locator('[data-like-count="film"]').textContent());
  await page.getByRole("button",{name:"Нравится фильм"}).click();
- const wasLiked=await page.getByRole("button",{name:"Нравится фильм"}).getAttribute("aria-pressed");
  await page.getByRole("button",{name:"Нравится фильм"}).click();
- assert.deepEqual((await rows()).filter(r=>r.type==="reaction").map(r=>r.intent),wasLiked==="true"?["like_on","like_off"]:["like_off","like_on"]);
+ assert.equal(Number(await page.locator('[data-like-count="film"]').textContent()),countBefore+2);
+ assert.deepEqual((await rows()).filter(r=>r.type==="reaction").map(r=>r.intent),[countBefore?"like_repeat":"like_on","like_repeat"]);
  await page.evaluate(()=>{const v=document.querySelector("#film");Object.defineProperty(v,"paused",{configurable:true,value:true});Object.defineProperty(v,"seeking",{configurable:true,value:false})});
  await seek(8.8);assert.equal((await rows()).filter(r=>r.type==="scene_view").length,0);
  // The simulated media clock exercises accounting, not physical video decoding.
@@ -248,6 +249,27 @@ try{
  await page.locator("#screen .image-fail").waitFor();
  assert.ok(await page.locator("#book").isVisible());
  console.log("PASS "+width+"px image fallback and complete outage");
+ // Repeat-like migration, isolation, persistence and language switching.
+ await page.evaluate(()=>{localStorage.setItem("bitos.atelier23.fashionOverlay.v1",JSON.stringify({likes:["film","navy"],saved:[]}));localStorage.removeItem("bitos.atelier23.fashionOverlay.locale.v1")});
+ await page.goto(url+"?lang=en");await page.locator('[data-like-count="film"]').waitFor();
+ assert.equal(await page.locator('[data-like-count="film"]').textContent(),"1");
+ const filmRepeat=page.getByRole("button",{name:"Like film",exact:true});
+ for(let i=0;i<5;i++)await filmRepeat.click();
+ assert.equal(await page.locator('[data-like-count="film"]').textContent(),"6");
+ await page.reload();assert.equal(await page.locator('[data-like-count="film"]').textContent(),"6");
+ await page.goto(url+"?event=business&look=navy&lang=en");await page.locator('[data-like-count="navy"]').waitFor();
+ assert.equal(await page.locator('[data-like-count="navy"]').textContent(),"1");
+ await page.getByRole("button",{name:"Like",exact:true}).click();
+ await page.locator("#locale-toggle").click();
+ assert.equal(await page.locator('[data-like-count="navy"]').textContent(),"2");
+ assert.equal(await page.locator('[data-like-count="navy"]').getAttribute("aria-label"),"Лайки на этом устройстве: 2");
+ await page.goto(url+"?event=wedding&look=ivory&lang=en");await page.locator('[data-like-count="ivory"]').waitFor();
+ assert.equal(await page.locator('[data-like-count="ivory"]').textContent(),"0");
+ await page.getByRole("button",{name:"Like",exact:true}).click();
+ assert.equal(await page.locator('[data-like-count="ivory"]').textContent(),"1");
+ assert.deepEqual(await page.evaluate(()=>{const s=JSON.parse(localStorage.getItem("bitos.atelier23.fashionOverlay.v1"));return [s.likeCounts.film,s.likeCounts.navy,s.likeCounts.ivory,s.saved.length]}),[6,2,1,0]);
+ await viewport();console.log("PASS "+width+"px repeated likes, migration, persistence and isolation");
+ 
  
  console.log("PASS "+width+"px international and X share");
  assert.deepEqual(errors,[]);console.log("PASS "+width+"px: full-bleed video, overlay actions, same-player transition, swipe, direct booking, plan and personalization");await context.close();
