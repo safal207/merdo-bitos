@@ -1,0 +1,22 @@
+name: Atelier 23 — global social prototype
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'server/atelier23-social/**'
+      - 'atelier23/fashion-overlay/global-social.js'
+      - '.github/workflows/atelier23-social.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  social:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Backend and client integration
+        run: node --test server/atelier23-social/server.test.mjs
