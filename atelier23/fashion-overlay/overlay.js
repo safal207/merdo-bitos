@@ -21,9 +21,14 @@ const today=()=>{let d=new Date();return [d.getFullYear(),String(d.getMonth()+1)
 const validDate=d=>typeof d==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(d)&&!Number.isNaN(Date.parse(d))&&new Date(d+"T00:00:00Z").toISOString().slice(0,10)===d&&d>=today();
 function restore(){
  let r={};try{r=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch{}
- const a={event:Object.hasOwn(events,r.event)?r.event:"",likes:[],saved:[],plans:{},views:{}};
+ const a={event:Object.hasOwn(events,r.event)?r.event:"",likes:[],likeCounts:{},saved:[],plans:{},views:{}};
  for(const k of ["likes","saved"])a[k]=Array.isArray(r[k])?[...new Set(r[k].filter(x=>x==="film"||product(x)))]:[];
- for(const id of ["film",...products.map(p=>p.id)]){const v=r.views?.[id];a.views[id]=Number.isSafeInteger(v)&&v>=0?v:0}
+ for(const id of ["film",...products.map(p=>p.id)]){
+  const v=r.views?.[id],n=r.likeCounts?.[id];
+  a.views[id]=Number.isSafeInteger(v)&&v>=0?v:0;
+  a.likeCounts[id]=Number.isSafeInteger(n)&&n>=0?n:(a.likes.includes(id)?1:0);
+ }
+ a.likes=Object.keys(a.likeCounts).filter(id=>a.likeCounts[id]>0);
  for(const e of Object.keys(events)){
   const t=r.plans?.[e]||{},p=blank();
   p.date=validDate(t.date)?t.date:"";p.dateSet=!!t.dateSet&&(!t.date||!!p.date);
@@ -148,6 +153,10 @@ let shareData=null,shareTrigger=null;
 const sharePanel=()=>"<div class=\"share-panel share-sheet\" id=\"share-panel\" hidden role=\"dialog\" aria-label=\"Поделиться\"><p class=\"share-title\">Куда отправить?</p><div class=\"share-options\"><a id=\"share-target-x\" target=\"_blank\" rel=\"noopener noreferrer\">X</a><a id=\"share-target-telegram\" target=\"_blank\" rel=\"noopener noreferrer\">Telegram</a><a id=\"share-target-whatsapp\" target=\"_blank\" rel=\"noopener noreferrer\">WhatsApp</a><button type=\"button\" data-action=\"native-share\">Другие приложения</button></div><input id=\"share-link\" aria-label=\"Ссылка для отправки\" readonly><p id=\"share-status\" role=\"status\"></p><button type=\"button\" class=\"secondary\" data-action=\"copy-share\">Копировать ссылку</button><button type=\"button\" class=\"link\" data-action=\"close-share\">Закрыть</button></div>";
 const eye='<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
 let viewCleanup=()=>{};
+const likeCount=id=>state.likeCounts[id]||0;
+const likeDescription=id=>"Лайки на этом устройстве: "+likeCount(id);
+const likeDisplay=id=>likeCount(id)>999999?"999999+":String(likeCount(id));
+const likeButton=id=>'<button class="icon repeat-like" data-like="'+id+'" data-liked="'+(likeCount(id)>0)+'" aria-label="'+(id==="film"?"Нравится фильм":"Нравится")+'" aria-describedby="like-count-'+id+'" title="'+likeDescription(id)+'">'+icon("heart")+'<span class="like-count" id="like-count-'+id+'" data-like-count="'+id+'" aria-live="polite" aria-atomic="true" aria-label="'+likeDescription(id)+'">'+likeDisplay(id)+'</span></button>';
 const viewText=id=>String(state.views[id]||0)+" просм. · на устройстве";
 const viewLabel=id=>'<span class="tiny" data-view-count="'+id+'" aria-label="Просмотры на этом устройстве: '+(state.views[id]||0)+'">'+viewText(id)+'</span>';
 function recordView(id){
@@ -206,12 +215,12 @@ function render(){
  $("back").disabled=page==="film";$("plan").disabled=page==="plan";
  let body="";
  if(page==="film"){
-  body='<div class="story overlay"><div class="mark-overlay">'+atelierMark+'</div><div class="video-controls"><button class="icon" data-action="play" aria-label="Воспроизвести фильм">▶</button><button class="icon" data-action="sound" aria-label="Включить звук">♫</button></div><div class="overlay-actions"><div class="eye-stat">'+eye+viewLabel("film")+'</div><button class="icon" data-like="film" aria-label="Нравится фильм" aria-pressed="'+state.likes.includes("film")+'">'+icon("heart")+'</button><button class="icon" data-save="film" aria-label="Сохранить фильм" aria-pressed="'+state.saved.includes("film")+'">'+icon("save")+'</button><button class="icon" data-share="film" aria-label="Поделиться фильмом">'+icon("share")+'</button></div><div class="overlay-copy"><span class="eyebrow">FILM 01 · YOUR MOMENT</span><h1><span id="cue-title">Ваш момент.</span><br><i id="cue-subtitle">Ваш стиль.</i></h1></div><button class="primary" id="cue-cta" data-action="cue" data-intent="event" data-cue="emotion">'+(state.event?"Продолжить":"Выбрать повод")+'</button><div class="cue-footer"><span class="tiny">Рекламный концепт</span><button class="link" id="cue-other" data-action="start" hidden>Выбрать повод</button></div><a id="film-fallback" class="link" hidden href="../assets/atelier23-film.mp4">Открыть ролик ↗</a></div>';
+  body='<div class="story overlay"><div class="mark-overlay">'+atelierMark+'</div><div class="video-controls"><button class="icon" data-action="play" aria-label="Воспроизвести фильм">▶</button><button class="icon" data-action="sound" aria-label="Включить звук">♫</button></div><div class="overlay-actions"><div class="eye-stat">'+eye+viewLabel("film")+'</div>'+likeButton("film")+'<button class="icon" data-save="film" aria-label="Сохранить фильм" aria-pressed="'+state.saved.includes("film")+'">'+icon("save")+'</button><button class="icon" data-share="film" aria-label="Поделиться фильмом">'+icon("share")+'</button></div><div class="overlay-copy"><span class="eyebrow">FILM 01 · YOUR MOMENT</span><h1><span id="cue-title">Ваш момент.</span><br><i id="cue-subtitle">Ваш стиль.</i></h1></div><button class="primary" id="cue-cta" data-action="cue" data-intent="event" data-cue="emotion">'+(state.event?"Продолжить":"Выбрать повод")+'</button><div class="cue-footer"><span class="tiny">Рекламный концепт</span><button class="link" id="cue-other" data-action="start" hidden>Выбрать повод</button></div><a id="film-fallback" class="link" hidden href="../assets/atelier23-film.mp4">Открыть ролик ↗</a></div>';
  }else if(page==="event"){
   body='<div class="story overlay event-overlay"><div class="overlay-copy"><span class="eyebrow">01 / ПОВОД</span><h1>К чему вы<br><i>готовитесь?</i></h1></div><div class="choice-list">'+Object.entries(events).map(([id,label])=>'<button class="choice" data-event="'+id+'">'+label+'<span>↗</span></button>').join("")+'</div></div>';
  }else if(page==="look"){
   const a=list();index=Math.max(0,Math.min(index,a.length-1));const item=a[index];
-  body='<div class="story product-overlay">'+heading("02 / "+events[state.event],"Ваш образ?")+'<div class="media" id="look-photo" tabindex="0" aria-label="Фото; свайп вверх или вниз, либо клавиши стрелок"><img data-photo="'+item.image+'" referrerpolicy="no-referrer" alt="'+item.item+'"><div class="image-fail" hidden>Фото недоступно</div><span class="number">'+(index+1)+' / '+a.length+'</span><div class="reactions"><button class="icon" data-like="'+item.id+'" aria-label="Нравится" aria-pressed="'+state.likes.includes(item.id)+'">'+icon("heart")+'</button><button class="icon" data-save="'+item.id+'" aria-label="В избранное" aria-pressed="'+state.saved.includes(item.id)+'">'+icon("save")+'</button><button class="icon" data-share="'+item.id+'" aria-label="Поделиться образом">'+icon("share")+'</button></div></div><div class="copy"><h2>'+item.name+'</h2><p>'+item.item+' · '+price(item)+'</p><span class="tiny">Цена изделия · <a href="'+url(item)+'">Каталог ↗</a> · '+viewLabel(item.id)+'</span></div>'+primary("Хочу этот образ","choose")+'<div class="action-row"><button class="link" data-action="prev" '+(index===0?"disabled":"")+'>↑ Назад</button><button class="link" data-action="next" '+(index===a.length-1?"disabled":"")+'>↓ Другой образ</button></div></div>';
+  body='<div class="story product-overlay">'+heading("02 / "+events[state.event],"Ваш образ?")+'<div class="media" id="look-photo" tabindex="0" aria-label="Фото; свайп вверх или вниз, либо клавиши стрелок"><img data-photo="'+item.image+'" referrerpolicy="no-referrer" alt="'+item.item+'"><div class="image-fail" hidden>Фото недоступно</div><span class="number">'+(index+1)+' / '+a.length+'</span><div class="reactions">'+likeButton(item.id)+'<button class="icon" data-save="'+item.id+'" aria-label="В избранное" aria-pressed="'+state.saved.includes(item.id)+'">'+icon("save")+'</button><button class="icon" data-share="'+item.id+'" aria-label="Поделиться образом">'+icon("share")+'</button></div></div><div class="copy"><h2>'+item.name+'</h2><p>'+item.item+' · '+price(item)+'</p><span class="tiny">Цена изделия · <a href="'+url(item)+'">Каталог ↗</a> · '+viewLabel(item.id)+'</span></div>'+primary("Хочу этот образ","choose")+'<div class="action-row"><button class="link" data-action="prev" '+(index===0?"disabled":"")+'>↑ Назад</button><button class="link" data-action="next" '+(index===a.length-1?"disabled":"")+'>↓ Другой образ</button></div></div>';
  }else if(page==="date"){
   body='<div class="story center">'+heading("СРОК","Когда ваш<br><i>момент?</i>")+'<label class="field">Дата события<input id="date" type="date" min="'+today()+'" value="'+p.date+'"></label>'+primary("Готово","date")+secondary("Пока не знаю","unknown")+'<p class="notice" id="date-error" role="status"></p></div>';
  }else if(page==="wardrobe"){
@@ -274,7 +283,20 @@ $("plan").addEventListener("click",()=>{returnPage=page;go("plan")});
 screen.addEventListener("click",async e=>{
  const b=e.target.closest("button");if(!b||b.disabled)return;const d=b.dataset,p=plan(),a=d.action;
  if(d.event){state.event=d.event;log("occasion_selected");rebuildDeck();persist();return go("look")}
- if(d.like||d.save){const key=d.like?"likes":"saved",id=d.like||d.save;toggle(key,id);const on=state[key].includes(id);log("reaction",{target:id,intent:(d.like?"like_":"save_")+(on?"on":"off")});b.setAttribute("aria-pressed",String(on));return}
+ if(d.like){
+  const id=d.like,previous=likeCount(id);
+  if(!Object.hasOwn(state.likeCounts,id)||previous>=Number.MAX_SAFE_INTEGER)return;
+  state.likeCounts[id]=previous+1;
+  if(!state.likes.includes(id))state.likes.push(id);
+  persist();log("reaction",{target:id,intent:previous?"like_repeat":"like_on"});
+  b.dataset.liked="true";b.title=likeDescription(id);
+  const count=b.querySelector("[data-like-count]");
+  count.textContent=likeDisplay(id);count.setAttribute("aria-label",likeDescription(id));
+  localizeTree(b,locale);
+  if(!motion.matches&&b.animate)b.animate([{transform:"scale(1)"},{transform:"scale(1.13)"},{transform:"scale(1)"}],{duration:180});
+  return;
+ }
+ if(d.save){const id=d.save;toggle("saved",id);const on=state.saved.includes(id);log("reaction",{target:id,intent:on?"save_on":"save_off"});b.setAttribute("aria-pressed",String(on));return}
  if(a==="play"){if(film.paused){filmWanted=true;film.play().catch(()=>{})}else{filmWanted=false;film.pause()}return}
  if(a==="sound"){film.muted=!film.muted;return}
  if(a==="open-film")return go("film");
