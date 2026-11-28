@@ -10,7 +10,7 @@ const types=new Set(["film_view","look_view","scene_view","reaction","share_clic
 const targets=new Set(["film","navy","grey","black","ivory","travel-navy","travel-black"]);
 const cues=new Set(SCENES.map(s=>s[0]));
 const occasions=new Set(["business","wedding","evening","travel","wardrobe"]);
-const intents=new Set(["event","business","tailoring","booking","like_on","like_off","save_on","save_off"]);
+const intents=new Set(["event","business","tailoring","booking","like_on","like_repeat","like_off","save_on","save_off"]);
 const pages=new Set(["film","event","look","result","summary","saved","plan"]);
 const validId=x=>typeof x==="string"&&/^[a-zA-Z0-9-]{1,80}$/.test(x);
 function clean(row){
@@ -48,5 +48,5 @@ export function makeTracker(storage,visit){
 }
 export function summarize(rows){
  const count=(type,predicate=()=>true)=>rows.filter(r=>r.type===type&&predicate(r)).length;
- return {visits:new Set(rows.map(r=>r.visit)).size,filmViews:count("film_view"),lookViews:count("look_view"),likes:count("reaction",r=>r.intent==="like_on"),unlikes:count("reaction",r=>r.intent==="like_off"),saves:count("reaction",r=>r.intent==="save_on"),unsaves:count("reaction",r=>r.intent==="save_off"),shares:count("share_click"),copied:count("link_copied"),shareResolved:count("share_resolved"),occasions:count("occasion_selected"),looks:count("look_selected"),booking:count("booking_click"),tailoring:count("tailoring_click"),scenes:SCENES.map(([id,range,label])=>({id,range,label,views:count("scene_view",r=>r.cue===id),clicks:count("cta_click",r=>r.cue===id)}))};
+ return {visits:new Set(rows.map(r=>r.visit)).size,filmViews:count("film_view"),lookViews:count("look_view"),likes:count("reaction",r=>r.intent==="like_on"||r.intent==="like_repeat"),unlikes:count("reaction",r=>r.intent==="like_off"),saves:count("reaction",r=>r.intent==="save_on"),unsaves:count("reaction",r=>r.intent==="save_off"),shares:count("share_click"),copied:count("link_copied"),shareResolved:count("share_resolved"),occasions:count("occasion_selected"),looks:count("look_selected"),booking:count("booking_click"),tailoring:count("tailoring_click"),scenes:SCENES.map(([id,range,label])=>({id,range,label,views:count("scene_view",r=>r.cue===id),clicks:count("cta_click",r=>r.cue===id)}))};
 }
