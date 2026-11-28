@@ -1,8 +1,8 @@
 import {makeTracker} from "./analytics.js";
+import {attachPhoto} from "./photos.js";
 import {translate,localizeTree} from "./locale.js";
 import {xIntentURL,X_TEXT,X_TAGS} from "./social.js";
 const ROOT="https://atelier-23.ru/";
-const PHOTO=ROOT+"wp-content/uploads/";
 const BOOK=ROOT+"sign-up-for-a-fitting-room/";
 const events={business:"Деловая встреча",wedding:"Свадьба",evening:"Торжество",travel:"Путешествие",wardrobe:"Гардероб"};
 const products=[
@@ -211,7 +211,7 @@ function render(){
   body='<div class="story overlay event-overlay"><div class="overlay-copy"><span class="eyebrow">01 / ПОВОД</span><h1>К чему вы<br><i>готовитесь?</i></h1></div><div class="choice-list">'+Object.entries(events).map(([id,label])=>'<button class="choice" data-event="'+id+'">'+label+'<span>↗</span></button>').join("")+'</div></div>';
  }else if(page==="look"){
   const a=list();index=Math.max(0,Math.min(index,a.length-1));const item=a[index];
-  body='<div class="story product-overlay">'+heading("02 / "+events[state.event],"Ваш образ?")+'<div class="media" id="look-photo" tabindex="0" aria-label="Фото; свайп вверх или вниз, либо клавиши стрелок"><img src="'+PHOTO+item.image+'" alt="'+item.item+'"><div class="image-fail" hidden>Фото недоступно</div><span class="number">'+(index+1)+' / '+a.length+'</span><div class="reactions"><button class="icon" data-like="'+item.id+'" aria-label="Нравится" aria-pressed="'+state.likes.includes(item.id)+'">'+icon("heart")+'</button><button class="icon" data-save="'+item.id+'" aria-label="В избранное" aria-pressed="'+state.saved.includes(item.id)+'">'+icon("save")+'</button><button class="icon" data-share="'+item.id+'" aria-label="Поделиться образом">'+icon("share")+'</button></div></div><div class="copy"><h2>'+item.name+'</h2><p>'+item.item+' · '+price(item)+'</p><span class="tiny">Цена изделия · <a href="'+url(item)+'">Каталог ↗</a> · '+viewLabel(item.id)+'</span></div>'+primary("Хочу этот образ","choose")+'<div class="action-row"><button class="link" data-action="prev" '+(index===0?"disabled":"")+'>↑ Назад</button><button class="link" data-action="next" '+(index===a.length-1?"disabled":"")+'>↓ Другой образ</button></div></div>';
+  body='<div class="story product-overlay">'+heading("02 / "+events[state.event],"Ваш образ?")+'<div class="media" id="look-photo" tabindex="0" aria-label="Фото; свайп вверх или вниз, либо клавиши стрелок"><img data-photo="'+item.image+'" referrerpolicy="no-referrer" alt="'+item.item+'"><div class="image-fail" hidden>Фото недоступно</div><span class="number">'+(index+1)+' / '+a.length+'</span><div class="reactions"><button class="icon" data-like="'+item.id+'" aria-label="Нравится" aria-pressed="'+state.likes.includes(item.id)+'">'+icon("heart")+'</button><button class="icon" data-save="'+item.id+'" aria-label="В избранное" aria-pressed="'+state.saved.includes(item.id)+'">'+icon("save")+'</button><button class="icon" data-share="'+item.id+'" aria-label="Поделиться образом">'+icon("share")+'</button></div></div><div class="copy"><h2>'+item.name+'</h2><p>'+item.item+' · '+price(item)+'</p><span class="tiny">Цена изделия · <a href="'+url(item)+'">Каталог ↗</a> · '+viewLabel(item.id)+'</span></div>'+primary("Хочу этот образ","choose")+'<div class="action-row"><button class="link" data-action="prev" '+(index===0?"disabled":"")+'>↑ Назад</button><button class="link" data-action="next" '+(index===a.length-1?"disabled":"")+'>↓ Другой образ</button></div></div>';
  }else if(page==="date"){
   body='<div class="story center">'+heading("СРОК","Когда ваш<br><i>момент?</i>")+'<label class="field">Дата события<input id="date" type="date" min="'+today()+'" value="'+p.date+'"></label>'+primary("Готово","date")+secondary("Пока не знаю","unknown")+'<p class="notice" id="date-error" role="status"></p></div>';
  }else if(page==="wardrobe"){
@@ -221,7 +221,7 @@ function render(){
   const item=product(p.chosen),missing=item.parts.filter(x=>!p.owned.includes(x)).map(x=>parts[x]),owned=p.owned.includes(item.parts[0]);
   const days=p.date?Math.round((Date.parse(p.date+"T00:00:00Z")-Date.parse(today()+"T00:00:00Z"))/86400000):null;
   const caution=days!==null&&days<56?"Меньше 8 недель: уточните наличие и подгонку.":days!==null&&state.event==="wedding"&&days<92?"Для свадьбы лучше иметь запас около трёх месяцев.":"Срок и наличие подтвердит менеджер.";
-  body='<div class="story product-overlay">'+heading("03 / ВАШ ВЫБОР","Образ <i>найден.</i>")+'<div class="media"><img src="'+PHOTO+item.image+'" alt="'+item.item+'"><div class="image-fail" hidden>Фото недоступно</div></div><div class="copy"><h2>'+item.name+'</h2><p>'+item.item+' · '+(owned?"уже есть":price(item))+'</p><p class="tiny">'+caution+'</p></div><a class="primary" id="book" href="'+BOOK+'">Записаться на примерку ↗</a><button class="link" data-action="details">Уточнить дату и гардероб</button><span class="tiny">Запись подтверждает ателье. Цена не за весь комплект.</span></div>';
+  body='<div class="story product-overlay">'+heading("03 / ВАШ ВЫБОР","Образ <i>найден.</i>")+'<div class="media"><img data-photo="'+item.image+'" referrerpolicy="no-referrer" alt="'+item.item+'"><div class="image-fail" hidden>Фото недоступно</div></div><div class="copy"><h2>'+item.name+'</h2><p>'+item.item+' · '+(owned?"уже есть":price(item))+'</p><p class="tiny">'+caution+'</p></div><a class="primary" id="book" href="'+BOOK+'">Записаться на примерку ↗</a><button class="link" data-action="details">Уточнить дату и гардероб</button><span class="tiny">Запись подтверждает ателье. Цена не за весь комплект.</span></div>';
  }else if(page==="plan"){
   const labels=["Выбрать событие","Уточнить дату","Выбрать образ","Проверить гардероб","Подготовить запрос","Посетить ателье"],targets=["event","date","look","wardrobe","summary","visit"];
   body='<div class="story">'+heading("ЛИЧНЫЙ МАРШРУТ","Мой <i>план.</i>",n+" из 6 этапов")+'<div class="plan-list">'+labels.map((s,i)=>'<button data-jump="'+targets[i]+'" '+(i>0&&!state.event||i>=3&&!p.chosen?"disabled":"")+'><b>'+(completion()[i]?"✓":"○")+'</b><span class="'+(completion()[i]?"done":"")+'">'+s+'</span></button>').join("")+'</div>'+primary("Продолжить","resume")+secondary("Избранное · "+state.saved.length,"saved")+'</div>';
@@ -231,11 +231,17 @@ function render(){
  }else if(page==="visit"){
   body='<div class="story center">'+heading("ПОСЛЕДНИЙ ЭТАП","Вы уже были<br><i>в ателье?</i>","Отмечайте только состоявшийся визит.")+'<label class="checkrow"><input id="visit" type="checkbox" '+(p.visited?"checked":"")+' '+(!p.summary?"disabled":"")+'><span>Я посетил ателье</span></label>'+primary("Готово","plan")+'<p class="tiny">Отметка личная, не подтверждение брони.</p></div>';
  }else if(page==="saved"){
-  body='<div class="story">'+heading("ВАША КОЛЛЕКЦИЯ","Избранное.")+'<div>'+state.saved.map(id=>{if(id==="film")return '<div class="saved-item"><span>ATELIER 23 · Фильм 01</span><button data-action="open-film">Открыть</button><button data-remove="film">Удалить</button></div>';const item=product(id);return '<div class="saved-item"><img src="'+PHOTO+item.image+'" alt=""><span>'+item.name+'</span><button data-remove="'+id+'">Удалить</button></div>'}).join("")+'</div>'+(state.saved.length?"":"<p>Пока нет сохранённых образов.</p>")+primary("К образам","resume")+'</div>';
+  body='<div class="story">'+heading("ВАША КОЛЛЕКЦИЯ","Избранное.")+'<div>'+state.saved.map(id=>{if(id==="film")return '<div class="saved-item"><span>ATELIER 23 · Фильм 01</span><button data-action="open-film">Открыть</button><button data-remove="film">Удалить</button></div>';const item=product(id);return '<div class="saved-item"><img data-photo="'+item.image+'" referrerpolicy="no-referrer" alt=""><span>'+item.name+'</span><button data-remove="'+id+'">Удалить</button></div>'}).join("")+'</div>'+(state.saved.length?"":"<p>Пока нет сохранённых образов.</p>")+primary("К образам","resume")+'</div>';
  }
  shareData=null;shareTrigger=null;
  screen.innerHTML=body+(page==="film"||page==="look"?sharePanel():"");localize(screen);
- screen.querySelectorAll(".media img").forEach(img=>{const fail=()=>{img.hidden=true;img.parentElement.querySelector(".image-fail").hidden=false};img.addEventListener("error",fail);if(img.complete&&!img.naturalWidth)fail()});
+ screen.querySelectorAll("img[data-photo]").forEach(img=>{
+  attachPhoto(img,img.dataset.photo,{onFailure:()=>{
+   img.hidden=true;
+   const fallback=img.parentElement.querySelector(".image-fail");
+   if(fallback)fallback.hidden=false;
+  }});
+ });
  if(page==="film"){syncTimeline(true);updateFilmControls();if(film.error||film.querySelector("source").dataset.failed)$("film-fallback").hidden=false;}
  if(page==="look"){
   const photo=$("look-photo");watchPhoto(photo,list()[index].id);let x=0,y=0;
