@@ -1,4 +1,5 @@
 import {makeTracker} from "./analytics.js";
+import {createSocialClient} from "./global-social.js";
 import {attachPhoto} from "./photos.js";
 import {translate,localizeTree} from "./locale.js";
 import {xIntentURL,X_TEXT,X_TAGS} from "./social.js";
@@ -153,6 +154,21 @@ let shareData=null,shareTrigger=null;
 const sharePanel=()=>"<div class=\"share-panel share-sheet\" id=\"share-panel\" hidden role=\"dialog\" aria-label=\"Поделиться\"><p class=\"share-title\">Куда отправить?</p><div class=\"share-options\"><a id=\"share-target-x\" target=\"_blank\" rel=\"noopener noreferrer\">X</a><a id=\"share-target-telegram\" target=\"_blank\" rel=\"noopener noreferrer\">Telegram</a><a id=\"share-target-whatsapp\" target=\"_blank\" rel=\"noopener noreferrer\">WhatsApp</a><button type=\"button\" data-action=\"native-share\">Другие приложения</button></div><input id=\"share-link\" aria-label=\"Ссылка для отправки\" readonly><p id=\"share-status\" role=\"status\"></p><button type=\"button\" class=\"secondary\" data-action=\"copy-share\">Копировать ссылку</button><button type=\"button\" class=\"link\" data-action=\"close-share\">Закрыть</button></div>";
 const eye='<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
 let viewCleanup=()=>{};
+let globalStatus="pending";
+const globalSocial=createSocialClient({onUpdate:()=>updateGlobalSocial(),onStatus:status=>{globalStatus=status;updateGlobalSocial()}});
+function updateGlobalSocial(){
+ const panel=$("global-social");if(!panel)return;
+ const data=globalSocial.snapshot,id=panel.dataset.target;
+ const status={pending:"Обновление общего счётчика",ready:"Общий счётчик",offline:"Общий счётчик недоступен",limited:"Лимит общих реакций"}[globalStatus];
+ panel.querySelector("[data-global-status]").textContent=status;
+ panel.querySelector("[data-global-count]").textContent=data?String(data.counts[id]):"—";
+ const ranking=panel.querySelector("[data-global-ranking]");ranking.replaceChildren();
+ for(const entry of (data?.ranking||[]).filter(r=>r.count>0).slice(0,3)){
+  const li=document.createElement("li");li.textContent=product(entry.target).name+" · "+entry.count;ranking.append(li);
+ }
+ localizeTree(panel,locale);
+}
+function globalPanel(id){return globalSocial.enabled?'<aside id="global-social" data-target="'+id+'" class="global-social"><span data-global-status></span> <b data-global-count>—</b><details><summary>Популярные образы</summary><ol data-global-ranking></ol><small>Подтверждённые нажатия, не уникальные люди.</small></details></aside>':""}
 const likeCount=id=>state.likeCounts[id]||0;
 const likeDescription=id=>"Лайки на этом устройстве: "+likeCount(id);
 const likeDisplay=id=>likeCount(id)>999999?"999999+":String(likeCount(id));
@@ -244,6 +260,11 @@ function render(){
  }
  shareData=null;shareTrigger=null;
  screen.innerHTML=body+(page==="film"||page==="look"?sharePanel():"");localize(screen);
+ if(globalSocial.enabled&&(page==="film"||page==="look")){
+  const target=page==="film"?"film":list()[index].id;
+  screen.querySelector(".story").insertAdjacentHTML("beforeend",globalPanel(target));
+  updateGlobalSocial();void globalSocial.refresh();
+ }
  screen.querySelectorAll("img[data-photo]").forEach(img=>{
   attachPhoto(img,img.dataset.photo,{onFailure:()=>{
    img.hidden=true;
@@ -288,7 +309,7 @@ screen.addEventListener("click",async e=>{
   if(!Object.hasOwn(state.likeCounts,id)||previous>=Number.MAX_SAFE_INTEGER)return;
   state.likeCounts[id]=previous+1;
   if(!state.likes.includes(id))state.likes.push(id);
-  persist();log("reaction",{target:id,intent:previous?"like_repeat":"like_on"});
+  persist();log("reaction",{target:id,intent:previous?"like_repeat":"like_on"});void globalSocial.like(id);
   b.dataset.liked="true";b.title=likeDescription(id);
   const count=b.querySelector("[data-like-count]");
   count.textContent=likeDisplay(id);count.setAttribute("aria-label",likeDescription(id));
