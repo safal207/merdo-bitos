@@ -6,12 +6,12 @@ const PHOTO=ROOT+"wp-content/uploads/";
 const BOOK=ROOT+"sign-up-for-a-fitting-room/";
 const events={business:"Деловая встреча",wedding:"Свадьба",evening:"Торжество",travel:"Путешествие",wardrobe:"Гардероб"};
 const products=[
-{id:"navy",name:"Уверенная классика",item:"Тёмно-синий костюм VBC",price:145000,desc:"Для переговоров: тёмно-синий костюм, светлая сорочка и лаконичный галстук.",image:"2024/12/Atelier23_24_11_14_0844-600x800.jpg",link:"dark-navy-classic-suit",parts:["suit","shirt","tie","shoes"],events:["business","wedding","wardrobe"]},
-{id:"grey",name:"Современный характер",item:"Серый костюм VBC",price:145000,desc:"Мягче строгой классики. С сорочкой — для встреч, с трикотажем — для неформальной среды.",image:"2024/12/Atelier23_24_11_14_0852-1-600x800.jpg",link:"gray-classic-suit",parts:["suit","shirt","shoes"],events:["business","wardrobe","travel"]},
-{id:"black",name:"Вечерняя классика",item:"Чёрный шерстяной смокинг",price:165000,desc:"Для вечерней свадьбы, приёма и дресс-кода Black Tie. Белая сорочка, бабочка, подходящая обувь.",image:"2025/08/Atelier23_25_07_30_0537-600x800.jpg",link:"black-tuxedo",parts:["tux","shirt","bow","shoes"],events:["wedding","evening","wardrobe"]},
-{id:"ivory",name:"Светлый акцент",item:"Смокинг цвета слоновой кости",price:165000,desc:"Выразительный вариант для летнего вечера или свадьбы на открытом воздухе.",image:"2025/08/Atelier23_26_09_16_-41-600x800.jpg",link:"ivory-shawl-tuxedo",parts:["tux","shirt","bow","shoes"],events:["wedding","evening"]},
-{id:"travel-navy",name:"Свободная элегантность",item:"Синие шерстяные брюки VBC",price:null,desc:"Для поездки и неформальной встречи: повседневные брюки, трикотаж и удобная обувь.",image:"2025/10/Atelier_25_10_21_0453-600x800.jpg",link:"italian-casual-pants-5",parts:["trousers","knit","shoes"],events:["travel","wardrobe","business"]},
-{id:"travel-black",name:"Лаконичный гардероб",item:"Чёрные шерстяные брюки VBC",price:null,desc:"Универсальная основа для поездок и повседневных сочетаний.",image:"2025/10/Atelier_25_10_21_0251-600x800.jpg",link:"italian-casual-pants-4",parts:["trousers","knit","shoes"],events:["travel","wardrobe"]}
+{id:"navy",name:"Уверенная классика",item:"Тёмно-синий костюм VBC",price:145000,desc:"Для переговоров: тёмно-синий костюм, светлая сорочка и лаконичный галстук.",image:"2024/12/Atelier23_24_11_14_0844-300x400.jpg",link:"dark-navy-classic-suit",parts:["suit","shirt","tie","shoes"],events:["business","wedding","wardrobe"]},
+{id:"grey",name:"Современный характер",item:"Серый костюм VBC",price:145000,desc:"Мягче строгой классики. С сорочкой — для встреч, с трикотажем — для неформальной среды.",image:"2024/12/Atelier23_24_11_14_0852-1-300x400.jpg",link:"gray-classic-suit",parts:["suit","shirt","shoes"],events:["business","wardrobe","travel"]},
+{id:"black",name:"Вечерняя классика",item:"Чёрный шерстяной смокинг",price:165000,desc:"Для вечерней свадьбы, приёма и дресс-кода Black Tie. Белая сорочка, бабочка, подходящая обувь.",image:"2025/08/Atelier23_25_07_30_0537-300x400.jpg",link:"black-tuxedo",parts:["tux","shirt","bow","shoes"],events:["wedding","evening","wardrobe"]},
+{id:"ivory",name:"Светлый акцент",item:"Смокинг цвета слоновой кости",price:165000,desc:"Выразительный вариант для летнего вечера или свадьбы на открытом воздухе.",image:"2025/08/Atelier23_26_09_16_-41-300x400.jpg",link:"ivory-shawl-tuxedo",parts:["tux","shirt","bow","shoes"],events:["wedding","evening"]},
+{id:"travel-navy",name:"Свободная элегантность",item:"Синие шерстяные брюки VBC",price:null,desc:"Для поездки и неформальной встречи: повседневные брюки, трикотаж и удобная обувь.",image:"2025/10/Atelier_25_10_21_0453-300x400.jpg",link:"italian-casual-pants-5",parts:["trousers","knit","shoes"],events:["travel","wardrobe","business"]},
+{id:"travel-black",name:"Лаконичный гардероб",item:"Чёрные шерстяные брюки VBC",price:null,desc:"Универсальная основа для поездок и повседневных сочетаний.",image:"2025/10/Atelier_25_10_21_0251-300x400.jpg",link:"italian-casual-pants-4",parts:["trousers","knit","shoes"],events:["travel","wardrobe"]}
 ];
 const parts={suit:"Костюм",tux:"Смокинг",shirt:"Сорочка",tie:"Галстук",bow:"Бабочка",shoes:"Обувь",trousers:"Брюки",knit:"Трикотаж"};
 const product=id=>products.find(p=>p.id===id);
@@ -144,7 +144,8 @@ for(const event of ["pointerup","pointercancel"])screen.addEventListener(event,e
 screen.addEventListener("focusout",e=>{if(e.target.id==="cue-cta")queueMicrotask(()=>syncTimeline())});
 let filmCleanup=()=>{},filmActive=false,filmWanted=!motion.matches;
 const filmURL=()=>{const u=new URL(location.href);u.search="";u.hash="";u.searchParams.set("lang",locale);return u.href};
-const sharePanel=()=>'<div class="share-panel" id="share-panel" hidden><p id="share-status" role="status"></p><input id="share-link" aria-label="Ссылка для отправки" readonly><button class="link" data-action="close-share">Закрыть</button></div>';
+let shareData=null,shareTrigger=null;
+const sharePanel=()=>"<div class=\"share-panel share-sheet\" id=\"share-panel\" hidden role=\"dialog\" aria-label=\"Поделиться\"><p class=\"share-title\">Куда отправить?</p><div class=\"share-options\"><a id=\"share-target-x\" target=\"_blank\" rel=\"noopener noreferrer\">X</a><a id=\"share-target-telegram\" target=\"_blank\" rel=\"noopener noreferrer\">Telegram</a><a id=\"share-target-whatsapp\" target=\"_blank\" rel=\"noopener noreferrer\">WhatsApp</a><button type=\"button\" data-action=\"native-share\">Другие приложения</button></div><input id=\"share-link\" aria-label=\"Ссылка для отправки\" readonly><p id=\"share-status\" role=\"status\"></p><button type=\"button\" class=\"secondary\" data-action=\"copy-share\">Копировать ссылку</button><button type=\"button\" class=\"link\" data-action=\"close-share\">Закрыть</button></div>";
 const eye='<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
 let viewCleanup=()=>{};
 const viewText=id=>String(state.views[id]||0)+" просм. · на устройстве";
@@ -205,12 +206,12 @@ function render(){
  $("back").disabled=page==="film";$("plan").disabled=page==="plan";
  let body="";
  if(page==="film"){
-  body='<div class="story overlay"><div class="mark-overlay">'+atelierMark+'</div><div class="video-controls"><button class="icon" data-action="play" aria-label="Воспроизвести фильм">▶</button><button class="icon" data-action="sound" aria-label="Включить звук">♫</button></div><div class="overlay-actions"><div class="eye-stat">'+eye+viewLabel("film")+'</div><button class="icon" data-like="film" aria-label="Нравится фильм" aria-pressed="'+state.likes.includes("film")+'">'+icon("heart")+'</button><button class="icon" data-save="film" aria-label="Сохранить фильм" aria-pressed="'+state.saved.includes("film")+'">'+icon("save")+'</button><button class="icon" data-share="film" aria-label="Поделиться фильмом">'+icon("share")+'</button></div><div class="overlay-copy"><span class="eyebrow">FILM 01 · YOUR MOMENT</span><h1><span id="cue-title">Ваш момент.</span><br><i id="cue-subtitle">Ваш стиль.</i></h1></div><button class="primary" id="cue-cta" data-action="cue" data-intent="event" data-cue="emotion">'+(state.event?"Продолжить":"Выбрать повод")+'</button><div class="cue-footer"><span class="tiny">Рекламный концепт</span><button class="link" id="cue-other" data-action="start" hidden>Выбрать повод</button></div><a id="film-fallback" class="link" hidden href="../assets/atelier23-film.mp4">Открыть ролик ↗</a>'+sharePanel()+'</div>';
+  body='<div class="story overlay"><div class="mark-overlay">'+atelierMark+'</div><div class="video-controls"><button class="icon" data-action="play" aria-label="Воспроизвести фильм">▶</button><button class="icon" data-action="sound" aria-label="Включить звук">♫</button></div><div class="overlay-actions"><div class="eye-stat">'+eye+viewLabel("film")+'</div><button class="icon" data-like="film" aria-label="Нравится фильм" aria-pressed="'+state.likes.includes("film")+'">'+icon("heart")+'</button><button class="icon" data-save="film" aria-label="Сохранить фильм" aria-pressed="'+state.saved.includes("film")+'">'+icon("save")+'</button><button class="icon" data-share="film" aria-label="Поделиться фильмом">'+icon("share")+'</button></div><div class="overlay-copy"><span class="eyebrow">FILM 01 · YOUR MOMENT</span><h1><span id="cue-title">Ваш момент.</span><br><i id="cue-subtitle">Ваш стиль.</i></h1></div><button class="primary" id="cue-cta" data-action="cue" data-intent="event" data-cue="emotion">'+(state.event?"Продолжить":"Выбрать повод")+'</button><div class="cue-footer"><span class="tiny">Рекламный концепт</span><button class="link" id="cue-other" data-action="start" hidden>Выбрать повод</button></div><a id="film-fallback" class="link" hidden href="../assets/atelier23-film.mp4">Открыть ролик ↗</a></div>';
  }else if(page==="event"){
   body='<div class="story overlay event-overlay"><div class="overlay-copy"><span class="eyebrow">01 / ПОВОД</span><h1>К чему вы<br><i>готовитесь?</i></h1></div><div class="choice-list">'+Object.entries(events).map(([id,label])=>'<button class="choice" data-event="'+id+'">'+label+'<span>↗</span></button>').join("")+'</div></div>';
  }else if(page==="look"){
   const a=list();index=Math.max(0,Math.min(index,a.length-1));const item=a[index];
-  body='<div class="story product-overlay">'+heading("02 / "+events[state.event],"Ваш образ?")+'<div class="media" id="look-photo" tabindex="0" aria-label="Фото; свайп вверх или вниз, либо клавиши стрелок"><img src="'+PHOTO+item.image+'" alt="'+item.item+'"><div class="image-fail" hidden>Фото недоступно</div><span class="number">'+(index+1)+' / '+a.length+'</span><div class="reactions"><button class="icon" data-like="'+item.id+'" aria-label="Нравится" aria-pressed="'+state.likes.includes(item.id)+'">'+icon("heart")+'</button><button class="icon" data-save="'+item.id+'" aria-label="В избранное" aria-pressed="'+state.saved.includes(item.id)+'">'+icon("save")+'</button><button class="icon" data-share="'+item.id+'" aria-label="Поделиться образом">'+icon("share")+'</button></div><div class="share-panel" id="share-panel" hidden><p id="share-status" role="status"></p><input id="share-link" aria-label="Ссылка на образ" readonly><button class="link" data-action="close-share">Закрыть</button></div></div><div class="copy"><h2>'+item.name+'</h2><p>'+item.item+' · '+price(item)+'</p><span class="tiny">Цена изделия · <a href="'+url(item)+'">Каталог ↗</a> · '+viewLabel(item.id)+'</span></div>'+primary("Хочу этот образ","choose")+'<div class="action-row"><button class="link" data-action="prev" '+(index===0?"disabled":"")+'>↑ Назад</button><button class="link" data-action="next" '+(index===a.length-1?"disabled":"")+'>↓ Другой образ</button></div></div>';
+  body='<div class="story product-overlay">'+heading("02 / "+events[state.event],"Ваш образ?")+'<div class="media" id="look-photo" tabindex="0" aria-label="Фото; свайп вверх или вниз, либо клавиши стрелок"><img src="'+PHOTO+item.image+'" alt="'+item.item+'"><div class="image-fail" hidden>Фото недоступно</div><span class="number">'+(index+1)+' / '+a.length+'</span><div class="reactions"><button class="icon" data-like="'+item.id+'" aria-label="Нравится" aria-pressed="'+state.likes.includes(item.id)+'">'+icon("heart")+'</button><button class="icon" data-save="'+item.id+'" aria-label="В избранное" aria-pressed="'+state.saved.includes(item.id)+'">'+icon("save")+'</button><button class="icon" data-share="'+item.id+'" aria-label="Поделиться образом">'+icon("share")+'</button></div></div><div class="copy"><h2>'+item.name+'</h2><p>'+item.item+' · '+price(item)+'</p><span class="tiny">Цена изделия · <a href="'+url(item)+'">Каталог ↗</a> · '+viewLabel(item.id)+'</span></div>'+primary("Хочу этот образ","choose")+'<div class="action-row"><button class="link" data-action="prev" '+(index===0?"disabled":"")+'>↑ Назад</button><button class="link" data-action="next" '+(index===a.length-1?"disabled":"")+'>↓ Другой образ</button></div></div>';
  }else if(page==="date"){
   body='<div class="story center">'+heading("СРОК","Когда ваш<br><i>момент?</i>")+'<label class="field">Дата события<input id="date" type="date" min="'+today()+'" value="'+p.date+'"></label>'+primary("Готово","date")+secondary("Пока не знаю","unknown")+'<p class="notice" id="date-error" role="status"></p></div>';
  }else if(page==="wardrobe"){
@@ -232,7 +233,8 @@ function render(){
  }else if(page==="saved"){
   body='<div class="story">'+heading("ВАША КОЛЛЕКЦИЯ","Избранное.")+'<div>'+state.saved.map(id=>{if(id==="film")return '<div class="saved-item"><span>ATELIER 23 · Фильм 01</span><button data-action="open-film">Открыть</button><button data-remove="film">Удалить</button></div>';const item=product(id);return '<div class="saved-item"><img src="'+PHOTO+item.image+'" alt=""><span>'+item.name+'</span><button data-remove="'+id+'">Удалить</button></div>'}).join("")+'</div>'+(state.saved.length?"":"<p>Пока нет сохранённых образов.</p>")+primary("К образам","resume")+'</div>';
  }
- screen.innerHTML=body;localize(screen);
+ shareData=null;shareTrigger=null;
+ screen.innerHTML=body+(page==="film"||page==="look"?sharePanel():"");localize(screen);
  screen.querySelectorAll(".media img").forEach(img=>{const fail=()=>{img.hidden=true;img.parentElement.querySelector(".image-fail").hidden=false};img.addEventListener("error",fail);if(img.complete&&!img.naturalWidth)fail()});
  if(page==="film"){syncTimeline(true);updateFilmControls();if(film.error||film.querySelector("source").dataset.failed)$("film-fallback").hidden=false;}
  if(page==="look"){
@@ -274,14 +276,31 @@ screen.addEventListener("click",async e=>{
   const item=product(d.share),link=item?shareURL(item):filmURL();
   const shareContext={target:d.share,page,occasion:state.event,...(page==="film"?{cue:$("cue-cta")?.dataset.cue,second:film.currentTime}:{})};
   track("share_click",shareContext);
-  if(navigator.share){try{await navigator.share({title:"ATELIER 23 · "+t(item?.name||"Ваш момент"),text:X_TEXT+" "+X_TAGS.split(",").map(tag=>"#"+tag).join(" "),url:link});track("share_resolved",shareContext);return}catch(err){if(err.name==="AbortError"){track("share_cancelled",shareContext);return}}}
-  const panel=$("share-panel"),input=$("share-link"),status=$("share-status");
-  if(!panel||!input||!status)return;
-  panel.hidden=false;input.value=link;
-  try{await navigator.clipboard.writeText(link);track("link_copied",shareContext);status.textContent="Ссылка скопирована.";localize(screen)}catch{status.textContent="Скопируйте ссылку.";localize(screen);input.focus();input.select()}
+  shareData={link,shareContext,title:"ATELIER 23 · "+t(item?.name||"Ваш момент")};shareTrigger=b;
+  const panel=$("share-panel"),input=$("share-link");
+  if(!panel||!input)return;
+  const english=new URL(link);english.searchParams.set("lang","en");
+  const x=new URL(xIntentURL(link));x.searchParams.set("url",english.href);
+  $("share-target-x").href=x.href;
+  $("share-target-telegram").href="https://t.me/share/url?url="+encodeURIComponent(link)+"&text="+encodeURIComponent(shareData.title);
+  $("share-target-whatsapp").href="https://wa.me/?text="+encodeURIComponent(shareData.title+" "+link);
+  panel.querySelector('[data-action="native-share"]').hidden=typeof navigator.share!=="function";
+  $("share-status").textContent="";input.value=link;panel.hidden=false;
+  $("share-target-x").focus();return;
+ }
+ if(a==="close-share"){$("share-panel").hidden=true;shareTrigger?.focus();return}
+ if(a==="copy-share"&&shareData){
+  const data=shareData,input=$("share-link"),status=$("share-status");
+  try{await navigator.clipboard.writeText(data.link);track("link_copied",data.shareContext);if(status.isConnected)status.textContent="Ссылка скопирована."}
+  catch{if(status.isConnected){status.textContent="Скопируйте ссылку.";input.focus();input.select()}}
+  localize(screen);return;
+ }
+ if(a==="native-share"&&shareData&&typeof navigator.share==="function"){
+  const data=shareData;
+  try{await navigator.share({title:data.title,text:X_TEXT+" "+X_TAGS.split(",").map(tag=>"#"+tag).join(" "),url:data.link});track("share_resolved",data.shareContext)}
+  catch(err){if(err.name==="AbortError")track("share_cancelled",data.shareContext);else{$("share-status").textContent="Выберите приложение или скопируйте ссылку.";localize(screen)}}
   return;
  }
- if(a==="close-share"){$("share-panel").hidden=true;return}
  if(d.remove){toggle("saved",d.remove);log("reaction",{target:d.remove,intent:"save_off"});return render()}
  if(d.jump)return go(d.jump);
  if(a==="cue"){
@@ -312,6 +331,7 @@ function logBookingLink(e){
 }
 screen.addEventListener("click",logBookingLink);
 screen.addEventListener("auxclick",logBookingLink);
+screen.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("share-panel")&&!$("share-panel").hidden){$("share-panel").hidden=true;shareTrigger?.focus()}});
 screen.addEventListener("change",e=>{
  const el=e.target,p=plan(),id=el.dataset.own;
  if(id&&Object.hasOwn(parts,id)){p.owned=el.checked?[...new Set([...p.owned,id])]:p.owned.filter(x=>x!==id);p.wardrobe=false;invalidate(p);persist()}
